@@ -1,0 +1,32 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Serve public assets correctly when the whole Laravel project is uploaded
+    # to the hosting root instead of pointing the domain to /public.
+    RewriteRule ^assets/(.*)$ public/assets/$1 [L]
+    RewriteRule ^favicon\.ico$ public/favicon.ico [L]
+    RewriteRule ^site\.webmanifest$ public/site.webmanifest [L]
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Public Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ public/index.php [L]
+
+    <Files ~ "\.(env|env.example|json|config.js|md|gitignore|gitattributes|lock)$|artisan">
+            Order allow,deny
+            Deny from all
+    </Files>
+</IfModule>
