@@ -710,6 +710,55 @@ a {
     margin-top: auto;
 }
 
+.category-tools-panel {
+    padding: clamp(1rem, 3vw, 1.35rem);
+}
+
+.category-tools-head {
+    margin-top: 0;
+}
+
+.category-tool-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+    gap: 18px;
+}
+
+.category-tool-card {
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    min-height: 168px;
+    padding: 1.1rem;
+}
+
+.category-tool-card .tool-icon {
+    margin-bottom: 0;
+}
+
+.category-tool-body {
+    display: grid;
+    gap: .45rem;
+    min-width: 0;
+}
+
+.category-tool-body h3 {
+    margin: 0;
+    font-size: 1.08rem;
+}
+
+.category-tool-body p {
+    margin: 0;
+    color: #64748b;
+    line-height: 1.55;
+}
+
+.category-tool-body .btn {
+    width: fit-content;
+    margin-top: .35rem;
+}
+
 .tool-hero {
     padding: clamp(1.2rem, 3vw, 2rem);
     margin-bottom: 22px;
@@ -1907,6 +1956,10 @@ a {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .category-tool-grid {
+        grid-template-columns: 1fr;
+    }
+
     .blog-grid,
     .blog-related-grid {
         grid-template-columns: 1fr;
@@ -1959,6 +2012,12 @@ a {
 
     .tool-card {
         min-height: 184px;
+    }
+
+    .category-tool-card {
+        grid-template-columns: 48px minmax(0, 1fr);
+        min-height: auto;
+        padding: .95rem;
     }
 
     .section-head {
