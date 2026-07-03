@@ -111,6 +111,8 @@ class DiscoverController extends Controller
             $request->file('photo')
         );
 
+        $this->rememberOwnerToken($entry['id'], $entry['owner_token']);
+
         return redirect()->route('discover.share', [$entry['id'], $entry['owner_token']]);
     }
 
@@ -175,9 +177,15 @@ class DiscoverController extends Controller
         $entry = $this->discover->find($id);
         abort_if(!$entry, 404);
 
+        $ownerToken = session('discover_owner_tokens.'.$entry['id']);
+        $resultsUrl = is_string($ownerToken) && hash_equals($entry['owner_token'] ?? '', $ownerToken)
+            ? route('discover.results', [$entry['id'], $ownerToken])
+            : null;
+
         return view('discover.thanks', [
             'entry' => $entry,
             'feature' => $this->discover->feature(),
+            'resultsUrl' => $resultsUrl,
             'robotsMeta' => 'noindex,nofollow',
             'canonicalUrl' => route('discover.show', $entry['id']),
         ]);
@@ -187,6 +195,8 @@ class DiscoverController extends Controller
     {
         $entry = $this->discover->find($id);
         abort_if(!$entry || !hash_equals($entry['owner_token'] ?? '', $token), 404);
+
+        $this->rememberOwnerToken($entry['id'], $token);
 
         return view('discover.share', [
             'entry' => $entry,
@@ -204,6 +214,8 @@ class DiscoverController extends Controller
     {
         $entry = $this->discover->find($id);
         abort_if(!$entry || !hash_equals($entry['owner_token'] ?? '', $token), 404);
+
+        $this->rememberOwnerToken($entry['id'], $token);
 
         return view('discover.results', [
             'entry' => $entry,
@@ -226,5 +238,10 @@ class DiscoverController extends Controller
         return response()->file($path, [
             'Cache-Control' => 'private, max-age=3600',
         ]);
+    }
+
+    private function rememberOwnerToken(string $id, string $token): void
+    {
+        session()->put('discover_owner_tokens.'.$id, $token);
     }
 }
