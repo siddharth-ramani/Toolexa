@@ -2284,6 +2284,28 @@ a {
     font-weight: 900;
 }
 
+.discover-owner-link {
+    display: grid;
+    gap: .75rem;
+    margin-top: 1.2rem;
+    padding: 1rem;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+}
+
+.discover-owner-link h2 {
+    margin: .35rem 0 .2rem;
+    color: #0f172a;
+    font-size: clamp(1.15rem, 3vw, 1.45rem);
+}
+
+.discover-owner-link p {
+    margin: 0;
+    color: #9a3412;
+    font-weight: 800;
+}
+
 .discover-dashboard {
     display: grid;
     gap: 1rem;

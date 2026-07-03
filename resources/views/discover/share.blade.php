@@ -34,6 +34,20 @@
             <span class="copy-status" data-copy-status></span>
         </div>
 
+        <div class="discover-owner-link">
+            <div>
+                <span class="eyebrow">Private</span>
+                <h2>Your results dashboard link</h2>
+                <p>Save this private link. You will need it later to view responses and analytics.</p>
+            </div>
+            <label for="discover-results-url">Private results link</label>
+            <div class="discover-copy-row">
+                <input id="discover-results-url" class="form-control" type="text" readonly value="{{ $resultsUrl }}">
+                <button class="btn btn-primary" type="button" data-copy-target="discover-results-url">Copy Results Link</button>
+                <span class="copy-status" data-copy-status></span>
+            </div>
+        </div>
+
         <div class="discover-share-grid" data-discover-share data-share-url="{{ $shareUrl }}" data-share-title="{{ $shareTitle }}" data-share-text="{{ trim($shareCaption) }}">
             <button class="btn btn-primary" type="button" data-native-share>Share</button>
             <a class="btn btn-success" href="https://wa.me/?text={{ rawurlencode($fullShareText) }}" target="_blank" rel="noopener">WhatsApp</a>
@@ -46,6 +60,7 @@
 
         <div class="result-actions">
             <a class="btn btn-primary" href="{{ $resultsUrl }}">View Results Dashboard</a>
+            <button class="btn" type="button" data-copy-text="{{ $resultsUrl }}">Copy Results Link</button>
         </div>
     </section>
 @endsection
