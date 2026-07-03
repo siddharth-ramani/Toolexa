@@ -102,13 +102,15 @@ class DiscoverController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'min:2', 'max:40', 'regex:/^[\pL\pM\s.\'-]+$/u'],
             'theme' => ['required', Rule::in($feature->themes)],
+            'public_results' => ['nullable', 'boolean'],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
         $entry = $this->discover->create(
             trim($validated['name']),
             $validated['theme'],
-            $request->file('photo')
+            $request->file('photo'),
+            $request->boolean('public_results')
         );
 
         $this->rememberOwnerToken($entry['id'], $entry['owner_token']);
@@ -181,11 +183,15 @@ class DiscoverController extends Controller
         $resultsUrl = is_string($ownerToken) && hash_equals($entry['owner_token'] ?? '', $ownerToken)
             ? route('discover.results', [$entry['id'], $ownerToken])
             : null;
+        $publicResultsUrl = !empty($entry['public_results'])
+            ? route('discover.public-results', $entry['id'])
+            : null;
 
         return view('discover.thanks', [
             'entry' => $entry,
             'feature' => $this->discover->feature(),
             'resultsUrl' => $resultsUrl,
+            'publicResultsUrl' => $publicResultsUrl,
             'robotsMeta' => 'noindex,nofollow',
             'canonicalUrl' => route('discover.show', $entry['id']),
         ]);
@@ -224,6 +230,22 @@ class DiscoverController extends Controller
             'shareUrl' => route('discover.show', $entry['id']),
             'robotsMeta' => 'noindex,nofollow',
             'canonicalUrl' => route('discover.results', [$entry['id'], $token]),
+        ]);
+    }
+
+    public function publicResults(string $id)
+    {
+        $entry = $this->discover->find($id);
+        abort_if(!$entry || empty($entry['public_results']), 404);
+
+        return view('discover.results', [
+            'entry' => $entry,
+            'feature' => $this->discover->feature(),
+            'analytics' => $this->discover->analytics($entry),
+            'shareUrl' => route('discover.show', $entry['id']),
+            'robotsMeta' => 'noindex,nofollow',
+            'canonicalUrl' => route('discover.public-results', $entry['id']),
+            'isPublicResults' => true,
         ]);
     }
 

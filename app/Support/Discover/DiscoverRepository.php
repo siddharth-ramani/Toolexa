@@ -24,7 +24,7 @@ class DiscoverRepository
         return $this->feature;
     }
 
-    public function create(string $name, string $theme, ?UploadedFile $photo = null): array
+    public function create(string $name, string $theme, ?UploadedFile $photo = null, bool $publicResults = false): array
     {
         $this->ensureDirectories();
 
@@ -39,6 +39,7 @@ class DiscoverRepository
             'theme' => in_array($theme, $this->feature->themes, true) ? $theme : 'light',
             'created_at' => now()->toIso8601String(),
             'owner_token' => Str::random(12),
+            'public_results' => $publicResults,
             'photo' => null,
             'responses' => [],
         ];

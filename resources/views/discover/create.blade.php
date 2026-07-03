@@ -38,6 +38,11 @@
                     </select>
                 </div>
 
+                <label class="checkbox-row" for="public-results">
+                    <input id="public-results" type="checkbox" name="public_results" value="1" @checked(old('public_results'))>
+                    <span>Allow friends to view results after submitting</span>
+                </label>
+
                 <button class="btn btn-primary w-100" type="submit" data-ga-event="create_link_click" data-ga-label="{{ $feature->slug }}">Generate My Link</button>
             </form>
         </div>

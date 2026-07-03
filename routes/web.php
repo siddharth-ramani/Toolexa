@@ -48,6 +48,7 @@ Route::post('/discover/{id}', [DiscoverController::class, 'submit'])->whereAlpha
 Route::get('/discover/{id}/thanks', [DiscoverController::class, 'thanks'])->whereAlphaNumeric('id')->name('discover.thanks');
 Route::get('/discover/{id}/photo', [DiscoverController::class, 'photo'])->whereAlphaNumeric('id')->name('discover.photo');
 Route::get('/discover/{id}/share/{token}', [DiscoverController::class, 'share'])->whereAlphaNumeric('id')->whereAlphaNumeric('token')->name('discover.share');
+Route::get('/discover/{id}/results', [DiscoverController::class, 'publicResults'])->whereAlphaNumeric('id')->name('discover.public-results');
 Route::get('/discover/{id}/results/{token}', [DiscoverController::class, 'results'])->whereAlphaNumeric('id')->whereAlphaNumeric('token')->name('discover.results');
 Route::get('/{page}', [SiteController::class, 'page'])
     ->whereIn('page', ['about', 'contact', 'privacy-policy', 'terms', 'disclaimer'])
