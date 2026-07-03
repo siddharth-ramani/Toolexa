@@ -51,4 +51,30 @@
             <p class="empty-state">No tools found. Try a different keyword or category.</p>
         @endif
     </section>
+
+    @if(isset($articles) && $articles->count())
+        <section class="info-panel search-articles-panel">
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">{{ $articles->count() }} articles</span>
+                    <h2>Related Blog Articles</h2>
+                </div>
+                <a class="btn btn-sm" href="{{ route('blog.index') }}">View Blog</a>
+            </div>
+
+            <div class="search-article-list">
+                @foreach($articles as $article)
+                    <a class="search-article-card" href="{{ route('blog.show', $article['slug']) }}">
+                        <span class="search-article-badge">{{ $article['category'] }}</span>
+                        <span class="search-article-body">
+                            <strong>{{ $article['title'] }}</strong>
+                            <small>{{ $article['excerpt'] }}</small>
+                            <span>{{ $article['reading_time'] }} min read</span>
+                        </span>
+                        <span class="search-article-arrow" aria-hidden="true">›</span>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
 @endsection

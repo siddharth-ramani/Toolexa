@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Tools\HomeController;
+use App\Support\BlogRepository;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
@@ -217,8 +218,9 @@ class SiteController extends Controller
     public function sitemap()
     {
         $urls = [
-            ['loc' => url('/'), 'priority' => '1.0', 'changefreq' => 'daily'],
-            ['loc' => url('search'), 'priority' => '0.6', 'changefreq' => 'weekly'],
+            ['loc' => url('/'), 'priority' => '1.0', 'changefreq' => 'daily', 'lastmod' => now()->toDateString()],
+            ['loc' => url('search'), 'priority' => '0.6', 'changefreq' => 'weekly', 'lastmod' => now()->toDateString()],
+            ['loc' => route('blog.index'), 'priority' => '0.8', 'changefreq' => 'weekly', 'lastmod' => now()->toDateString()],
         ];
 
         foreach (array_keys($this->pages) as $page) {
@@ -226,6 +228,7 @@ class SiteController extends Controller
                 'loc' => url($page),
                 'priority' => '0.5',
                 'changefreq' => 'monthly',
+                'lastmod' => now()->toDateString(),
             ];
         }
 
@@ -234,6 +237,7 @@ class SiteController extends Controller
                 'loc' => url('category/'.$category['slug']),
                 'priority' => '0.8',
                 'changefreq' => 'weekly',
+                'lastmod' => now()->toDateString(),
             ];
         }
 
@@ -242,6 +246,16 @@ class SiteController extends Controller
                 'loc' => url('tools/'.$tool['slug']),
                 'priority' => '0.9',
                 'changefreq' => 'monthly',
+                'lastmod' => now()->toDateString(),
+            ];
+        }
+
+        foreach (BlogRepository::all() as $article) {
+            $urls[] = [
+                'loc' => route('blog.show', $article['slug']),
+                'priority' => '0.7',
+                'changefreq' => 'monthly',
+                'lastmod' => $article['published_at'] ?? now()->toDateString(),
             ];
         }
 
@@ -258,10 +272,24 @@ class SiteController extends Controller
             'Allow: /',
             'Disallow: /storage/',
             'Disallow: /vendor/',
+            'Disallow: /bootstrap/',
+            'Disallow: /config/',
             '',
             'Sitemap: '.url('sitemap.xml'),
             '',
         ]);
+
+        return response($content, 200)
+            ->header('Content-Type', 'text/plain; charset=UTF-8')
+            ->header('Cache-Control', 'public, max-age=3600');
+    }
+
+    public function ads()
+    {
+        $publisherId = trim((string) config('services.google.adsense_publisher_id'));
+        $content = $publisherId
+            ? 'google.com, '.$publisherId.', DIRECT, f08c47fec0942fa0'."\n"
+            : '';
 
         return response($content, 200)
             ->header('Content-Type', 'text/plain; charset=UTF-8')
@@ -273,6 +301,7 @@ class SiteController extends Controller
         $query = trim((string) $request->query('q', ''));
         $category = trim((string) $request->query('category', ''));
         $tools = collect(HomeController::tools());
+        $articles = collect(BlogRepository::all());
 
         if ($query !== '') {
             $needle = Str::lower($query);
@@ -282,10 +311,18 @@ class SiteController extends Controller
                     || str_contains(Str::lower($tool['category']), $needle)
                     || str_contains(Str::lower($tool['keywords']), $needle);
             });
+
+            $articles = $articles->filter(function ($article) use ($needle) {
+                return str_contains(Str::lower($article['title']), $needle)
+                    || str_contains(Str::lower($article['excerpt']), $needle)
+                    || str_contains(Str::lower($article['category']), $needle)
+                    || str_contains(Str::lower($article['meta_description']), $needle);
+            });
         }
 
         if ($category !== '') {
             $tools = $tools->filter(fn ($tool) => Str::slug($tool['category']) === $category);
+            $articles = collect();
         }
 
         $tools = $tools->values();
@@ -293,6 +330,7 @@ class SiteController extends Controller
 
         return view('search', [
             'tools' => $paginatedTools,
+            'articles' => $articles->values(),
             'query' => $query,
             'selectedCategory' => $category,
             'categories' => HomeController::categories(),
@@ -304,6 +342,7 @@ class SiteController extends Controller
             'seoTitle' => $query ? 'Search results for '.$query.' - Toolexa' : 'Search Free Online Tools - Toolexa',
             'seoDescription' => 'Search Toolexa calculators and utility tools by name, category or keyword.',
             'seoKeywords' => 'search tools, online calculators, free utility tools',
+            'robotsMeta' => $query || $category ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
         ]);
     }
 
@@ -311,6 +350,9 @@ class SiteController extends Controller
     {
         $categoryMeta = collect(HomeController::categories())->firstWhere('slug', $category);
         abort_unless($categoryMeta, 404);
+        $categoryLabel = str_contains($categoryMeta['name'], 'Tools')
+            ? $categoryMeta['name']
+            : $categoryMeta['name'].' Tools';
 
         $tools = collect(HomeController::tools())
             ->filter(fn ($tool) => Str::slug($tool['category']) === $category)
@@ -327,8 +369,8 @@ class SiteController extends Controller
                 ['name' => $categoryMeta['name'], 'url' => route('category.show', $category)],
             ],
             'canonicalUrl' => url('category/'.$category),
-            'seoTitle' => $categoryMeta['name'].' Tools - Free Online '.$categoryMeta['name'].' Calculators',
-            'seoDescription' => 'Browse free '.$categoryMeta['name'].' tools on Toolexa. Fast, responsive and easy to use.',
+            'seoTitle' => $categoryLabel.' - Free Online Tools on Toolexa',
+            'seoDescription' => 'Browse free '.$categoryLabel.' on Toolexa. Fast, responsive, private and easy-to-use tools for everyday tasks.',
             'seoKeywords' => Str::lower($categoryMeta['name']).' tools, online calculators, free tools',
         ]);
     }

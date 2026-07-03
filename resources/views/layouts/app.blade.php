@@ -3,14 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="keywords" content="@yield('keywords', $seoKeywords ?? 'online tools, gst calculator, emi calculator, age calculator, free calculators')">
-    <meta name="description" content="@yield('description', $seoDescription ?? 'Free online calculators and utility tools for daily use.')">
+    @php
+        $pageTitle = trim($__env->yieldContent('title', $seoTitle ?? 'Toolexa - Free Online Tools'));
+        $pageDescription = trim($__env->yieldContent('description', $seoDescription ?? 'Free online calculators and utility tools for daily use.'));
+        $pageKeywords = trim($__env->yieldContent('keywords', $seoKeywords ?? 'online tools, gst calculator, emi calculator, age calculator, free calculators'));
+        $pageCanonical = $canonicalUrl ?? url()->current();
+        $robotsMeta = $robotsMeta ?? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+    @endphp
+    <meta name="keywords" content="{{ $pageKeywords }}">
+    <meta name="description" content="{{ $pageDescription }}">
+    <meta name="robots" content="{{ $robotsMeta }}">
     <meta name="theme-color" content="#0f766e">
     @if(config('services.google.site_verification'))
         <meta name="google-site-verification" content="{{ config('services.google.site_verification') }}">
     @endif
 
-    <title>@yield('title', $seoTitle ?? 'Toolexa - Free Online Tools')</title>
+    <title>{{ $pageTitle }}</title>
 
     @php
         $basePath = rtrim(request()->getBaseUrl(), '/');
@@ -48,15 +56,86 @@
             'cagr-calculator',
         ]);
         $utilityNavTools = collect(\App\Http\Controllers\Tools\HomeController::tools())
-            ->filter(fn ($tool) => in_array($tool['category'], ['Utility', 'Text', 'Math', 'Shopping'], true))
+            ->filter(fn ($tool) => in_array($tool['category'], ['Utility', 'Utility Tools', 'Text Tools', 'Developer Tools', 'Image Tools', 'PDF Tools', 'Seller Tools', 'Math', 'Shopping'], true))
             ->take(8)
             ->values();
+        $footerGuides = class_exists(\App\Support\BlogRepository::class)
+            ? collect(\App\Support\BlogRepository::all())->take(3)->values()
+            : collect();
+        $footerToolGroups = [
+            'Calculators' => \App\Http\Controllers\Tools\HomeController::toolsBySlugs([
+                'gst-calculator',
+                'emi-calculator',
+                'sip-calculator',
+                'percentage-calculator',
+                'compound-interest-calculator',
+            ]),
+            'Text & Developer' => \App\Http\Controllers\Tools\HomeController::toolsBySlugs([
+                'word-counter',
+                'text-case-converter',
+                'base64-encoder',
+                'uuid-generator',
+            ]),
+            'Image & PDF' => \App\Http\Controllers\Tools\HomeController::toolsBySlugs([
+                'image-compressor',
+                'image-resizer',
+                'image-to-pdf-converter',
+                'pdf-merger',
+            ]),
+            'Seller Tools' => \App\Http\Controllers\Tools\HomeController::toolsBySlugs([
+                'meesho-label-cropper',
+                'amazon-label-cropper',
+                'flipkart-label-cropper',
+                'myntra-label-cropper',
+                'ajio-label-cropper',
+            ]),
+        ];
+        $socialImageUrl = $logoUrl ?: $faviconUrl;
+        $globalSchemas = [
+            [
+                '@context' => 'https://schema.org',
+                '@type' => 'Organization',
+                'name' => $brandName,
+                'url' => url('/'),
+                'logo' => $socialImageUrl,
+            ],
+            [
+                '@context' => 'https://schema.org',
+                '@type' => 'WebSite',
+                'name' => $brandName,
+                'url' => url('/'),
+                'potentialAction' => [
+                    '@type' => 'SearchAction',
+                    'target' => route('search').'?q={search_term_string}',
+                    'query-input' => 'required name=search_term_string',
+                ],
+            ],
+        ];
+        $pageSchemas = $schemaJsonLd ?? [];
+        $pageSchemas = $pageSchemas ? (array_is_list($pageSchemas) ? $pageSchemas : [$pageSchemas]) : [];
+        $allSchemaJsonLd = array_merge($globalSchemas, $pageSchemas);
     @endphp
 
-    <link rel="canonical" href="{{ $canonicalUrl ?? url()->current() }}">
+    <link rel="canonical" href="{{ $pageCanonical }}">
     <link rel="icon" type="image/png" href="{{ $faviconUrl }}">
     <link rel="apple-touch-icon" href="{{ $faviconUrl }}">
     <link rel="manifest" href="{{ $manifestUrl }}">
+    <meta property="og:site_name" content="{{ $brandName }}">
+    <meta property="og:type" content="{{ request()->is('blog/*') ? 'article' : 'website' }}">
+    <meta property="og:title" content="{{ $pageTitle }}">
+    <meta property="og:description" content="{{ $pageDescription }}">
+    <meta property="og:url" content="{{ $pageCanonical }}">
+    <meta property="og:image" content="{{ $socialImageUrl }}">
+    @isset($article)
+        <meta property="article:published_time" content="{{ $article['published_at'] }}">
+        <meta property="article:modified_time" content="{{ $article['published_at'] }}">
+        <meta property="article:author" content="{{ $article['author'] }}">
+        <meta property="article:section" content="{{ $article['category'] }}">
+    @endisset
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $pageTitle }}">
+    <meta name="twitter:description" content="{{ $pageDescription }}">
+    <meta name="twitter:image" content="{{ $socialImageUrl }}">
     <link rel="stylesheet" href="{{ $assetRoot }}/css/bootstrap-lite.css">
     <link rel="stylesheet" href="{{ $assetRoot }}/css/style.css">
 
@@ -70,9 +149,7 @@
         </script>
     @endif
 
-    @isset($schemaJsonLd)
-        <script type="application/ld+json">@json($schemaJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)</script>
-    @endisset
+    <script type="application/ld+json">@json($allSchemaJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)</script>
 </head>
 <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -137,7 +214,8 @@
                     </button>
                     <div class="dropdown-panel">
                         @foreach($categoryLinks as $category)
-                            <a href="{{ route('category.show', $category['slug']) }}">{{ $category['name'] }} Tools</a>
+                            @php($categoryLabel = str_contains($category['name'], 'Tools') ? $category['name'] : $category['name'].' Tools')
+                            <a href="{{ route('category.show', $category['slug']) }}">{{ $categoryLabel }}</a>
                         @endforeach
                     </div>
                 </div>
@@ -155,6 +233,7 @@
                     </div>
                 </div>
 
+                <a class="nav-link {{ request()->is('blog*') ? 'active' : '' }}" href="{{ route('blog.index') }}">Blog</a>
                 <a class="nav-link nav-cta {{ request()->is('search') ? 'active' : '' }}" href="{{ route('search') }}">Find Tools</a>
             </div>
         </div>
@@ -199,8 +278,8 @@
     </main>
 
     <footer class="site-footer">
-        <div class="container footer-grid">
-            <div>
+        <div class="container footer-top">
+            <div class="footer-about">
                 <a class="brand footer-brand" href="{{ url('/') }}">
                     @if($logoUrl)
                         <img class="brand-logo" src="{{ $logoUrl }}" alt="{{ $brandName }} logo" width="160" height="48" loading="lazy" decoding="async">
@@ -210,22 +289,38 @@
                     @endif
                 </a>
                 <p>Free online calculators, converters and utility tools for everyday tasks.</p>
+                <div class="footer-actions">
+                    <a href="{{ route('search') }}">Find Tools</a>
+                    <a href="{{ route('blog.index') }}">Read Guides</a>
+                </div>
             </div>
 
-            <nav aria-label="Footer tools">
-                <h2>Tools</h2>
-                <a href="{{ url('tools/gst-calculator') }}">GST Calculator</a>
-                <a href="{{ url('tools/emi-calculator') }}">EMI Calculator</a>
-                <a href="{{ url('tools/sip-calculator') }}">SIP Calculator</a>
-                <a href="{{ url('tools/qr-generator') }}">QR Generator</a>
-            </nav>
-
-            <nav aria-label="Footer categories">
-                <h2>Categories</h2>
+            <div class="footer-category-strip" aria-label="Footer categories">
                 @foreach($categoryLinks as $category)
                     <a href="{{ route('category.show', $category['slug']) }}">{{ $category['name'] }}</a>
                 @endforeach
-            </nav>
+            </div>
+        </div>
+
+        <div class="container footer-grid">
+            @foreach($footerToolGroups as $groupName => $tools)
+                <nav aria-label="Footer {{ $groupName }}">
+                    <h2>{{ $groupName }}</h2>
+                    @foreach($tools as $tool)
+                        <a href="{{ url('tools/'.$tool['slug']) }}">{{ $tool['name'] }}</a>
+                    @endforeach
+                </nav>
+            @endforeach
+
+            @if($footerGuides->count())
+                <nav aria-label="Footer guides">
+                    <h2>Guides</h2>
+                    @foreach($footerGuides as $guide)
+                        <a href="{{ route('blog.show', $guide['slug']) }}">{{ $guide['title'] }}</a>
+                    @endforeach
+                    <a href="{{ route('blog.index') }}">All Guides</a>
+                </nav>
+            @endif
 
             <nav aria-label="Footer company">
                 <h2>Company</h2>
@@ -233,10 +328,6 @@
                 <a href="{{ route('page.show', 'contact') }}">Contact</a>
                 <a href="{{ route('search') }}">Search</a>
                 <a href="{{ route('sitemap') }}">Sitemap</a>
-            </nav>
-
-            <nav aria-label="Footer legal">
-                <h2>Legal</h2>
                 <a href="{{ route('page.show', 'privacy-policy') }}">Privacy Policy</a>
                 <a href="{{ route('page.show', 'terms') }}">Terms & Conditions</a>
                 <a href="{{ route('page.show', 'disclaimer') }}">Disclaimer</a>

@@ -25,8 +25,10 @@ class AppServiceProvider extends ServiceProvider
             $viewSlugMap = collect(HomeController::tools())
                 ->mapWithKeys(fn ($tool) => ['tools.'.$tool['view'] => $tool['slug']])
                 ->all();
-            $slug = $view->getName() === 'tools.finance-calculator'
-                ? request()->route('slug')
+            $routeSlugViews = ['tools.finance-calculator', 'tools.text-utility', 'tools.image-utility', 'tools.browser-utility', 'tools.pdf-utility', 'tools.seller-label'];
+            $viewData = $view->getData();
+            $slug = in_array($view->getName(), $routeSlugViews, true)
+                ? (request()->route('slug') ?: ($viewData['slug'] ?? null))
                 : ($viewSlugMap[$view->getName()] ?? null);
             $tool = $slug ? HomeController::toolBySlug($slug) : null;
 
@@ -39,7 +41,7 @@ class AppServiceProvider extends ServiceProvider
             $recentTools = HomeController::recentTools();
             $breadcrumbs = [
                 ['name' => 'Home', 'url' => url('/')],
-                ['name' => $tool['category'], 'url' => url('/').'#'.strtolower($tool['category'])],
+                ['name' => $tool['category'], 'url' => url('/').'#'.\Illuminate\Support\Str::slug($tool['category'])],
                 ['name' => $tool['name'], 'url' => url('tools/'.$tool['slug'])],
             ];
 

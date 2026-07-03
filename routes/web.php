@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\Tools\HomeController;
 use App\Http\Controllers\Tools\GstController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Tools\PasswordController;
 use App\Http\Controllers\Tools\UnitController;
 use App\Http\Controllers\Tools\QrController;
 use App\Http\Controllers\Tools\TextController;
+use App\Http\Controllers\Tools\TextUtilityController;
 use App\Http\Controllers\Tools\FinanceCalculatorController;
 
 /*
@@ -31,7 +33,10 @@ Route::get('/', [HomeController::class, 'index']);
 Route::post('/', fn () => redirect('/'));
 Route::get('/sitemap.xml', [SiteController::class, 'sitemap'])->name('sitemap');
 Route::get('/robots.txt', [SiteController::class, 'robots'])->name('robots');
+Route::get('/ads.txt', [SiteController::class, 'ads'])->name('ads');
 Route::get('/search', [SiteController::class, 'search'])->name('search');
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/{page}', [SiteController::class, 'page'])
     ->whereIn('page', ['about', 'contact', 'privacy-policy', 'terms', 'disclaimer'])
     ->name('page.show');
@@ -48,4 +53,9 @@ Route::post('/tools/password-generator', [PasswordController::class, 'generate']
 Route::post('/tools/unit-converter', [UnitController::class, 'convert'])->name('unit.convert');
 Route::post('/tools/qr-generator', [QrController::class, 'generate'])->name('qr.generate');
 Route::post('/tools/text-case-converter', [TextController::class, 'convert'])->name('text.convert');
+foreach (['word-counter', 'character-counter', 'remove-duplicate-lines', 'remove-extra-spaces', 'text-repeater', 'base64-encoder', 'base64-decoder', 'url-encoder-decoder', 'md5-hash-generator', 'lorem-ipsum-generator'] as $textToolSlug) {
+    Route::post('/tools/'.$textToolSlug, [TextUtilityController::class, 'process'])
+        ->defaults('slug', $textToolSlug)
+        ->name('text-tools.'.$textToolSlug);
+}
 Route::post('/tools/{slug}', [FinanceCalculatorController::class, 'calculate'])->name('finance.calculate');

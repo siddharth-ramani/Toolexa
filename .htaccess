@@ -5,6 +5,9 @@
 
     RewriteEngine On
 
+    DirectoryIndex index.php
+    FallbackResource /toolexa/index.php
+
     # Serve public assets correctly when the whole Laravel project is uploaded
     # to the hosting root instead of pointing the domain to /public.
     RewriteRule ^assets/(.*)$ public/assets/$1 [L]
@@ -23,7 +26,7 @@
     # Send Requests To Public Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ public/index.php [L]
+    RewriteRule ^ index.php [L]
 
     <Files ~ "\.(env|env.example|json|config.js|md|gitignore|gitattributes|lock)$|artisan">
             Order allow,deny

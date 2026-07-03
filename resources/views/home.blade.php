@@ -1,7 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Free Online Tools & Calculators - Toolexa')
-@section('description', 'Use free online tools and calculators for finance, text, utility, QR codes, passwords and everyday tasks. Fast, secure and mobile friendly.')
+@section('title', 'Toolexa - Free Online Calculators, PDF, Image, Text & Developer Tools')
+@section('description', 'Use free online calculators, PDF tools, image tools, text utilities, developer tools and seller label tools on Toolexa. Fast, private and mobile friendly.')
+@section('keywords', 'free online tools, online calculators, pdf tools, image tools, text tools, developer tools, seller tools, gst calculator, emi calculator')
 
 @section('content')
     <section class="home-hero">
@@ -20,6 +21,13 @@
                 <span><strong>{{ count($tools) }}+</strong> Free Tools</span>
                 <span><strong>Fast</strong> & Secure</span>
                 <span><strong>No</strong> Registration Required</span>
+            </div>
+
+            <div class="home-quick-links" aria-label="Explore Toolexa collections">
+                <a href="{{ route('category.show', 'pdf-tools') }}">PDF Tools</a>
+                <a href="{{ route('category.show', 'image-tools') }}">Image Tools</a>
+                <a href="{{ route('category.show', 'seller-tools') }}">Seller Tools</a>
+                <a href="{{ route('blog.index') }}">Guides</a>
             </div>
         </div>
     </section>
@@ -62,6 +70,7 @@
                 <span class="eyebrow">New</span>
                 <h2 id="recent-tools-heading">Recently Added Tools</h2>
             </div>
+            <a class="btn btn-sm" href="{{ route('search') }}">View All Tools</a>
         </div>
 
         <div class="recent-grid">
@@ -74,6 +83,29 @@
             @endforeach
         </div>
     </section>
+
+    @if(!empty($latestArticles))
+        <section class="home-section" aria-labelledby="latest-guides-heading">
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">Guides</span>
+                    <h2 id="latest-guides-heading">Latest Blog Guides</h2>
+                </div>
+                <a class="btn btn-sm" href="{{ route('blog.index') }}">View Blog</a>
+            </div>
+
+            <div class="home-guide-grid">
+                @foreach($latestArticles as $article)
+                    <a class="home-guide-card" href="{{ route('blog.show', $article['slug']) }}">
+                        <span>{{ $article['category'] }}</span>
+                        <strong>{{ $article['title'] }}</strong>
+                        <p>{{ $article['excerpt'] }}</p>
+                        <small>{{ $article['reading_time'] }} min read</small>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
 
     <section class="home-section" aria-labelledby="why-choose-heading">
         <div class="section-head">
@@ -143,14 +175,13 @@
 
     <section class="newsletter-panel home-section" aria-labelledby="newsletter-heading">
         <div>
-            <span class="eyebrow">Updates</span>
-            <h2 id="newsletter-heading">Stay Updated</h2>
-            <p>Get notified when new tools and features are added.</p>
+            <span class="eyebrow">Explore</span>
+            <h2 id="newsletter-heading">Find the Right Tool Faster</h2>
+            <p>Search tools, browse categories or read practical guides before using a calculator or converter.</p>
         </div>
-        <form class="newsletter-form" method="GET" action="{{ route('search') }}">
-            <label class="sr-only" for="newsletter-email">Email address</label>
-            <input id="newsletter-email" class="form-control" type="email" name="email" placeholder="Email address">
-            <button class="btn btn-primary" type="submit">Subscribe</button>
-        </form>
+        <div class="newsletter-actions">
+            <a class="btn btn-primary" href="{{ route('search') }}">Find Tools</a>
+            <a class="btn" href="{{ route('blog.index') }}">Read Guides</a>
+        </div>
     </section>
 @endsection

@@ -34,6 +34,7 @@ return [
     'google' => [
         'analytics_id' => env('GOOGLE_ANALYTICS_ID'),
         'site_verification' => env('GOOGLE_SITE_VERIFICATION'),
+        'adsense_publisher_id' => env('GOOGLE_ADSENSE_PUBLISHER_ID'),
     ],
 
 ];

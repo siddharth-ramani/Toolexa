@@ -1,15 +1,17 @@
 @extends('layouts.app')
 
+@php($categoryLabel = str_contains($category['name'], 'Tools') ? $category['name'] : $category['name'].' Tools')
+
 @section('content')
     <section class="tool-hero">
         <span class="eyebrow">Category</span>
-        <h1>{{ $category['name'] }} Tools</h1>
+        <h1>{{ $categoryLabel }}</h1>
         <p>Browse free {{ strtolower($category['name']) }} calculators and tools.</p>
     </section>
 
     <section class="info-panel">
         <span class="eyebrow">{{ $tools->total() }} tools</span>
-        <h2>{{ $category['name'] }} Tools</h2>
+        <h2>{{ $categoryLabel }}</h2>
 
         <div class="tool-grid">
             @foreach($tools as $tool)
