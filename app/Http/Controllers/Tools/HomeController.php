@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tools;
 
 use App\Support\BlogRepository;
 use App\Http\Controllers\Controller;
+use App\Support\Discover\DiscoverFeature;
 use Illuminate\Support\Str;
 
 class HomeController extends Controller
@@ -1376,6 +1377,7 @@ class HomeController extends Controller
         $homepageCategories = self::homepageCategories();
         $recentTools = self::recentTools(8);
         $latestArticles = collect(BlogRepository::all())->take(3)->values()->all();
+        $discoverFeatures = DiscoverFeature::catalog();
         $schemaJsonLd = [
             [
                 '@context' => 'https://schema.org',
@@ -1428,6 +1430,6 @@ class HomeController extends Controller
             ],
         ];
 
-        return view('home', compact('tools', 'popular', 'popularSlugs', 'homepageCategories', 'recentTools', 'latestArticles', 'schemaJsonLd'));
+        return view('home', compact('tools', 'popular', 'popularSlugs', 'homepageCategories', 'recentTools', 'latestArticles', 'discoverFeatures', 'schemaJsonLd'));
     }
 }

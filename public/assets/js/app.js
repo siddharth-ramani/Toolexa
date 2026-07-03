@@ -68,6 +68,30 @@
         }
     });
 
+    function trackEvent(name, params) {
+        if (!name || typeof window.gtag !== 'function') {
+            return;
+        }
+
+        window.gtag('event', name, params || {});
+    }
+
+    document.querySelectorAll('[data-ga-view]').forEach(function (element) {
+        trackEvent(element.getAttribute('data-ga-view'), {
+            event_category: element.getAttribute('data-ga-category') || 'Discover',
+            event_label: element.getAttribute('data-ga-label') || document.title
+        });
+    });
+
+    document.querySelectorAll('[data-ga-event]').forEach(function (element) {
+        element.addEventListener('click', function () {
+            trackEvent(element.getAttribute('data-ga-event'), {
+                event_category: element.getAttribute('data-ga-category') || 'Discover',
+                event_label: element.getAttribute('data-ga-label') || element.textContent.trim()
+            });
+        });
+    });
+
     document.querySelectorAll('[data-tool-actions]').forEach(function (actions) {
         var copyButton = actions.querySelector('[data-copy-url]');
         var shareButton = actions.querySelector('[data-share-url]');
@@ -201,6 +225,86 @@
             document.body.removeChild(input);
             markCopied('Copied');
         });
+    });
+
+    document.querySelectorAll('[data-native-share]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var wrap = button.closest('[data-discover-share]');
+            var url = button.getAttribute('data-share-url') || (wrap ? wrap.getAttribute('data-share-url') : '') || window.location.href;
+            var text = button.getAttribute('data-share-text') || (wrap ? wrap.getAttribute('data-share-text') : '') || document.title;
+            var title = button.getAttribute('data-share-title') || (wrap ? wrap.getAttribute('data-share-title') : '') || document.title;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    text: text,
+                    url: url
+                }).catch(function () {});
+                return;
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(function () {
+                    var original = button.textContent;
+                    button.textContent = 'Copied';
+                    window.setTimeout(function () {
+                        button.textContent = original;
+                    }, 1800);
+                });
+            }
+        });
+    });
+
+    document.querySelectorAll('[data-discover-response]').forEach(function (panel) {
+        var checks = panel.querySelectorAll('input[name="words[]"]');
+        var count = panel.querySelector('[data-discover-count]');
+        var submit = panel.querySelector('[data-discover-submit]');
+
+        function sync() {
+            var selected = Array.prototype.filter.call(checks, function (input) {
+                return input.checked;
+            });
+
+            if (count) {
+                count.textContent = selected.length + ' / 3 selected';
+            }
+
+            checks.forEach(function (input) {
+                input.disabled = selected.length >= 3 && !input.checked;
+            });
+
+            if (submit) {
+                submit.disabled = selected.length !== 3;
+            }
+        }
+
+        checks.forEach(function (input) {
+            input.addEventListener('change', sync);
+        });
+        sync();
+    });
+
+    document.querySelectorAll('[data-counter]').forEach(function (counter) {
+        var target = parseFloat(counter.getAttribute('data-counter') || '0');
+        var isDecimal = String(target).indexOf('.') !== -1;
+        var start = null;
+        var duration = 850;
+
+        function tick(timestamp) {
+            if (!start) {
+                start = timestamp;
+            }
+
+            var progress = Math.min(1, (timestamp - start) / duration);
+            var value = target * progress;
+            counter.textContent = isDecimal ? value.toFixed(1) : Math.round(value);
+
+            if (progress < 1) {
+                window.requestAnimationFrame(tick);
+            }
+        }
+
+        window.requestAnimationFrame(tick);
     });
 
     document.querySelectorAll('[data-clear-tool]').forEach(function (button) {

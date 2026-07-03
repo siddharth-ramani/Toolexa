@@ -32,6 +32,57 @@
         </div>
     </section>
 
+    @php($discoverFeature = $discoverFeatures[0] ?? null)
+    @if($discoverFeature)
+        <section class="home-section discover-home-feature" aria-labelledby="discover-home-heading">
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">New on Toolexa</span>
+                    <h2 id="discover-home-heading">🔥 Discover Something Fun</h2>
+                </div>
+            </div>
+
+            <div class="discover-home-card">
+                <div class="discover-feature-icon" aria-hidden="true">{{ $discoverFeature->icon }}</div>
+                <div>
+                    <span class="discover-card-badge">{{ $discoverFeature->badge }}</span>
+                    <h3>{{ $discoverFeature->name }}</h3>
+                    <p>Create interactive links, share them with friends, and discover what people really think about you.</p>
+                    <p>{{ $discoverFeature->description }}</p>
+                    <div class="hero-actions">
+                        <a class="btn btn-primary" href="{{ $discoverFeature->url() }}" data-ga-event="create_link_click" data-ga-label="{{ $discoverFeature->slug }}">Create My Link</a>
+                        <a class="btn" href="{{ $discoverFeature->demoUrl() }}" data-ga-event="demo_click" data-ga-label="{{ $discoverFeature->slug }}">View Demo</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="home-section" aria-labelledby="discover-love-heading">
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">Discover</span>
+                    <h2 id="discover-love-heading">Why You'll Love Discover</h2>
+                </div>
+            </div>
+
+            <div class="discover-love-grid">
+                @foreach([
+                    ['icon' => '🔒', 'title' => 'Anonymous Responses'],
+                    ['icon' => '📱', 'title' => 'Easy to Share'],
+                    ['icon' => '⚡', 'title' => 'Instant Results'],
+                    ['icon' => '🎨', 'title' => 'Beautiful Analytics'],
+                    ['icon' => '❤️', 'title' => 'No Signup Required'],
+                    ['icon' => '🚀', 'title' => 'Powered by Toolexa'],
+                ] as $item)
+                    <article class="discover-love-card">
+                        <span>{{ $item['icon'] }}</span>
+                        <strong>{{ $item['title'] }}</strong>
+                    </article>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     <section class="home-section" aria-labelledby="browse-category-heading">
         <div class="section-head">
             <div>
@@ -184,4 +235,17 @@
             <a class="btn" href="{{ route('blog.index') }}">Read Guides</a>
         </div>
     </section>
+
+    @if($discoverFeature)
+        <section class="newsletter-panel home-section discover-footer-cta" aria-labelledby="discover-footer-cta-heading">
+            <div>
+                <span class="eyebrow">Discover</span>
+                <h2 id="discover-footer-cta-heading">Ready to discover what your friends really think?</h2>
+                <p>Create a private link, share it anywhere, and watch the anonymous responses roll in.</p>
+            </div>
+            <div class="newsletter-actions">
+                <a class="btn btn-primary" href="{{ $discoverFeature->url() }}" data-ga-event="create_link_click" data-ga-label="{{ $discoverFeature->slug }}">Create Your Link</a>
+            </div>
+        </section>
+    @endif
 @endsection
