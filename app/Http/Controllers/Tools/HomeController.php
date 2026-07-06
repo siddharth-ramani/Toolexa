@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Tools;
 
 use App\Support\BlogRepository;
 use App\Http\Controllers\Controller;
-use App\Support\Discover\DiscoverFeature;
 use Illuminate\Support\Str;
 
 class HomeController extends Controller
@@ -283,7 +282,7 @@ class HomeController extends Controller
             ],
         ];
 
-        return self::enrichTools(array_merge($tools, self::textTools(), self::developerTools(), self::utilityTools(), self::imageTools(), self::pdfTools(), self::sellerTools(), self::financeTools()));
+        return self::enrichTools(array_merge($tools, self::textTools(), self::developerTools(), self::localTools(), self::utilityTools(), self::imageTools(), self::pdfTools(), self::sellerTools(), self::financeTools()));
     }
 
     public static function textTools(): array
@@ -591,6 +590,339 @@ class HomeController extends Controller
                 ],
                 'Developer Tools'
             ),
+            self::developerTool(
+                'JSON Formatter',
+                'json-formatter',
+                'JSON',
+                'Beautify, minify and validate JSON locally in your browser.',
+                'JSON Formatter is a free developer tool for cleaning, validating and compressing JSON without uploading your data. Paste a JSON object, array, API response, configuration snippet or test payload into the editor, then choose Beautify JSON to create readable indentation or Minify JSON to remove extra spaces for compact storage and transport. The same page can validate JSON and show a clear error message with an approximate line number when parsing fails. This makes it useful for debugging API responses, preparing documentation examples, checking webhook payloads, reviewing app settings and cleaning copied data before sharing it with teammates. All processing happens in your browser with JavaScript, so Toolexa does not permanently store the JSON you enter. The output can be copied or downloaded as a .json file, and Clear resets both panels for another payload. The layout follows Toolexa’s standard responsive tool design, so it is comfortable on desktop screens while still usable on mobile when you need a quick formatting check.',
+                [
+                    'Beautify JSON with readable indentation',
+                    'Minify JSON for compact output',
+                    'Validate JSON before using it',
+                    'Show error line number for invalid JSON',
+                    'Copy formatted or minified output',
+                    'Download output as a .json file',
+                    'Clear input and output instantly',
+                ],
+                [
+                    'Paste JSON into the input editor.',
+                    'Click Beautify JSON, Minify JSON or Validate JSON.',
+                    'Review the formatted output or validation message.',
+                    'Use Copy Result or Download .json when you need the output.',
+                    'Click Clear before working with another JSON payload.',
+                ],
+                [
+                    ['q' => 'Does JSON Formatter upload my JSON?', 'a' => 'No, formatting and validation run locally in your browser.'],
+                    ['q' => 'Can it minify JSON?', 'a' => 'Yes, click Minify JSON to remove unnecessary whitespace.'],
+                    ['q' => 'Will it show JSON errors?', 'a' => 'Yes, invalid JSON displays a parse message and approximate line number.'],
+                    ['q' => 'Can I download the formatted JSON?', 'a' => 'Yes, use Download .json after generating valid output.'],
+                    ['q' => 'What JSON inputs are supported?', 'a' => 'Objects, arrays, strings, numbers, booleans and null are supported when they follow valid JSON syntax.'],
+                ],
+                ['json-validator', 'json-to-xml-converter', 'xml-to-json-converter', 'html-formatter', 'base64-encoder', 'md5-hash-generator']
+            ),
+            self::developerTool(
+                'JSON Validator',
+                'json-validator',
+                'JVAL',
+                'Validate JSON and find syntax errors with line numbers.',
+                'JSON Validator is a focused browser tool for checking whether JSON text is valid before you paste it into code, an API client, a database field or a configuration file. Add your JSON payload to the editor and click Validate JSON. The tool parses it locally, confirms valid JSON when the structure is correct, and reports syntax problems when parsing fails. It also estimates the error line from the parser position when available, helping you jump to the likely issue faster. This is especially helpful for missing commas, trailing commas, unquoted keys, unmatched braces, broken arrays and copied API responses that look correct at first glance. Toolexa does not upload or permanently store your input; validation happens in the browser using JavaScript. The result summary is copyable, and Clear resets the page for another payload. JSON Validator is intentionally simple, making it a good quick check for developers, QA testers, students, support teams and anyone who needs confidence that a JSON snippet is safe to use.',
+                [
+                    'Validate JSON syntax locally',
+                    'Highlight validation errors in the result panel',
+                    'Show approximate error line number',
+                    'Display valid JSON summary',
+                    'Copy validation result',
+                    'Clear input and result quickly',
+                ],
+                [
+                    'Paste JSON into the input editor.',
+                    'Click Validate JSON.',
+                    'Read the validation status and line number if an error is found.',
+                    'Copy the result summary if needed.',
+                    'Use Clear before checking another JSON snippet.',
+                ],
+                [
+                    ['q' => 'What does JSON Validator check?', 'a' => 'It checks whether the input can be parsed as valid JSON.'],
+                    ['q' => 'Does it show the exact error line?', 'a' => 'It shows an approximate line number when the browser parser provides an error position.'],
+                    ['q' => 'Can it fix JSON automatically?', 'a' => 'No, this tool validates and reports errors; use JSON Formatter after fixing syntax.'],
+                    ['q' => 'Are trailing commas allowed?', 'a' => 'No, standard JSON does not allow trailing commas.'],
+                    ['q' => 'Is the JSON stored by Toolexa?', 'a' => 'No, validation runs locally and the page does not permanently store your input.'],
+                ],
+                ['json-formatter', 'json-to-xml-converter', 'xml-to-json-converter', 'base64-decoder', 'url-encoder-decoder', 'uuid-validator']
+            ),
+            self::developerTool(
+                'JSON to XML Converter',
+                'json-to-xml-converter',
+                'J2X',
+                'Convert JSON objects and arrays into readable XML.',
+                'JSON to XML Converter helps developers transform JSON data into XML directly in the browser. Paste a valid JSON object, array, API response, sample payload or configuration snippet, then convert it into structured XML with readable indentation. Object keys become XML tags, arrays create repeated item nodes, and primitive values are escaped so the output remains valid XML text. This is useful when comparing API formats, preparing integration samples, documenting payload changes, testing legacy XML systems or moving data between tools that expect different formats. The converter validates the JSON before conversion and shows a clear error message if the input cannot be parsed. All conversion work happens locally with JavaScript; Toolexa does not upload or permanently store the JSON you enter. The XML output can be copied into an editor, API client or documentation page, and it can also be downloaded as an XML file. The page uses the same responsive Toolexa tool layout with clear actions, result feedback and quick reset controls.',
+                [
+                    'Convert JSON to XML',
+                    'Validate JSON before conversion',
+                    'Format XML with indentation',
+                    'Escape XML special characters',
+                    'Copy XML output',
+                    'Download XML file',
+                    'Clear editor and result',
+                ],
+                [
+                    'Paste valid JSON into the input editor.',
+                    'Click Convert JSON to XML.',
+                    'Review the generated XML output.',
+                    'Copy the XML or download it as a file.',
+                    'Click Clear before converting another payload.',
+                ],
+                [
+                    ['q' => 'Can arrays be converted to XML?', 'a' => 'Yes, arrays are converted into repeated item nodes.'],
+                    ['q' => 'What happens if JSON is invalid?', 'a' => 'The tool shows a validation error instead of generating XML.'],
+                    ['q' => 'Does the converter upload JSON?', 'a' => 'No, conversion runs locally in your browser.'],
+                    ['q' => 'Can I download the XML?', 'a' => 'Yes, use Download XML after conversion.'],
+                    ['q' => 'How are special XML characters handled?', 'a' => 'Characters such as ampersands and angle brackets are escaped in text values.'],
+                ],
+                ['xml-to-json-converter', 'json-formatter', 'json-validator', 'html-formatter', 'base64-encoder', 'url-encoder-decoder']
+            ),
+            self::developerTool(
+                'XML to JSON Converter',
+                'xml-to-json-converter',
+                'X2J',
+                'Validate XML and convert it into JSON locally.',
+                'XML to JSON Converter is a practical browser tool for turning XML documents into JSON objects without sending the content to a server. Paste XML from an API response, legacy feed, configuration file, sitemap sample or integration document, then convert it into readable JSON. The tool validates XML with the browser parser first and reports parsing errors when the markup is broken. During conversion, attributes are grouped under @attributes, repeated child elements become arrays, text-only nodes become string values, and mixed content is represented with a #text field where needed. This gives a clear JSON structure that is useful for debugging, prototyping, migration notes and documentation. All parsing and conversion run locally in JavaScript, so Toolexa does not upload or permanently store the XML you paste. You can copy the JSON result or download it as a .json file. The interface also includes a dedicated Validate XML action and a Clear button for quick repeated checks on desktop, tablet or mobile.',
+                [
+                    'Validate XML syntax',
+                    'Convert XML to JSON',
+                    'Preserve XML attributes in JSON',
+                    'Handle repeated XML elements as arrays',
+                    'Copy JSON output',
+                    'Download JSON file',
+                    'Clear input and output',
+                ],
+                [
+                    'Paste XML into the input editor.',
+                    'Click Validate XML if you want to check markup first.',
+                    'Click Convert XML to JSON.',
+                    'Review the generated JSON structure.',
+                    'Copy or download the JSON output when ready.',
+                ],
+                [
+                    ['q' => 'Does XML validation happen before conversion?', 'a' => 'Yes, invalid XML is reported before JSON output is generated.'],
+                    ['q' => 'How are XML attributes represented?', 'a' => 'Attributes are stored in an @attributes object.'],
+                    ['q' => 'How are repeated tags handled?', 'a' => 'Repeated child elements become arrays in the JSON output.'],
+                    ['q' => 'Can I download the converted JSON?', 'a' => 'Yes, use Download JSON after conversion.'],
+                    ['q' => 'Is my XML uploaded?', 'a' => 'No, XML parsing and conversion run locally in your browser.'],
+                ],
+                ['json-to-xml-converter', 'json-formatter', 'json-validator', 'html-formatter', 'base64-decoder', 'uuid-validator']
+            ),
+            self::developerTool(
+                'HTML Formatter',
+                'html-formatter',
+                'HTML',
+                'Beautify and minify HTML snippets in your browser.',
+                'HTML Formatter is a free developer tool for making HTML easier to read or smaller to paste into templates, emails, demos and documentation. Add an HTML snippet, page fragment, copied markup, component output or email block into the editor, then choose Beautify HTML for readable indentation or Minify HTML for compact output. Beautify mode uses the browser DOM parser to normalize markup and then formats nested elements with indentation. Minify mode removes comments and unnecessary whitespace between tags while keeping text content usable. This is helpful when reviewing generated HTML, cleaning copied code, preparing examples, comparing component output or quickly shrinking a snippet before sharing it. Processing happens locally in your browser with JavaScript, and Toolexa does not upload or permanently store your HTML. The output can be copied or downloaded as an HTML file, and Clear resets the editor. The page follows the existing Toolexa responsive tool layout with SEO content, FAQs, related tools and simple action buttons.',
+                [
+                    'Beautify HTML with indentation',
+                    'Minify HTML snippets',
+                    'Copy formatted output',
+                    'Download HTML output',
+                    'Clear editor and result',
+                    'Local browser processing',
+                ],
+                [
+                    'Paste HTML into the input editor.',
+                    'Click Beautify HTML or Minify HTML.',
+                    'Review the generated output.',
+                    'Copy the result or download it as an HTML file.',
+                    'Use Clear before formatting another snippet.',
+                ],
+                [
+                    ['q' => 'Does HTML Formatter upload my markup?', 'a' => 'No, formatting runs locally in your browser.'],
+                    ['q' => 'Can it minify HTML?', 'a' => 'Yes, Minify HTML removes comments and extra spacing between tags.'],
+                    ['q' => 'Will beautify mode fix all invalid HTML?', 'a' => 'The browser may normalize some markup, but you should still review important output.'],
+                    ['q' => 'Can I download the output?', 'a' => 'Yes, use Download after formatting or minifying HTML.'],
+                    ['q' => 'Is it suitable for full pages?', 'a' => 'It works best for snippets and moderate HTML documents used in everyday development.'],
+                ],
+                ['json-formatter', 'json-validator', 'json-to-xml-converter', 'xml-to-json-converter', 'url-encoder-decoder', 'base64-encoder']
+            ),
+            self::developerTool(
+                'CSS Minifier',
+                'css-minifier',
+                'CSS',
+                'Minify CSS by removing comments and unnecessary whitespace locally.',
+                'CSS Minifier is a browser-based developer tool for compressing stylesheet code into a smaller, cleaner output. Paste CSS from a component, theme file, landing page, email template or quick experiment, then minify it with one click. The tool removes CSS comments, trims unnecessary whitespace, tightens punctuation around braces and separators, and keeps the result ready to copy or download as a .css file. This is useful when preparing snippets for production, reducing inline CSS size, cleaning copied examples, sharing compact code in documentation or quickly testing how much space can be saved without opening a build tool. Processing runs entirely in your browser with JavaScript, so Toolexa does not upload, inspect or permanently store the CSS you enter. The page follows the same responsive Toolexa tool layout with a clear input editor, result panel, copy button, download control and reset action. Developers, designers and students can use it for quick CSS cleanup whenever a full bundler is unnecessary.',
+                [
+                    'Minify CSS locally in the browser',
+                    'Remove CSS comments',
+                    'Remove unnecessary whitespace',
+                    'Copy minified CSS output',
+                    'Download output as a .css file',
+                    'Clear input and output quickly',
+                ],
+                [
+                    'Paste CSS into the input editor.',
+                    'Click Minify CSS.',
+                    'Review the compressed CSS output.',
+                    'Copy the result or download it as a .css file.',
+                    'Use Clear before minifying another stylesheet.',
+                ],
+                [
+                    ['q' => 'Does CSS Minifier upload my stylesheet?', 'a' => 'No, minification runs locally in your browser.'],
+                    ['q' => 'Does it remove CSS comments?', 'a' => 'Yes, standard block comments are removed during minification.'],
+                    ['q' => 'Can I download the minified CSS?', 'a' => 'Yes, use Download .css after generating output.'],
+                    ['q' => 'Will it optimize every CSS rule?', 'a' => 'It focuses on comments and whitespace, not advanced semantic optimization.'],
+                    ['q' => 'Is it safe for quick snippets?', 'a' => 'Yes, it is designed for common CSS snippets and moderate stylesheet text.'],
+                ],
+                ['css-beautifier', 'html-formatter', 'html-to-markdown-converter', 'json-formatter', 'base64-encoder-decoder', 'url-encoder-decoder']
+            ),
+            self::developerTool(
+                'CSS Beautifier',
+                'css-beautifier',
+                'CSS',
+                'Format CSS with proper indentation and readable spacing.',
+                'CSS Beautifier is a free developer utility for turning compact or messy stylesheet code into readable CSS. Paste minified CSS, copied browser output, theme snippets, component styles or quick notes, then format the code with consistent indentation and line breaks. The beautifier expands braces and declarations onto separate lines, trims crowded punctuation, and gives selectors and properties enough spacing to review changes more comfortably. It is useful when debugging design issues, reading third-party snippets, preparing documentation examples, teaching CSS, comparing before-and-after code or cleaning styles before editing them in a project. Everything runs locally in the browser with JavaScript, and Toolexa does not upload or permanently store your CSS. The output appears in the standard Toolexa result panel where it can be copied or downloaded. A Clear button resets the editor for the next stylesheet. The tool is intentionally lightweight, responsive and practical for everyday front-end work when opening a full IDE formatter would slow down a quick task.',
+                [
+                    'Format CSS into readable code',
+                    'Apply proper indentation',
+                    'Add clear line breaks around rules',
+                    'Copy beautified CSS output',
+                    'Download formatted CSS',
+                    'Clear editor and result',
+                ],
+                [
+                    'Paste CSS into the input editor.',
+                    'Click Format CSS.',
+                    'Review the beautified stylesheet.',
+                    'Copy the output or download it.',
+                    'Click Clear to reset the page.',
+                ],
+                [
+                    ['q' => 'What does CSS Beautifier do?', 'a' => 'It formats CSS with indentation, spacing and readable line breaks.'],
+                    ['q' => 'Can it beautify minified CSS?', 'a' => 'Yes, paste minified CSS and click Format CSS.'],
+                    ['q' => 'Does formatting happen on the server?', 'a' => 'No, formatting runs locally in your browser.'],
+                    ['q' => 'Can I download formatted CSS?', 'a' => 'Yes, use the Download button after formatting.'],
+                    ['q' => 'Will it change CSS behavior?', 'a' => 'It is designed to change formatting only, but you should review important output before production use.'],
+                ],
+                ['css-minifier', 'html-formatter', 'json-formatter', 'html-to-markdown-converter', 'markdown-to-html-converter', 'base64-encoder-decoder']
+            ),
+            self::developerTool(
+                'HTML to Markdown Converter',
+                'html-to-markdown-converter',
+                'H2M',
+                'Convert HTML snippets into Markdown locally in your browser.',
+                'HTML to Markdown Converter helps turn basic HTML into clean Markdown without sending your content anywhere. Paste headings, paragraphs, links, lists, blockquotes, code blocks or simple article markup, then convert it into Markdown that is easier to edit in docs, README files, CMS drafts, issue trackers and static-site workflows. The converter reads the HTML with the browser parser and maps common elements such as h1 to h6, p, strong, em, a, img, ul, ol, li, blockquote, pre and code into Markdown syntax. This is helpful when migrating copied web content, cleaning documentation snippets, preparing developer notes or converting small formatted sections into plain text-friendly Markdown. Processing happens locally with JavaScript, and Toolexa does not upload or permanently store the HTML you enter. The Markdown output can be copied or downloaded as a .md file. The page follows the same responsive Toolexa structure with a clear editor, result panel, copy action, download button, related tools, FAQs and supporting SEO content.',
+                [
+                    'Convert HTML to Markdown',
+                    'Handle headings, links and lists',
+                    'Convert bold, italic and code elements',
+                    'Copy Markdown output',
+                    'Download output as a .md file',
+                    'Clear input and output',
+                ],
+                [
+                    'Paste HTML into the input editor.',
+                    'Click Convert HTML to Markdown.',
+                    'Review the Markdown output.',
+                    'Copy the Markdown or download it as a .md file.',
+                    'Use Clear before converting another snippet.',
+                ],
+                [
+                    ['q' => 'Which HTML elements are supported?', 'a' => 'Common headings, paragraphs, links, lists, images, quotes and code elements are supported.'],
+                    ['q' => 'Does it upload my HTML?', 'a' => 'No, conversion runs locally in your browser.'],
+                    ['q' => 'Can I download Markdown?', 'a' => 'Yes, use Download .md after conversion.'],
+                    ['q' => 'Is it suitable for full websites?', 'a' => 'It is best for snippets, articles and moderate HTML content.'],
+                    ['q' => 'Will styling be converted?', 'a' => 'No, Markdown focuses on content structure, not CSS styling.'],
+                ],
+                ['markdown-to-html-converter', 'html-formatter', 'css-beautifier', 'json-formatter', 'base64-encoder-decoder', 'url-encoder-decoder']
+            ),
+            self::developerTool(
+                'Markdown to HTML Converter',
+                'markdown-to-html-converter',
+                'M2H',
+                'Convert Markdown to HTML with a live preview.',
+                'Markdown to HTML Converter is a local browser tool for turning Markdown notes into HTML output with an instant preview. Paste Markdown from a README draft, documentation note, changelog, blog outline, issue comment or quick content block, then convert it into HTML that can be copied or downloaded. The converter supports common Markdown patterns such as headings, paragraphs, bold, italic, inline code, fenced code blocks, blockquotes, unordered lists, ordered lists, links, images and horizontal rules. A live preview appears below the result so you can quickly check how the converted content will read before using it elsewhere. All processing happens in your browser with JavaScript, and Toolexa does not upload or permanently store your Markdown. The output panel gives copy and download controls, while Clear resets the editor for the next document. The tool is practical for developers, writers, students and content teams who need a quick Markdown-to-HTML bridge without opening a full static site generator or editor extension.',
+                [
+                    'Convert Markdown to HTML',
+                    'Show live HTML preview',
+                    'Support common Markdown syntax',
+                    'Copy generated HTML',
+                    'Download HTML output',
+                    'Clear editor and preview',
+                ],
+                [
+                    'Paste Markdown into the input editor.',
+                    'Click Convert Markdown to HTML.',
+                    'Review the generated HTML and live preview.',
+                    'Copy the HTML or download it.',
+                    'Use Clear to reset the converter.',
+                ],
+                [
+                    ['q' => 'Does Markdown conversion happen locally?', 'a' => 'Yes, Markdown is converted in your browser.'],
+                    ['q' => 'Does this tool show a preview?', 'a' => 'Yes, the converted HTML is rendered in a live preview area.'],
+                    ['q' => 'Can I download the HTML?', 'a' => 'Yes, use Download HTML after conversion.'],
+                    ['q' => 'Which Markdown syntax is supported?', 'a' => 'Common headings, lists, links, images, quotes, code and emphasis are supported.'],
+                    ['q' => 'Is my Markdown stored?', 'a' => 'No, Toolexa does not permanently store the content you enter.'],
+                ],
+                ['html-to-markdown-converter', 'html-formatter', 'css-minifier', 'json-formatter', 'base64-encoder-decoder', 'url-encoder-decoder']
+            ),
+            self::developerTool(
+                'Base64 Encoder & Decoder',
+                'base64-encoder-decoder',
+                'B64',
+                'Encode text to Base64 or decode Base64 back to text.',
+                'Base64 Encoder & Decoder combines two common developer tasks on one browser-based page. Paste plain text and encode it into Base64, or paste an encoded string and decode it back into readable text. The decoder checks invalid Base64 input and shows a clear error instead of producing confusing output. This is useful when working with API samples, authorization examples, headers, configuration values, small payloads, data snippets, documentation and debugging notes. Base64 is encoding rather than encryption, so the tool is best used for representation and testing rather than protecting secrets. All processing happens locally in your browser with JavaScript, and Toolexa does not upload or permanently store the text you enter. The result can be copied or downloaded as a text file, and the Clear button resets the page for another value. The interface follows the same Toolexa developer-tool layout with responsive editors, status messages, FAQs, related tools, breadcrumbs, schema markup and shareable page metadata.',
+                [
+                    'Encode text to Base64',
+                    'Decode Base64 to text',
+                    'Detect invalid Base64 input',
+                    'Copy output',
+                    'Download result',
+                    'Clear input and output',
+                ],
+                [
+                    'Paste plain text or Base64 into the input editor.',
+                    'Click Encode Base64 or Decode Base64.',
+                    'Review the output or validation error.',
+                    'Copy the result or download it.',
+                    'Use Clear before processing another value.',
+                ],
+                [
+                    ['q' => 'Can this tool both encode and decode Base64?', 'a' => 'Yes, it includes separate encode and decode actions.'],
+                    ['q' => 'Does it detect invalid Base64?', 'a' => 'Yes, invalid Base64 input shows a validation error.'],
+                    ['q' => 'Is Base64 encryption?', 'a' => 'No, Base64 is encoding and should not be used to secure secrets.'],
+                    ['q' => 'Can I download the result?', 'a' => 'Yes, use the Download button after generating output.'],
+                    ['q' => 'Does Toolexa store my text?', 'a' => 'No, processing runs locally in your browser.'],
+                ],
+                ['base64-encoder', 'base64-decoder', 'json-formatter', 'url-encoder-decoder', 'css-minifier', 'html-formatter']
+            ),
+            self::developerTool(
+                'SQL Formatter',
+                'sql-formatter',
+                'SQL',
+                'Beautify and minify SQL queries locally in your browser.',
+                'SQL Formatter is a browser-based developer tool for making SQL queries easier to read or smaller to share. Paste a SELECT, INSERT, UPDATE, DELETE, JOIN, WHERE, GROUP BY or ORDER BY query into the editor, then choose Beautify SQL to add line breaks and indentation, or Minify SQL to remove comments and unnecessary whitespace. The tool is useful when reviewing copied database queries, preparing examples for documentation, cleaning logs, formatting snippets from dashboards or making a long query easier to debug before sending it to a teammate. Processing happens locally with JavaScript, so Toolexa does not upload, execute or permanently store any SQL you enter. The output can be copied or downloaded as a SQL file, and Clear resets both editors. This tool focuses on readable formatting for common SQL syntax rather than database-specific validation, making it a fast helper for developers, analysts, students and support teams working with query text.',
+                [
+                    'Beautify SQL queries',
+                    'Minify SQL output',
+                    'Remove SQL comments during minify',
+                    'Copy formatted SQL',
+                    'Download SQL output',
+                    'Clear editor and result',
+                ],
+                [
+                    'Paste SQL into the input editor.',
+                    'Click Beautify SQL or Minify SQL.',
+                    'Review the generated SQL output.',
+                    'Copy the result or download it.',
+                    'Use Clear before formatting another query.',
+                ],
+                [
+                    ['q' => 'Does SQL Formatter run my query?', 'a' => 'No, it only formats text locally in your browser.'],
+                    ['q' => 'Can it minify SQL?', 'a' => 'Yes, Minify SQL removes comments and unnecessary whitespace.'],
+                    ['q' => 'Does it validate database syntax?', 'a' => 'No, it is a formatter and minifier, not a database validator.'],
+                    ['q' => 'Can I download the formatted query?', 'a' => 'Yes, use the Download button after generating output.'],
+                    ['q' => 'Is my SQL stored by Toolexa?', 'a' => 'No, Toolexa does not permanently store the SQL you enter.'],
+                ],
+                ['json-formatter', 'css-beautifier', 'html-formatter', 'base64-encoder-decoder', 'url-encoder-decoder', 'md5-hash-generator']
+            ),
             self::browserTool(
                 'UUID Generator',
                 'uuid-generator',
@@ -777,6 +1109,316 @@ class HomeController extends Controller
         ];
     }
 
+    public static function localTools(): array
+    {
+        return [
+            self::localTool(
+                'HEX ↔ RGB ↔ HSL Color Converter',
+                'hex-rgb-hsl-color-converter',
+                'CLR',
+                'Convert HEX, RGB and HSL color values with a live preview.',
+                'HEX ↔ RGB ↔ HSL Color Converter is a browser-based color utility for designers, developers and content creators who need fast color format conversion. Enter a HEX value to get RGB and HSL equivalents, update RGB values to generate HEX and HSL, or enter HSL values to convert back to RGB and HEX. The live preview shows the current color immediately, making it easier to check whether a copied brand color, CSS variable, theme token or design sample looks correct before using it. This is useful when moving between design tools, CSS code, documentation, inline styles and UI prototypes where different color formats are required. All calculations happen locally in your browser with JavaScript, so Toolexa does not upload or permanently store any color values. The result area lists copy-ready HEX, RGB and HSL strings, and the copy button helps move values into your stylesheet or design notes quickly. The page follows the same responsive Toolexa tool layout with clear controls and supporting SEO content.',
+                [
+                    'HEX to RGB conversion',
+                    'RGB to HEX conversion',
+                    'RGB to HSL conversion',
+                    'HSL to RGB conversion',
+                    'Live color preview',
+                    'Copy values',
+                ],
+                [
+                    'Enter a HEX, RGB or HSL value in the matching fields.',
+                    'Click the conversion action you need.',
+                    'Check the live color preview.',
+                    'Copy the generated HEX, RGB and HSL values.',
+                    'Use Clear to reset the converter.',
+                ],
+                [
+                    ['q' => 'Can I convert HEX to RGB?', 'a' => 'Yes, enter a HEX value and click HEX to RGB.'],
+                    ['q' => 'Does the tool show HSL values?', 'a' => 'Yes, RGB values can be converted into HSL.'],
+                    ['q' => 'Is there a live preview?', 'a' => 'Yes, the preview updates to show the selected color.'],
+                    ['q' => 'Are color values uploaded?', 'a' => 'No, conversion happens locally in your browser.'],
+                    ['q' => 'Can I copy all values?', 'a' => 'Yes, the output contains copy-ready HEX, RGB and HSL strings.'],
+                ],
+                ['css-beautifier', 'css-minifier', 'html-formatter', 'image-resizer', 'image-compressor', 'json-formatter'],
+                'Color Tools'
+            ),
+            self::localTool(
+                'Barcode Generator',
+                'barcode-generator',
+                'BAR',
+                'Generate Code128, Code39, EAN-13 and UPC-A barcodes locally.',
+                'Barcode Generator is a business utility for creating printable barcodes directly in your browser. Choose Code128 for flexible text and numbers, Code39 for simple alphanumeric labels, EAN-13 for retail-style 13-digit codes, or UPC-A for 12-digit product codes. Enter the barcode value, generate the preview, then download the barcode as SVG or PNG, or print it from the page. This is useful for product mockups, inventory labels, internal references, packaging drafts, warehouse testing, sample catalog entries and small business workflows where a quick barcode image is needed. Barcode generation runs locally with JavaScript, so Toolexa does not upload or permanently store your barcode value. The preview lets you check the visual output before downloading, while the copy area summarizes the encoded value and selected format. Users should test printed barcodes with their own scanner before using them in production, especially for retail systems that require official number allocation. The interface stays simple, responsive and aligned with the existing Toolexa tool design.',
+                [
+                    'Generate Code128 barcodes',
+                    'Generate Code39 barcodes',
+                    'Generate EAN-13 barcodes',
+                    'Generate UPC-A barcodes',
+                    'Download PNG or SVG',
+                    'Print barcode output',
+                ],
+                [
+                    'Choose the barcode type.',
+                    'Enter the barcode value.',
+                    'Click Generate Barcode.',
+                    'Review the preview and output summary.',
+                    'Download PNG, download SVG or print the barcode.',
+                ],
+                [
+                    ['q' => 'Which barcode formats are supported?', 'a' => 'The tool supports Code128, Code39, EAN-13 and UPC-A.'],
+                    ['q' => 'Can I download the barcode?', 'a' => 'Yes, download options are available for SVG and PNG.'],
+                    ['q' => 'Can I print the barcode?', 'a' => 'Yes, use the Print Barcode button after generating it.'],
+                    ['q' => 'Does Toolexa store barcode values?', 'a' => 'No, barcode generation runs locally in your browser.'],
+                    ['q' => 'Should I test the printed barcode?', 'a' => 'Yes, always scan-test output before production or retail use.'],
+                ],
+                ['vat-calculator', 'qr-generator', 'image-to-base64-converter', 'pdf-merger', 'json-formatter', 'random-number-generator'],
+                'Business Tools'
+            ),
+            self::localTool(
+                'Image to Base64 Converter',
+                'image-to-base64-converter',
+                'B64',
+                'Upload an image and convert it to a Base64 data URL.',
+                'Image to Base64 Converter is a browser-based image utility for converting small image files into Base64 data URLs. Upload a PNG, JPG, WebP or GIF image, preview it on the page, and generate a copy-ready Base64 string that can be used in HTML, CSS, JSON samples, test payloads, documentation or quick prototypes. This is helpful when you need a tiny embedded asset, want to test an API field, prepare a CSS background data URL or include a sample image without hosting it separately. The file is read locally with the browser FileReader API, so Toolexa does not upload or permanently store your image. The preview confirms you selected the right file before copying or downloading the result as a TXT file. Base64 can make files larger than the original binary image, so it is best for small icons, placeholders and test data rather than large photos. The page uses the same responsive Toolexa layout with clear upload, preview, copy, download and reset controls.',
+                [
+                    'Upload image from your device',
+                    'Convert image to Base64',
+                    'Preview selected image',
+                    'Copy Base64 output',
+                    'Download output as TXT',
+                    'Clear selected file and result',
+                ],
+                [
+                    'Upload a supported image file.',
+                    'Click Convert to Base64.',
+                    'Check the preview and generated data URL.',
+                    'Copy the Base64 text or download it as TXT.',
+                    'Use Clear before converting another image.',
+                ],
+                [
+                    ['q' => 'Which image formats are supported?', 'a' => 'PNG, JPG, JPEG, WebP and GIF files are supported.'],
+                    ['q' => 'Does this upload my image?', 'a' => 'No, the image is converted locally in your browser.'],
+                    ['q' => 'Can I preview the image?', 'a' => 'Yes, the uploaded image preview appears in the result panel.'],
+                    ['q' => 'Can I download the Base64 text?', 'a' => 'Yes, use Download TXT after conversion.'],
+                    ['q' => 'Is Base64 good for large images?', 'a' => 'It is usually better for small images because Base64 output is larger than the source file.'],
+                ],
+                ['base64-encoder-decoder', 'image-compressor', 'image-resizer', 'jpg-to-png-converter', 'png-to-jpg-converter', 'html-formatter'],
+                'Image Tools'
+            ),
+            self::localTool(
+                'VAT Calculator',
+                'vat-calculator',
+                'VAT',
+                'Add or remove VAT and calculate VAT amount and totals.',
+                'VAT Calculator is a simple finance tool for adding VAT to a net amount or removing VAT from a gross amount. Enter the amount, enter the VAT rate, then choose Add VAT or Remove VAT. The result shows the net amount, VAT amount and total amount in a copy-ready summary. This is useful for invoices, quotations, product pricing, receipts, business estimates, purchase comparisons and quick tax checks where you need to understand how VAT affects a price. Add VAT starts from an amount before tax and calculates the final total. Remove VAT starts from a tax-inclusive total and works backward to estimate the pre-tax value and VAT component. Calculations run locally in your browser, and Toolexa does not upload or permanently store your amounts. Results are intended for quick planning and should be checked against local tax rules, rounding policies and accounting requirements before official use. The page follows the same responsive Toolexa layout with clear inputs, result summary, copy button and helpful FAQs.',
+                [
+                    'Add VAT to a net amount',
+                    'Remove VAT from a gross amount',
+                    'Calculate VAT amount',
+                    'Show total amount',
+                    'Copy result summary',
+                    'Clear inputs and output',
+                ],
+                [
+                    'Enter the amount.',
+                    'Enter the VAT rate percentage.',
+                    'Choose Add VAT or Remove VAT.',
+                    'Review the net amount, VAT amount and total amount.',
+                    'Copy the result or clear the calculator.',
+                ],
+                [
+                    ['q' => 'Can I add VAT to a price?', 'a' => 'Yes, enter the net amount and click Add VAT.'],
+                    ['q' => 'Can I remove VAT from a total?', 'a' => 'Yes, enter the VAT-inclusive total and click Remove VAT.'],
+                    ['q' => 'Does it show VAT amount?', 'a' => 'Yes, the result includes VAT amount and total amount.'],
+                    ['q' => 'Are VAT results stored?', 'a' => 'No, calculations happen locally in your browser.'],
+                    ['q' => 'Should I use this for official tax filing?', 'a' => 'Use it for estimates and verify official calculations with your accountant or local rules.'],
+                ],
+                ['gst-calculator', 'discount-calculator', 'percentage-calculator', 'invoice-generator', 'emi-calculator', 'simple-interest-calculator'],
+                'Finance'
+            ),
+            self::localTool(
+                'Robots.txt Generator',
+                'robots-txt-generator',
+                'ROB',
+                'Generate robots.txt rules with allow, disallow and sitemap support.',
+                'Robots.txt Generator is a browser-based SEO tool for creating a clean robots.txt file without writing every directive manually. Enter the user-agent, add Allow rules, add Disallow rules and include a sitemap URL when available. The tool then generates a copy-ready robots.txt file that can be downloaded and uploaded to the root of a website. It is useful for site owners, SEO teams, developers and bloggers who need a quick starting point for crawler instructions, staging blocks, admin-path exclusions or sitemap discovery. Robots.txt files guide compliant crawlers, but they do not protect private content, so sensitive pages should still be secured properly. All generation happens locally in your browser with JavaScript, and Toolexa does not upload or permanently store the rules you enter. The output panel makes it easy to review the generated directives before copying or downloading the file. The page follows Toolexa’s standard responsive layout with SEO metadata, breadcrumbs, FAQs, related tools and copy/share controls.',
+                ['Generate robots.txt', 'Allow rules', 'Disallow rules', 'Sitemap URL support', 'Copy output', 'Download robots.txt', 'Clear form'],
+                ['Enter the user-agent value.', 'Add Allow rules and Disallow rules, one per line.', 'Enter the sitemap URL if available.', 'Click Generate robots.txt.', 'Copy or download the generated file.'],
+                [
+                    ['q' => 'Where should robots.txt be uploaded?', 'a' => 'It should be placed at the root of your domain, such as example.com/robots.txt.'],
+                    ['q' => 'Can robots.txt secure private pages?', 'a' => 'No, it only gives crawler instructions and should not be used as access control.'],
+                    ['q' => 'Can I add a sitemap URL?', 'a' => 'Yes, the generator includes a Sitemap directive when you enter a URL.'],
+                    ['q' => 'Does Toolexa store my rules?', 'a' => 'No, robots.txt generation happens locally in your browser.'],
+                    ['q' => 'Can I download the generated file?', 'a' => 'Yes, use Download robots.txt after generating output.'],
+                ],
+                ['sitemap', 'json-formatter', 'html-formatter', 'sql-formatter', 'url-encoder-decoder', 'qr-generator'],
+                'SEO Tools'
+            ),
+            self::localTool(
+                'Password Strength Checker',
+                'password-strength-checker',
+                'SEC',
+                'Check password strength, crack time and improvement suggestions locally.',
+                'Password Strength Checker is a local security tool for estimating how strong a password looks before you use it. Type a password and the page calculates a score based on length, character variety, repeated patterns and common weak choices. The result shows a Weak, Medium or Strong indicator, an estimated crack time, a character analysis and practical suggestions for improving the password. This is helpful when teaching password hygiene, reviewing temporary credentials, checking whether a generated phrase is diverse enough or helping users understand why short passwords are risky. The password is evaluated entirely in your browser with JavaScript and is never uploaded or permanently stored by Toolexa. The tool is educational and should not replace a trusted password manager, breach checking service or organization policy. For important accounts, use long unique passwords and multi-factor authentication. The interface follows Toolexa’s standard responsive tool pattern with a clear input, result summary, copy and clear controls, FAQs and related security/developer utilities.',
+                ['Password strength score', 'Weak/Medium/Strong indicator', 'Crack time estimation', 'Character analysis', 'Suggestions to improve password', 'Copy and clear'],
+                ['Enter a password in the field.', 'Click Check Strength.', 'Review the score, strength label and crack time estimate.', 'Read character analysis and suggestions.', 'Clear the field before checking another password.'],
+                [
+                    ['q' => 'Is my password uploaded?', 'a' => 'No, the password is checked locally in your browser.'],
+                    ['q' => 'What does the score mean?', 'a' => 'The score estimates strength using length, variety and common weakness checks.'],
+                    ['q' => 'Is crack time exact?', 'a' => 'No, it is a rough educational estimate and depends on attacker resources.'],
+                    ['q' => 'Can I copy the result?', 'a' => 'Yes, the result summary can be copied.'],
+                    ['q' => 'Should I reuse strong passwords?', 'a' => 'No, use unique passwords for important accounts.'],
+                ],
+                ['password-generator', 'base64-encoder-decoder', 'md5-hash-generator', 'uuid-generator', 'random-string-generator', 'json-validator'],
+                'Security Tools'
+            ),
+            self::localTool(
+                'CSV to JSON Converter',
+                'csv-to-json-converter',
+                'CSV',
+                'Convert pasted or uploaded CSV data into pretty JSON locally.',
+                'CSV to JSON Converter is a developer tool for turning spreadsheet-style CSV data into structured JSON in the browser. Paste CSV text or upload a .csv file, then convert it into an array of JSON objects using the first row as field names. The output is pretty printed by default so it is easy to inspect, copy, download and use in API tests, seed files, mock data, documentation or front-end prototypes. The converter handles quoted values, commas inside quoted cells and multiple rows for common CSV workflows. Because all parsing happens locally with JavaScript, Toolexa does not upload or permanently store your CSV file or generated JSON. This tool is helpful for developers, analysts, students and content teams who need a quick bridge between tabular data and JSON without opening a spreadsheet script or server-side converter. The interface includes upload, paste, copy, download and clear controls, plus the standard Toolexa SEO sections, related tools, FAQs, breadcrumbs and schema metadata.',
+                ['Convert CSV to JSON', 'Upload CSV file', 'Copy JSON output', 'Download JSON', 'Pretty print JSON', 'Clear input and output'],
+                ['Paste CSV text or upload a CSV file.', 'Click Convert CSV to JSON.', 'Review the pretty printed JSON output.', 'Copy or download the JSON file.', 'Use Clear before converting another dataset.'],
+                [
+                    ['q' => 'Does CSV upload to Toolexa?', 'a' => 'No, uploaded CSV files are read locally in your browser.'],
+                    ['q' => 'How are JSON keys created?', 'a' => 'The first CSV row is used as the object field names.'],
+                    ['q' => 'Are quoted CSV values supported?', 'a' => 'Yes, common quoted values and commas inside quoted cells are supported.'],
+                    ['q' => 'Can I download the JSON?', 'a' => 'Yes, use Download JSON after conversion.'],
+                    ['q' => 'Is the output pretty printed?', 'a' => 'Yes, JSON is formatted with indentation for readability.'],
+                ],
+                ['json-formatter', 'json-validator', 'json-to-xml-converter', 'xml-to-json-converter', 'sql-formatter', 'base64-encoder-decoder'],
+                'Developer Tools'
+            ),
+            self::localTool(
+                'Timestamp Converter',
+                'timestamp-converter',
+                'TIME',
+                'Convert Unix timestamps to dates and dates to Unix timestamps.',
+                'Timestamp Converter is a browser-based date and time tool for converting between Unix timestamps and human-readable dates. Enter a Unix timestamp to see the matching local date and ISO date, or choose a human date and convert it back into a Unix timestamp. A Current Timestamp button instantly fills the result with the current time, which is useful for logs, APIs, debugging, database records, analytics exports, token expiry checks and developer notes. The converter supports second-based Unix timestamps and also recognizes millisecond-length values when pasted. All conversion happens locally in your browser with JavaScript, so Toolexa does not upload or permanently store any dates or timestamps. The result is copy-ready and includes useful formats for quick comparison across systems. Because time zones can affect interpretation, the output includes both local time and ISO UTC text. The page follows Toolexa’s existing responsive tool layout with copy, clear, share, supporting content, FAQs, breadcrumbs and schema markup.',
+                ['Unix Timestamp to Human Date', 'Human Date to Unix Timestamp', 'Current timestamp', 'Copy result', 'Clear input and output'],
+                ['Enter a Unix timestamp or choose a human date.', 'Click the conversion action you need.', 'Use Current Timestamp for the current time.', 'Review local and UTC output.', 'Copy the result or clear the tool.'],
+                [
+                    ['q' => 'Does this convert Unix timestamps?', 'a' => 'Yes, it converts Unix timestamps into human-readable dates.'],
+                    ['q' => 'Can I convert a date to timestamp?', 'a' => 'Yes, choose a human date and click Date to Unix.'],
+                    ['q' => 'Does it show current timestamp?', 'a' => 'Yes, use the Current Timestamp button.'],
+                    ['q' => 'Are timestamps uploaded?', 'a' => 'No, conversion happens locally in your browser.'],
+                    ['q' => 'Which timezone is shown?', 'a' => 'The output includes local time and ISO UTC time.'],
+                ],
+                ['age-calculator', 'json-formatter', 'sql-formatter', 'uuid-generator', 'random-number-generator', 'unit-converter'],
+                'Date & Time Tools'
+            ),
+            self::localTool(
+                'WebP to PNG Converter',
+                'webp-to-png-converter',
+                'W2P',
+                'Convert one or more WebP images to PNG locally in your browser.',
+                'WebP to PNG Converter is an image utility for converting WebP files into PNG images without uploading them to a server. Select one WebP image or multiple WebP files, convert them in the browser, preview the output list and download each generated PNG. This is useful when a design app, upload form, marketplace, document editor or older workflow does not accept WebP images but supports PNG. The conversion uses browser image and canvas APIs, so Toolexa does not permanently store your files. PNG output is lossless but may be larger than the original WebP file, so it is best used when compatibility matters more than compression. Batch support helps convert several small assets in one session, while Clear resets the selected files and output list. The page follows Toolexa’s responsive image-tool style with upload, preview, download, related tools, FAQs, breadcrumbs and schema metadata. Users should review transparency and dimensions in the preview before using converted files in production graphics or websites.',
+                ['Upload WebP image', 'Convert WebP to PNG', 'Preview converted images', 'Download PNG', 'Batch support', 'Clear files and output'],
+                ['Upload one or more WebP images.', 'Click Convert to PNG.', 'Review the generated preview list.', 'Download each PNG output.', 'Use Clear before converting another batch.'],
+                [
+                    ['q' => 'Does WebP conversion upload files?', 'a' => 'No, conversion happens locally in your browser.'],
+                    ['q' => 'Can I convert multiple images?', 'a' => 'Yes, the file input supports batch conversion.'],
+                    ['q' => 'Can PNG files be larger?', 'a' => 'Yes, PNG output is often larger than WebP.'],
+                    ['q' => 'Is transparency preserved?', 'a' => 'Canvas conversion usually preserves transparency from supported WebP files.'],
+                    ['q' => 'Can I preview output?', 'a' => 'Yes, converted images appear in the preview list.'],
+                ],
+                ['image-to-base64-converter', 'png-to-jpg-converter', 'jpg-to-png-converter', 'image-compressor', 'image-resizer', 'image-cropper'],
+                'Image Tools'
+            ),
+            self::localTool(
+                'Keyword Density Checker',
+                'keyword-density-checker',
+                'KEY',
+                'Analyze keyword density, word counts and top keywords locally.',
+                'Keyword Density Checker is a browser-based SEO tool for reviewing how often words appear in a piece of content. Paste article copy, landing page text, product descriptions, blog drafts or meta content, then analyze total words, unique words, top keywords and keyword percentages. The report helps writers and SEO teams understand whether a page repeats a term too often, misses important wording or contains a healthy mix of related phrases. It is useful during content editing, competitor note-taking, on-page SEO reviews and readability checks before publishing. The analyzer ignores common stop words so the keyword list focuses on meaningful terms, and the output can be copied into a content brief or audit note. Everything runs locally with JavaScript, so Toolexa does not upload or permanently store your text. The page follows the standard Toolexa layout with responsive editors, copy/share actions, FAQs, breadcrumbs, schema data, related tools and supporting SEO content.',
+                ['Analyze keyword density', 'Total word count', 'Unique word count', 'Top keywords', 'Keyword percentage', 'Copy report'],
+                ['Paste your content into the text box.', 'Click Analyze Keyword Density.', 'Review total words, unique words and top keywords.', 'Check keyword percentages for repeated terms.', 'Copy the report if needed.'],
+                [
+                    ['q' => 'Does this tool upload my content?', 'a' => 'No, keyword analysis runs locally in your browser.'],
+                    ['q' => 'What is keyword density?', 'a' => 'It is the percentage of total words represented by a specific keyword.'],
+                    ['q' => 'Are common words ignored?', 'a' => 'Yes, common stop words are filtered from the top keyword list.'],
+                    ['q' => 'Can I copy the report?', 'a' => 'Yes, the generated report is copy-ready.'],
+                    ['q' => 'Is there an ideal density?', 'a' => 'There is no universal perfect number; use the report to avoid unnatural repetition.'],
+                ],
+                ['robots-txt-generator', 'url-slug-generator', 'html-to-markdown-converter', 'word-counter', 'character-counter', 'json-formatter'],
+                'SEO Tools'
+            ),
+            self::localTool(
+                'ICO / Favicon Generator',
+                'ico-favicon-generator',
+                'ICO',
+                'Generate favicon sizes and downloadable ICO or ZIP files from an image.',
+                'ICO / Favicon Generator helps create common favicon assets directly in the browser. Upload a PNG, JPG or WebP image and generate multiple favicon sizes including 16x16, 32x32, 48x48, 64x64, 180x180, 192x192 and 512x512. The page previews the generated icons, creates a multi-size .ico file using PNG image entries, and can also download a ZIP containing PNG favicon files plus the ICO. This is useful for website owners, Laravel projects, static sites, dashboards, blogs and brand prototypes that need favicon assets without opening an image editor. All resizing happens locally with canvas, so Toolexa does not upload or permanently store your image. For best results, start with a square, high-resolution logo or icon with enough padding. The tool keeps the workflow simple: upload, generate, preview and download. It follows Toolexa’s standard responsive layout with copy/share actions where relevant, related tools, FAQs, breadcrumbs, SEO metadata and schema markup.',
+                ['Upload image', 'Generate favicon sizes', 'Generate 16x16 through 512x512 assets', 'Download .ico', 'Download ZIP', 'Preview icons', 'Clear output'],
+                ['Upload a PNG, JPG or WebP image.', 'Click Generate Favicons.', 'Review the generated size previews.', 'Download the .ico file or ZIP package.', 'Use Clear before generating another favicon set.'],
+                [
+                    ['q' => 'Which sizes are generated?', 'a' => 'The tool generates 16x16, 32x32, 48x48, 64x64, 180x180, 192x192 and 512x512.'],
+                    ['q' => 'Does the image upload to Toolexa?', 'a' => 'No, resizing happens locally in your browser.'],
+                    ['q' => 'Can I download an ICO file?', 'a' => 'Yes, the tool creates a downloadable favicon.ico file.'],
+                    ['q' => 'Can I download all sizes together?', 'a' => 'Yes, use Download ZIP for the generated assets.'],
+                    ['q' => 'What source image works best?', 'a' => 'A square high-resolution logo or icon usually gives the best favicon results.'],
+                ],
+                ['image-resizer', 'image-cropper', 'image-compressor', 'png-to-jpg-converter', 'image-to-base64-converter', 'color-picker-from-image'],
+                'Image Tools'
+            ),
+            self::localTool(
+                'Mortgage Calculator',
+                'mortgage-calculator',
+                'MOR',
+                'Calculate monthly mortgage payment, total interest and amortization summary.',
+                'Mortgage Calculator is a browser-based finance tool for estimating loan payments and total borrowing cost. Enter the loan amount, annual interest rate and loan term, then calculate the estimated monthly payment, total payment, total interest and an amortization summary. The result helps homeowners, buyers, agents and finance learners compare loan scenarios before speaking with a lender. It shows how principal and interest change over time and gives a yearly summary so the long-term cost is easier to understand. Calculations happen locally in your browser with JavaScript, and Toolexa does not upload or permanently store loan values. Results are estimates and may not include taxes, insurance, fees, changing rates, prepayments or lender-specific rules. Use the printable result option to save or share a quick scenario, then verify official numbers with a qualified lender or advisor. The page follows Toolexa’s standard responsive tool pattern with copy, share, related tools, FAQs, breadcrumbs, SEO metadata and schema markup.',
+                ['Loan amount input', 'Interest rate input', 'Loan term input', 'Monthly payment', 'Total interest', 'Amortization summary', 'Printable result'],
+                ['Enter the loan amount.', 'Enter the annual interest rate.', 'Enter the loan term in years.', 'Click Calculate Mortgage.', 'Review monthly payment, total interest and yearly amortization summary.'],
+                [
+                    ['q' => 'Does this calculate monthly mortgage payment?', 'a' => 'Yes, it estimates the monthly principal and interest payment.'],
+                    ['q' => 'Does it include taxes and insurance?', 'a' => 'No, it focuses on loan principal and interest only.'],
+                    ['q' => 'Can I print the result?', 'a' => 'Yes, use the Print Result button after calculating.'],
+                    ['q' => 'Are mortgage values stored?', 'a' => 'No, calculation runs locally in your browser.'],
+                    ['q' => 'Are results official loan quotes?', 'a' => 'No, they are estimates and should be verified with a lender.'],
+                ],
+                ['emi-calculator', 'loan-calculator', 'home-loan-emi-calculator', 'simple-interest-calculator', 'compound-interest-calculator', 'vat-calculator'],
+                'Finance'
+            ),
+            self::localTool(
+                'URL Slug Generator',
+                'url-slug-generator',
+                'SLUG',
+                'Convert text into a clean SEO-friendly URL slug.',
+                'URL Slug Generator is a text and SEO utility for converting headings, titles and phrases into clean URL slugs. Paste a blog title, product name, category heading, page label or campaign phrase, then generate a lowercase slug with special characters removed and spaces replaced by hyphens. This is useful when preparing SEO-friendly URLs, Laravel route slugs, blog permalinks, product handles, documentation anchors or content migration spreadsheets. The generator keeps the output simple and readable, helping URLs look consistent across a website. Everything runs locally in your browser with JavaScript, so Toolexa does not upload or permanently store the text you enter. The result can be copied immediately and Clear resets the tool for another title. Slugs should still be reviewed for clarity, length and uniqueness before publishing. The page follows the same Toolexa structure as other tools with responsive layout, helpful introduction, features, how-to steps, FAQs, related tools, popular tools, breadcrumbs, Open Graph metadata and schema JSON-LD.',
+                ['Convert text into SEO-friendly slug', 'Lowercase conversion', 'Remove special characters', 'Replace spaces with hyphens', 'Copy output', 'Clear input and output'],
+                ['Paste a title or phrase into the input box.', 'Click Generate Slug.', 'Review the lowercase hyphenated URL slug.', 'Copy the slug if it looks correct.', 'Use Clear before generating another slug.'],
+                [
+                    ['q' => 'What is a URL slug?', 'a' => 'A slug is the readable part of a URL that identifies a page.'],
+                    ['q' => 'Does it convert text to lowercase?', 'a' => 'Yes, output is converted to lowercase.'],
+                    ['q' => 'Are special characters removed?', 'a' => 'Yes, special characters are stripped or normalized.'],
+                    ['q' => 'Can I copy the slug?', 'a' => 'Yes, the generated slug appears in a copy-ready output box.'],
+                    ['q' => 'Is my text stored?', 'a' => 'No, slug generation runs locally in your browser.'],
+                ],
+                ['keyword-density-checker', 'text-case-converter', 'remove-extra-spaces', 'word-counter', 'html-to-markdown-converter', 'robots-txt-generator'],
+                'Text Tools'
+            ),
+            self::localTool(
+                'Color Picker From Image',
+                'color-picker-from-image',
+                'PICK',
+                'Upload an image, click a pixel and copy HEX, RGB and HSL colors.',
+                'Color Picker From Image is a browser-based color tool for extracting colors from uploaded images. Select a PNG, JPG or WebP image, click directly on the preview, and the tool reports the selected pixel as HEX, RGB and HSL values. This is helpful for designers, developers, marketers and content creators who need to sample a brand color, match an interface shade, inspect a screenshot, build a palette from product photography or copy colors into CSS variables. The picked color is shown in a live preview and added to a small palette list that can be downloaded as text. All image reading and pixel sampling happens locally with canvas, so Toolexa does not upload or permanently store your file. The output is copy-ready and works well on desktop and mobile screens. For precise picking, use a clear image and click the exact area you want to sample. The page follows Toolexa’s standard tool architecture with responsive UI, related tools, FAQs, breadcrumbs, SEO metadata and schema markup.',
+                ['Upload image', 'Click to pick color', 'HEX output', 'RGB output', 'HSL output', 'Copy color codes', 'Download palette'],
+                ['Upload a PNG, JPG or WebP image.', 'Click a point on the image preview.', 'Review HEX, RGB and HSL values.', 'Copy the color codes or continue picking colors.', 'Download the palette when ready.'],
+                [
+                    ['q' => 'Does the image upload to Toolexa?', 'a' => 'No, the image is processed locally in your browser.'],
+                    ['q' => 'Which color formats are shown?', 'a' => 'The tool shows HEX, RGB and HSL values.'],
+                    ['q' => 'Can I pick multiple colors?', 'a' => 'Yes, each click adds the selected color to the palette output.'],
+                    ['q' => 'Can I download the palette?', 'a' => 'Yes, use Download Palette after selecting colors.'],
+                    ['q' => 'Which image formats work?', 'a' => 'PNG, JPG and WebP images are supported by the upload input.'],
+                ],
+                ['hex-rgb-hsl-color-converter', 'image-resizer', 'image-cropper', 'image-compressor', 'ico-favicon-generator', 'css-beautifier'],
+                'Color Tools'
+            ),
+        ];
+    }
+
     private static function browserTool(string $name, string $slug, string $icon, string $desc, string $introduction, array $features, array $howTo, array $faq, string $category): array
     {
         $related = $category === 'Developer Tools'
@@ -793,6 +1435,48 @@ class HomeController extends Controller
             'seo_title' => $name.' - Free Online '.Str::singular($category),
             'seo_description' => $desc.' Use this free Toolexa tool locally in your browser with copy, clear and responsive controls.',
             'keywords' => Str::lower($name).', '.Str::lower($category).', browser tool, free online tool',
+            'formula' => null,
+            'introduction' => $introduction,
+            'features' => $features,
+            'how_to' => $howTo,
+            'faq' => $faq,
+            'related' => $related,
+        ];
+    }
+
+    private static function developerTool(string $name, string $slug, string $icon, string $desc, string $introduction, array $features, array $howTo, array $faq, array $related): array
+    {
+        return [
+            'name' => $name,
+            'slug' => $slug,
+            'view' => 'developer-utility',
+            'icon' => $icon,
+            'desc' => $desc,
+            'category' => 'Developer Tools',
+            'seo_title' => $name.' - Free Online Developer Tool',
+            'seo_description' => $desc.' Use this free Toolexa developer tool locally in your browser with copy, download, clear and responsive controls.',
+            'keywords' => Str::lower($name).', developer tools, json tools, xml tools, html formatter, free online tool',
+            'formula' => null,
+            'introduction' => $introduction,
+            'features' => $features,
+            'how_to' => $howTo,
+            'faq' => $faq,
+            'related' => $related,
+        ];
+    }
+
+    private static function localTool(string $name, string $slug, string $icon, string $desc, string $introduction, array $features, array $howTo, array $faq, array $related, string $category): array
+    {
+        return [
+            'name' => $name,
+            'slug' => $slug,
+            'view' => 'local-utility',
+            'icon' => $icon,
+            'desc' => $desc,
+            'category' => $category,
+            'seo_title' => $name.' - Free Online Tool',
+            'seo_description' => $desc.' Use this free Toolexa tool locally in your browser with copy, clear and responsive controls.',
+            'keywords' => Str::lower($name).', '.Str::lower($category).', online tool, free tool',
             'formula' => null,
             'introduction' => $introduction,
             'features' => $features,
@@ -1363,6 +2047,11 @@ class HomeController extends Controller
             ['name' => 'Text Tools', 'slug' => 'text-tools', 'icon' => 'TXT', 'count' => $counts['text-tools']['count'] ?? 0, 'status' => null],
             ['name' => 'Utility', 'slug' => 'utility', 'icon' => 'UTL', 'count' => $counts['utility']['count'] ?? 0, 'status' => null],
             ['name' => 'Developer Tools', 'slug' => 'developer-tools', 'icon' => 'DEV', 'count' => $counts['developer-tools']['count'] ?? 0, 'status' => null],
+            ['name' => 'SEO Tools', 'slug' => 'seo-tools', 'icon' => 'SEO', 'count' => $counts['seo-tools']['count'] ?? 0, 'status' => null],
+            ['name' => 'Security Tools', 'slug' => 'security-tools', 'icon' => 'SEC', 'count' => $counts['security-tools']['count'] ?? 0, 'status' => null],
+            ['name' => 'Date & Time Tools', 'slug' => 'date-time-tools', 'icon' => 'D/T', 'count' => $counts['date-time-tools']['count'] ?? 0, 'status' => null],
+            ['name' => 'Color Tools', 'slug' => 'color-tools', 'icon' => 'CLR', 'count' => $counts['color-tools']['count'] ?? 0, 'status' => null],
+            ['name' => 'Business Tools', 'slug' => 'business-tools', 'icon' => 'BUS', 'count' => $counts['business-tools']['count'] ?? 0, 'status' => null],
             ['name' => 'Image Tools', 'slug' => 'image-tools', 'icon' => 'IMG', 'count' => $counts['image-tools']['count'] ?? 0, 'status' => null],
             ['name' => 'PDF Tools', 'slug' => 'pdf-tools', 'icon' => 'PDF', 'count' => $counts['pdf-tools']['count'] ?? 0, 'status' => null],
             ['name' => 'Seller Tools', 'slug' => 'seller-tools', 'icon' => 'SEL', 'count' => $counts['seller-tools']['count'] ?? 0, 'status' => null],
@@ -1377,7 +2066,6 @@ class HomeController extends Controller
         $homepageCategories = self::homepageCategories();
         $recentTools = self::recentTools(8);
         $latestArticles = collect(BlogRepository::all())->take(3)->values()->all();
-        $discoverFeatures = DiscoverFeature::catalog();
         $schemaJsonLd = [
             [
                 '@context' => 'https://schema.org',
@@ -1430,6 +2118,6 @@ class HomeController extends Controller
             ],
         ];
 
-        return view('home', compact('tools', 'popular', 'popularSlugs', 'homepageCategories', 'recentTools', 'latestArticles', 'discoverFeatures', 'schemaJsonLd'));
+        return view('home', compact('tools', 'popular', 'popularSlugs', 'homepageCategories', 'recentTools', 'latestArticles', 'schemaJsonLd'));
     }
 }

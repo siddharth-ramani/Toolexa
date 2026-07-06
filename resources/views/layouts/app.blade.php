@@ -56,15 +56,12 @@
             'cagr-calculator',
         ]);
         $utilityNavTools = collect(\App\Http\Controllers\Tools\HomeController::tools())
-            ->filter(fn ($tool) => in_array($tool['category'], ['Utility', 'Utility Tools', 'Text Tools', 'Developer Tools', 'Image Tools', 'PDF Tools', 'Seller Tools', 'Math', 'Shopping'], true))
+            ->filter(fn ($tool) => in_array($tool['category'], ['Utility', 'Utility Tools', 'Text Tools', 'Developer Tools', 'SEO Tools', 'Security Tools', 'Date & Time Tools', 'Color Tools', 'Business Tools', 'Image Tools', 'PDF Tools', 'Seller Tools', 'Math', 'Shopping'], true))
             ->take(8)
             ->values();
         $footerGuides = class_exists(\App\Support\BlogRepository::class)
             ? collect(\App\Support\BlogRepository::all())->take(3)->values()
             : collect();
-        $discoverNavFeature = class_exists(\App\Support\Discover\DiscoverFeature::class)
-            ? \App\Support\Discover\DiscoverFeature::howPeopleSeeYou()
-            : null;
         $footerToolGroups = [
             'Calculators' => \App\Http\Controllers\Tools\HomeController::toolsBySlugs([
                 'gst-calculator',
@@ -76,6 +73,8 @@
             'Text & Developer' => \App\Http\Controllers\Tools\HomeController::toolsBySlugs([
                 'word-counter',
                 'text-case-converter',
+                'json-formatter',
+                'json-validator',
                 'base64-encoder',
                 'uuid-generator',
             ]),
@@ -237,12 +236,6 @@
                 </div>
 
                 <a class="nav-link {{ request()->is('blog*') ? 'active' : '' }}" href="{{ route('blog.index') }}">Blog</a>
-                <a class="nav-link discover-nav-link {{ request()->is('discover*') ? 'active' : '' }}" href="{{ route('discover.index') }}">
-                    <span>🔥 Discover</span>
-                    @if($discoverNavFeature && $discoverNavFeature->isNew())
-                        <small>NEW</small>
-                    @endif
-                </a>
                 <a class="nav-link nav-cta {{ request()->is('search') ? 'active' : '' }}" href="{{ route('search') }}">Find Tools</a>
             </div>
         </div>
@@ -300,7 +293,6 @@
                 <p>Free online calculators, converters and utility tools for everyday tasks.</p>
                 <div class="footer-actions">
                     <a href="{{ route('search') }}">Find Tools</a>
-                    <a href="{{ route('discover.index') }}">Discover</a>
                     <a href="{{ route('blog.index') }}">Read Guides</a>
                 </div>
             </div>
@@ -337,7 +329,6 @@
                 <a href="{{ url('/') }}">Home</a>
                 <a href="{{ route('search') }}">Tools</a>
                 <a href="{{ route('blog.index') }}">Blogs</a>
-                <a href="{{ route('discover.index') }}">Discover</a>
             </nav>
 
             <nav aria-label="Footer company">

@@ -77,6 +77,12 @@
             </section>
         @endif
 
+        <section class="info-panel blog-author-box">
+            <span class="eyebrow">Author</span>
+            <h2>{{ $article['author'] }}</h2>
+            <p>Toolexa Editorial Team creates practical guides for calculators, converters and browser-based productivity tools. Each article is written to help readers understand the concept, test real examples and use the related Toolexa tools with more confidence.</p>
+        </section>
+
         <section id="faq" class="info-panel faq-panel">
             <span class="eyebrow">FAQs</span>
             <h2>{{ $article['title'] }} FAQs</h2>

@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\SiteController;
-use App\Http\Controllers\Discover\DiscoverController;
 use App\Http\Controllers\Tools\HomeController;
 use App\Http\Controllers\Tools\GstController;
 use App\Http\Controllers\Tools\ToolController;
@@ -38,18 +37,6 @@ Route::get('/ads.txt', [SiteController::class, 'ads'])->name('ads');
 Route::get('/search', [SiteController::class, 'search'])->name('search');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
-Route::get('/discover', [DiscoverController::class, 'create'])->name('discover.index');
-Route::post('/discover', [DiscoverController::class, 'storeDefault'])->name('discover.store.default');
-Route::get('/discover/{slug}/demo', [DiscoverController::class, 'demo'])->where('slug', '[a-z0-9-]+')->name('discover.feature.demo');
-Route::get('/discover/{slug}', [DiscoverController::class, 'feature'])->where('slug', 'how-people-see-you')->name('discover.feature.create');
-Route::post('/discover/{slug}', [DiscoverController::class, 'store'])->where('slug', 'how-people-see-you')->name('discover.store');
-Route::get('/discover/{id}', [DiscoverController::class, 'show'])->whereAlphaNumeric('id')->name('discover.show');
-Route::post('/discover/{id}', [DiscoverController::class, 'submit'])->whereAlphaNumeric('id')->name('discover.submit');
-Route::get('/discover/{id}/thanks', [DiscoverController::class, 'thanks'])->whereAlphaNumeric('id')->name('discover.thanks');
-Route::get('/discover/{id}/photo', [DiscoverController::class, 'photo'])->whereAlphaNumeric('id')->name('discover.photo');
-Route::get('/discover/{id}/share/{token}', [DiscoverController::class, 'share'])->whereAlphaNumeric('id')->whereAlphaNumeric('token')->name('discover.share');
-Route::get('/discover/{id}/results', [DiscoverController::class, 'publicResults'])->whereAlphaNumeric('id')->name('discover.public-results');
-Route::get('/discover/{id}/results/{token}', [DiscoverController::class, 'results'])->whereAlphaNumeric('id')->whereAlphaNumeric('token')->name('discover.results');
 Route::get('/{page}', [SiteController::class, 'page'])
     ->whereIn('page', ['about', 'contact', 'privacy-policy', 'terms', 'disclaimer'])
     ->name('page.show');

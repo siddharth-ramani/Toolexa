@@ -66,7 +66,7 @@ class BlogController extends Controller
             'schemaJsonLd' => [
                 [
                     '@context' => 'https://schema.org',
-                    '@type' => 'BlogPosting',
+                    '@type' => 'Article',
                     'headline' => $article['title'],
                     'description' => $article['meta_description'],
                     'url' => $canonicalUrl,

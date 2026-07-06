@@ -64,6 +64,18 @@
     </section>
 @endif
 
+@if(! empty($popularTools))
+    <section class="info-panel">
+        <span class="eyebrow">Popular tools</span>
+        <h2>Popular Tools</h2>
+        <div class="mini-tool-grid">
+            @foreach(collect($popularTools)->reject(fn ($tool) => $tool['slug'] === $toolMeta['slug'])->take(6) as $tool)
+                @include('partials.tool-card', ['tool' => $tool])
+            @endforeach
+        </div>
+    </section>
+@endif
+
 <section class="tool-actions" data-tool-actions>
     <button class="btn btn-primary" type="button" data-copy-url>Copy Link</button>
     <button class="btn btn-success" type="button" data-share-url>Share Tool</button>

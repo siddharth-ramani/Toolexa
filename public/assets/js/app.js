@@ -76,17 +76,10 @@
         window.gtag('event', name, params || {});
     }
 
-    document.querySelectorAll('[data-ga-view]').forEach(function (element) {
-        trackEvent(element.getAttribute('data-ga-view'), {
-            event_category: element.getAttribute('data-ga-category') || 'Discover',
-            event_label: element.getAttribute('data-ga-label') || document.title
-        });
-    });
-
     document.querySelectorAll('[data-ga-event]').forEach(function (element) {
         element.addEventListener('click', function () {
             trackEvent(element.getAttribute('data-ga-event'), {
-                event_category: element.getAttribute('data-ga-category') || 'Discover',
+                event_category: element.getAttribute('data-ga-category') || 'Tools',
                 event_label: element.getAttribute('data-ga-label') || element.textContent.trim()
             });
         });
@@ -225,86 +218,6 @@
             document.body.removeChild(input);
             markCopied('Copied');
         });
-    });
-
-    document.querySelectorAll('[data-native-share]').forEach(function (button) {
-        button.addEventListener('click', function () {
-            var wrap = button.closest('[data-discover-share]');
-            var url = button.getAttribute('data-share-url') || (wrap ? wrap.getAttribute('data-share-url') : '') || window.location.href;
-            var text = button.getAttribute('data-share-text') || (wrap ? wrap.getAttribute('data-share-text') : '') || document.title;
-            var title = button.getAttribute('data-share-title') || (wrap ? wrap.getAttribute('data-share-title') : '') || document.title;
-
-            if (navigator.share) {
-                navigator.share({
-                    title: title,
-                    text: text,
-                    url: url
-                }).catch(function () {});
-                return;
-            }
-
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(url).then(function () {
-                    var original = button.textContent;
-                    button.textContent = 'Copied';
-                    window.setTimeout(function () {
-                        button.textContent = original;
-                    }, 1800);
-                });
-            }
-        });
-    });
-
-    document.querySelectorAll('[data-discover-response]').forEach(function (panel) {
-        var checks = panel.querySelectorAll('input[name="words[]"]');
-        var count = panel.querySelector('[data-discover-count]');
-        var submit = panel.querySelector('[data-discover-submit]');
-
-        function sync() {
-            var selected = Array.prototype.filter.call(checks, function (input) {
-                return input.checked;
-            });
-
-            if (count) {
-                count.textContent = selected.length + ' / 3 selected';
-            }
-
-            checks.forEach(function (input) {
-                input.disabled = selected.length >= 3 && !input.checked;
-            });
-
-            if (submit) {
-                submit.disabled = selected.length !== 3;
-            }
-        }
-
-        checks.forEach(function (input) {
-            input.addEventListener('change', sync);
-        });
-        sync();
-    });
-
-    document.querySelectorAll('[data-counter]').forEach(function (counter) {
-        var target = parseFloat(counter.getAttribute('data-counter') || '0');
-        var isDecimal = String(target).indexOf('.') !== -1;
-        var start = null;
-        var duration = 850;
-
-        function tick(timestamp) {
-            if (!start) {
-                start = timestamp;
-            }
-
-            var progress = Math.min(1, (timestamp - start) / duration);
-            var value = target * progress;
-            counter.textContent = isDecimal ? value.toFixed(1) : Math.round(value);
-
-            if (progress < 1) {
-                window.requestAnimationFrame(tick);
-            }
-        }
-
-        window.requestAnimationFrame(tick);
     });
 
     document.querySelectorAll('[data-clear-tool]').forEach(function (button) {
@@ -1106,6 +1019,796 @@
         }
     });
 
+    document.querySelectorAll('[data-developer-tool]').forEach(function (tool) {
+        var mode = tool.getAttribute('data-developer-mode');
+        var input = tool.querySelector('[data-developer-input]');
+        var output = tool.querySelector('[data-developer-output]');
+        var status = tool.querySelector('[data-developer-status]');
+        var error = tool.querySelector('[data-developer-error]');
+        var clearButton = tool.querySelector('[data-developer-clear]');
+        var downloadButton = tool.querySelector('[data-developer-download]');
+        var shareButton = tool.querySelector('[data-share-url]');
+        var markdownPreview = tool.querySelector('[data-markdown-preview]');
+        var markdownPreviewBody = tool.querySelector('[data-markdown-preview-body]');
+
+        function setStatus(message) {
+            if (status) {
+                status.textContent = message;
+            }
+        }
+
+        function setError(message, line) {
+            if (!error) {
+                return;
+            }
+
+            error.hidden = false;
+            error.textContent = line ? 'Line ' + line + ': ' + message : message;
+            if (input) {
+                input.classList.add('input-invalid');
+            }
+        }
+
+        function clearError() {
+            if (error) {
+                error.hidden = true;
+                error.textContent = '';
+            }
+            if (input) {
+                input.classList.remove('input-invalid');
+            }
+        }
+
+        function setOutput(text) {
+            output.value = text || '';
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function jsonErrorLine(text, message) {
+            var match = String(message).match(/position\s+(\d+)/i);
+            if (!match) {
+                return null;
+            }
+
+            var position = Number(match[1]);
+            if (!Number.isFinite(position)) {
+                return null;
+            }
+
+            return text.slice(0, position).split(/\r\n|\r|\n/).length;
+        }
+
+        function parseJson() {
+            var text = input.value.trim();
+
+            if (!text) {
+                throw { message: 'Enter JSON before processing.', line: null };
+            }
+
+            try {
+                return JSON.parse(text);
+            } catch (exception) {
+                throw {
+                    message: exception.message || 'Invalid JSON syntax.',
+                    line: jsonErrorLine(text, exception.message)
+                };
+            }
+        }
+
+        function validateJson() {
+            var parsed = parseJson();
+            var summary = Array.isArray(parsed)
+                ? 'Valid JSON array with ' + parsed.length + ' item' + (parsed.length === 1 ? '' : 's') + '.'
+                : 'Valid JSON ' + (parsed !== null && typeof parsed === 'object' ? 'object' : typeof parsed) + '.';
+
+            setOutput(JSON.stringify(parsed, null, 2));
+            setStatus(summary);
+        }
+
+        function beautifyJson() {
+            var parsed = parseJson();
+            setOutput(JSON.stringify(parsed, null, 2));
+            setStatus('JSON beautified successfully.');
+        }
+
+        function minifyJson() {
+            var parsed = parseJson();
+            setOutput(JSON.stringify(parsed));
+            setStatus('JSON minified successfully.');
+        }
+
+        function escapeXml(value) {
+            return escapeHtml(value).replace(/&#039;/g, '&apos;');
+        }
+
+        function xmlTagName(key) {
+            var clean = String(key).trim().replace(/[^A-Za-z0-9_.-]/g, '-');
+            if (!clean || !/^[A-Za-z_]/.test(clean)) {
+                clean = 'item-' + clean;
+            }
+            return clean.replace(/-+/g, '-');
+        }
+
+        function jsonToXmlNode(value, name, depth) {
+            var tag = xmlTagName(name || 'item');
+            var indent = '  '.repeat(depth);
+            var childIndent = '  '.repeat(depth + 1);
+
+            if (Array.isArray(value)) {
+                if (!value.length) {
+                    return indent + '<' + tag + '></' + tag + '>';
+                }
+
+                return value.map(function (item) {
+                    return jsonToXmlNode(item, tag, depth);
+                }).join('\n');
+            }
+
+            if (value !== null && typeof value === 'object') {
+                var keys = Object.keys(value);
+                if (!keys.length) {
+                    return indent + '<' + tag + '></' + tag + '>';
+                }
+
+                return indent + '<' + tag + '>\n'
+                    + keys.map(function (key) {
+                        return jsonToXmlNode(value[key], key, depth + 1);
+                    }).join('\n')
+                    + '\n' + indent + '</' + tag + '>';
+            }
+
+            return indent + '<' + tag + '>' + escapeXml(value === null ? '' : value) + '</' + tag + '>';
+        }
+
+        function convertJsonToXml() {
+            var parsed = parseJson();
+            var body = '<?xml version="1.0" encoding="UTF-8"?>\n' + jsonToXmlNode(parsed, 'root', 0);
+            setOutput(body);
+            setStatus('JSON converted to XML successfully.');
+        }
+
+        function parseXml() {
+            var text = input.value.trim();
+            var parser;
+            var doc;
+            var parserError;
+
+            if (!text) {
+                throw { message: 'Enter XML before processing.' };
+            }
+
+            parser = new DOMParser();
+            doc = parser.parseFromString(text, 'application/xml');
+            parserError = doc.querySelector('parsererror');
+
+            if (parserError) {
+                throw { message: parserError.textContent.replace(/\s+/g, ' ').trim() || 'Invalid XML syntax.' };
+            }
+
+            return doc;
+        }
+
+        function xmlNodeToJson(node) {
+            var result = {};
+            var childElements = Array.prototype.filter.call(node.childNodes, function (child) {
+                return child.nodeType === 1;
+            });
+            var text = Array.prototype.filter.call(node.childNodes, function (child) {
+                return child.nodeType === 3 && child.nodeValue.trim() !== '';
+            }).map(function (child) {
+                return child.nodeValue.trim();
+            }).join(' ');
+
+            if (node.attributes && node.attributes.length) {
+                result['@attributes'] = {};
+                Array.prototype.forEach.call(node.attributes, function (attr) {
+                    result['@attributes'][attr.name] = attr.value;
+                });
+            }
+
+            childElements.forEach(function (child) {
+                var value = xmlNodeToJson(child);
+                if (Object.prototype.hasOwnProperty.call(result, child.nodeName)) {
+                    if (!Array.isArray(result[child.nodeName])) {
+                        result[child.nodeName] = [result[child.nodeName]];
+                    }
+                    result[child.nodeName].push(value);
+                } else {
+                    result[child.nodeName] = value;
+                }
+            });
+
+            if (text) {
+                if (Object.keys(result).length) {
+                    result['#text'] = text;
+                } else {
+                    return text;
+                }
+            }
+
+            return result;
+        }
+
+        function validateXml() {
+            var doc = parseXml();
+            setOutput(new XMLSerializer().serializeToString(doc));
+            setStatus('XML is valid.');
+        }
+
+        function convertXmlToJson() {
+            var doc = parseXml();
+            var root = doc.documentElement;
+            var json = {};
+            json[root.nodeName] = xmlNodeToJson(root);
+            setOutput(JSON.stringify(json, null, 2));
+            setStatus('XML converted to JSON successfully.');
+        }
+
+        function formatHtmlNode(node, depth) {
+            var indent = '  '.repeat(depth);
+            var serializer = new XMLSerializer();
+            var children;
+            var attrs;
+            var open;
+
+            if (node.nodeType === 3) {
+                return node.nodeValue.trim() ? indent + node.nodeValue.trim() : '';
+            }
+
+            if (node.nodeType === 8) {
+                return indent + '<!--' + node.nodeValue.trim() + '-->';
+            }
+
+            if (node.nodeType !== 1) {
+                return '';
+            }
+
+            children = Array.prototype.map.call(node.childNodes, function (child) {
+                return formatHtmlNode(child, depth + 1);
+            }).filter(Boolean);
+
+            attrs = Array.prototype.map.call(node.attributes, function (attr) {
+                return attr.name + '="' + attr.value.replace(/"/g, '&quot;') + '"';
+            }).join(' ');
+            open = '<' + node.tagName.toLowerCase() + (attrs ? ' ' + attrs : '') + '>';
+
+            if (!children.length) {
+                return indent + open + '</' + node.tagName.toLowerCase() + '>';
+            }
+
+            if (children.length === 1 && node.childNodes.length === 1 && node.firstChild.nodeType === 3) {
+                return indent + open + node.firstChild.nodeValue.trim() + '</' + node.tagName.toLowerCase() + '>';
+            }
+
+            return indent + open + '\n' + children.join('\n') + '\n' + indent + '</' + node.tagName.toLowerCase() + '>';
+        }
+
+        function beautifyHtml() {
+            var text = input.value.trim();
+            var doc;
+            var nodes;
+
+            if (!text) {
+                throw { message: 'Enter HTML before processing.' };
+            }
+
+            doc = new DOMParser().parseFromString(text, 'text/html');
+            nodes = Array.prototype.map.call(doc.body.childNodes, function (node) {
+                return formatHtmlNode(node, 0);
+            }).filter(Boolean);
+            setOutput(nodes.join('\n'));
+            setStatus('HTML beautified successfully.');
+        }
+
+        function minifyHtml() {
+            var text = input.value.trim();
+
+            if (!text) {
+                throw { message: 'Enter HTML before processing.' };
+            }
+
+            setOutput(text.replace(/<!--[\s\S]*?-->/g, '').replace(/>\s+</g, '><').replace(/\s{2,}/g, ' ').trim());
+            setStatus('HTML minified successfully.');
+        }
+
+        function minifyCss() {
+            var text = input.value.trim();
+
+            if (!text) {
+                throw { message: 'Enter CSS before processing.' };
+            }
+
+            setOutput(text
+                .replace(/\/\*[\s\S]*?\*\//g, '')
+                .replace(/\s+/g, ' ')
+                .replace(/\s*([{}:;,>~+])\s*/g, '$1')
+                .replace(/;}/g, '}')
+                .trim());
+            setStatus('CSS minified successfully.');
+        }
+
+        function beautifyCss() {
+            var text = input.value.trim();
+            var formatted;
+            var level = 0;
+
+            if (!text) {
+                throw { message: 'Enter CSS before processing.' };
+            }
+
+            formatted = text
+                .replace(/\/\*[\s\S]*?\*\//g, function (comment) {
+                    return '\n' + comment.trim() + '\n';
+                })
+                .replace(/\s*{\s*/g, ' {\n')
+                .replace(/;\s*/g, ';\n')
+                .replace(/\s*}\s*/g, '\n}\n')
+                .replace(/,\s*/g, ',\n')
+                .split('\n')
+                .map(function (line) {
+                    line = line.trim();
+                    if (!line) {
+                        return '';
+                    }
+                    if (line.charAt(0) === '}') {
+                        level = Math.max(0, level - 1);
+                    }
+                    var outputLine = '  '.repeat(level) + line;
+                    if (line.charAt(line.length - 1) === '{') {
+                        level += 1;
+                    }
+                    return outputLine;
+                })
+                .filter(Boolean)
+                .join('\n');
+
+            setOutput(formatted);
+            setStatus('CSS formatted successfully.');
+        }
+
+        function htmlInlineMarkdown(node) {
+            var text = '';
+
+            Array.prototype.forEach.call(node.childNodes, function (child) {
+                var tag;
+
+                if (child.nodeType === 3) {
+                    text += child.nodeValue.replace(/\s+/g, ' ');
+                    return;
+                }
+
+                if (child.nodeType !== 1) {
+                    return;
+                }
+
+                tag = child.tagName.toLowerCase();
+
+                if (tag === 'strong' || tag === 'b') {
+                    text += '**' + htmlInlineMarkdown(child).trim() + '**';
+                } else if (tag === 'em' || tag === 'i') {
+                    text += '*' + htmlInlineMarkdown(child).trim() + '*';
+                } else if (tag === 'code') {
+                    text += '`' + child.textContent.trim() + '`';
+                } else if (tag === 'a') {
+                    text += '[' + htmlInlineMarkdown(child).trim() + '](' + (child.getAttribute('href') || '') + ')';
+                } else if (tag === 'img') {
+                    text += '![' + (child.getAttribute('alt') || '') + '](' + (child.getAttribute('src') || '') + ')';
+                } else if (tag === 'br') {
+                    text += '\n';
+                } else {
+                    text += htmlInlineMarkdown(child);
+                }
+            });
+
+            return text.replace(/[ \t]+\n/g, '\n').trim();
+        }
+
+        function htmlBlockMarkdown(node, depth, index) {
+            var tag;
+            var prefix;
+
+            if (node.nodeType === 3) {
+                return node.nodeValue.trim();
+            }
+
+            if (node.nodeType !== 1) {
+                return '';
+            }
+
+            tag = node.tagName.toLowerCase();
+
+            if (/^h[1-6]$/.test(tag)) {
+                return '#'.repeat(Number(tag.charAt(1))) + ' ' + htmlInlineMarkdown(node);
+            }
+
+            if (tag === 'p') {
+                return htmlInlineMarkdown(node);
+            }
+
+            if (tag === 'blockquote') {
+                return htmlInlineMarkdown(node).split('\n').map(function (line) {
+                    return '> ' + line;
+                }).join('\n');
+            }
+
+            if (tag === 'pre') {
+                return '```\n' + node.textContent.trim() + '\n```';
+            }
+
+            if (tag === 'ul' || tag === 'ol') {
+                return Array.prototype.map.call(node.children, function (child, childIndex) {
+                    prefix = tag === 'ol' ? (childIndex + 1) + '. ' : '- ';
+                    return prefix + htmlInlineMarkdown(child);
+                }).join('\n');
+            }
+
+            if (tag === 'hr') {
+                return '---';
+            }
+
+            return Array.prototype.map.call(node.childNodes, function (child, childIndex) {
+                return htmlBlockMarkdown(child, depth + 1, childIndex);
+            }).filter(Boolean).join('\n\n');
+        }
+
+        function convertHtmlToMarkdown() {
+            var text = input.value.trim();
+            var doc;
+            var markdown;
+
+            if (!text) {
+                throw { message: 'Enter HTML before processing.' };
+            }
+
+            doc = new DOMParser().parseFromString(text, 'text/html');
+            markdown = Array.prototype.map.call(doc.body.childNodes, function (node, index) {
+                return htmlBlockMarkdown(node, 0, index);
+            }).filter(Boolean).join('\n\n');
+
+            setOutput(markdown);
+            setStatus('HTML converted to Markdown successfully.');
+        }
+
+        function markdownInline(text) {
+            return escapeHtml(text)
+                .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">')
+                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+        }
+
+        function convertMarkdownToHtml() {
+            var text = input.value.replace(/\r\n/g, '\n').trim();
+            var lines;
+            var html = [];
+            var index = 0;
+            var inCode = false;
+            var codeLines = [];
+
+            if (!text) {
+                throw { message: 'Enter Markdown before processing.' };
+            }
+
+            lines = text.split('\n');
+
+            function closeParagraph(buffer) {
+                if (buffer.length) {
+                    html.push('<p>' + markdownInline(buffer.join(' ')) + '</p>');
+                    buffer.length = 0;
+                }
+            }
+
+            var paragraph = [];
+
+            while (index < lines.length) {
+                var line = lines[index];
+                var trimmed = line.trim();
+                var listItems = [];
+                var ordered = false;
+
+                if (/^```/.test(trimmed)) {
+                    if (inCode) {
+                        html.push('<pre><code>' + escapeHtml(codeLines.join('\n')) + '</code></pre>');
+                        codeLines = [];
+                        inCode = false;
+                    } else {
+                        closeParagraph(paragraph);
+                        inCode = true;
+                    }
+                    index += 1;
+                    continue;
+                }
+
+                if (inCode) {
+                    codeLines.push(line);
+                    index += 1;
+                    continue;
+                }
+
+                if (!trimmed) {
+                    closeParagraph(paragraph);
+                    index += 1;
+                    continue;
+                }
+
+                if (/^---+$/.test(trimmed)) {
+                    closeParagraph(paragraph);
+                    html.push('<hr>');
+                    index += 1;
+                    continue;
+                }
+
+                if (/^#{1,6}\s+/.test(trimmed)) {
+                    closeParagraph(paragraph);
+                    var level = trimmed.match(/^#+/)[0].length;
+                    html.push('<h' + level + '>' + markdownInline(trimmed.replace(/^#{1,6}\s+/, '')) + '</h' + level + '>');
+                    index += 1;
+                    continue;
+                }
+
+                if (/^>\s?/.test(trimmed)) {
+                    closeParagraph(paragraph);
+                    html.push('<blockquote>' + markdownInline(trimmed.replace(/^>\s?/, '')) + '</blockquote>');
+                    index += 1;
+                    continue;
+                }
+
+                if (/^(-|\*)\s+/.test(trimmed) || /^\d+\.\s+/.test(trimmed)) {
+                    closeParagraph(paragraph);
+                    ordered = /^\d+\.\s+/.test(trimmed);
+                    while (index < lines.length) {
+                        trimmed = lines[index].trim();
+                        if (ordered && !/^\d+\.\s+/.test(trimmed)) break;
+                        if (!ordered && !/^(-|\*)\s+/.test(trimmed)) break;
+                        listItems.push('<li>' + markdownInline(trimmed.replace(/^(\d+\.|-|\*)\s+/, '')) + '</li>');
+                        index += 1;
+                    }
+                    html.push((ordered ? '<ol>' : '<ul>') + '\n' + listItems.join('\n') + '\n' + (ordered ? '</ol>' : '</ul>'));
+                    continue;
+                }
+
+                paragraph.push(trimmed);
+                index += 1;
+            }
+
+            closeParagraph(paragraph);
+            if (inCode) {
+                html.push('<pre><code>' + escapeHtml(codeLines.join('\n')) + '</code></pre>');
+            }
+
+            setOutput(html.join('\n'));
+            if (markdownPreview && markdownPreviewBody) {
+                markdownPreview.hidden = false;
+                markdownPreviewBody.innerHTML = output.value;
+            }
+            setStatus('Markdown converted to HTML successfully.');
+        }
+
+        function encodeBase64() {
+            var text = input.value;
+
+            if (!text) {
+                throw { message: 'Enter text before encoding.' };
+            }
+
+            setOutput(btoa(unescape(encodeURIComponent(text))));
+            setStatus('Text encoded to Base64 successfully.');
+        }
+
+        function decodeBase64() {
+            var text = input.value.trim();
+            var decoded;
+
+            if (!text) {
+                throw { message: 'Enter Base64 before decoding.' };
+            }
+
+            if (!/^[A-Za-z0-9+/]+={0,2}$/.test(text) || text.length % 4 === 1) {
+                throw { message: 'Invalid Base64 input.' };
+            }
+
+            try {
+                decoded = decodeURIComponent(escape(atob(text)));
+            } catch (exception) {
+                throw { message: 'Invalid Base64 input.' };
+            }
+
+            setOutput(decoded);
+            setStatus('Base64 decoded successfully.');
+        }
+
+        function stripSqlComments(text) {
+            return text.replace(/--.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+        }
+
+        function beautifySql() {
+            var text = input.value.trim();
+            var keywords = /\b(SELECT|FROM|WHERE|INNER JOIN|LEFT JOIN|RIGHT JOIN|FULL JOIN|JOIN|ON|GROUP BY|ORDER BY|HAVING|LIMIT|OFFSET|VALUES|SET|AND|OR|INSERT INTO|UPDATE|DELETE FROM)\b/gi;
+            var formatted;
+
+            if (!text) {
+                throw { message: 'Enter SQL before processing.' };
+            }
+
+            formatted = text
+                .replace(/\s+/g, ' ')
+                .replace(keywords, function (match) {
+                    var upper = match.toUpperCase();
+                    return '\n' + (upper === 'AND' || upper === 'OR' ? '  ' + upper : upper);
+                })
+                .replace(/\s*,\s*/g, ',\n  ')
+                .replace(/\(\s*/g, '(\n  ')
+                .replace(/\s*\)/g, '\n)')
+                .replace(/\n{2,}/g, '\n')
+                .trim();
+
+            setOutput(formatted);
+            setStatus('SQL beautified successfully.');
+        }
+
+        function minifySql() {
+            var text = input.value.trim();
+
+            if (!text) {
+                throw { message: 'Enter SQL before processing.' };
+            }
+
+            setOutput(stripSqlComments(text).replace(/\s+/g, ' ').replace(/\s*([(),=<>+\-*\/])\s*/g, '$1').trim());
+            setStatus('SQL minified successfully.');
+        }
+
+        function run(action) {
+            clearError();
+            if (markdownPreview && mode !== 'markdown-to-html-converter') {
+                markdownPreview.hidden = true;
+            }
+
+            try {
+                if (mode === 'json-formatter' && action === 'beautify') {
+                    beautifyJson();
+                } else if (mode === 'json-formatter' && action === 'minify') {
+                    minifyJson();
+                } else if ((mode === 'json-formatter' || mode === 'json-validator') && action === 'validate') {
+                    validateJson();
+                } else if (mode === 'json-to-xml-converter') {
+                    convertJsonToXml();
+                } else if (mode === 'xml-to-json-converter' && action === 'validate') {
+                    validateXml();
+                } else if (mode === 'xml-to-json-converter') {
+                    convertXmlToJson();
+                } else if (mode === 'html-formatter' && action === 'minify') {
+                    minifyHtml();
+                } else if (mode === 'html-formatter') {
+                    beautifyHtml();
+                } else if (mode === 'css-minifier') {
+                    minifyCss();
+                } else if (mode === 'css-beautifier') {
+                    beautifyCss();
+                } else if (mode === 'html-to-markdown-converter') {
+                    convertHtmlToMarkdown();
+                } else if (mode === 'markdown-to-html-converter') {
+                    convertMarkdownToHtml();
+                } else if (mode === 'base64-encoder-decoder' && action === 'decode') {
+                    decodeBase64();
+                } else if (mode === 'base64-encoder-decoder') {
+                    encodeBase64();
+                } else if (mode === 'sql-formatter' && action === 'minify') {
+                    minifySql();
+                } else if (mode === 'sql-formatter') {
+                    beautifySql();
+                }
+            } catch (exception) {
+                setOutput('');
+                setStatus('Please fix the highlighted input.');
+                setError(exception.message || 'Unable to process this input.', exception.line);
+                if (markdownPreview) {
+                    markdownPreview.hidden = true;
+                }
+            }
+        }
+
+        function downloadOutput(extension) {
+            var text = output.value;
+            var types = {
+                json: 'application/json',
+                xml: 'application/xml',
+                html: 'text/html',
+                css: 'text/css',
+                md: 'text/markdown',
+                txt: 'text/plain',
+                sql: 'application/sql'
+            };
+            var blob;
+            var url;
+            var link;
+
+            if (!text) {
+                setStatus('Generate output before downloading.');
+                return;
+            }
+
+            blob = new Blob([text], { type: (types[extension] || 'text/plain') + ';charset=utf-8' });
+            url = URL.createObjectURL(blob);
+            link = document.createElement('a');
+            link.href = url;
+            link.download = 'toolexa-' + mode + '.' + extension;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        tool.querySelectorAll('[data-developer-action]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                run(button.getAttribute('data-developer-action'));
+            });
+        });
+
+        if (clearButton) {
+            clearButton.addEventListener('click', function () {
+                input.value = '';
+                setOutput('');
+                clearError();
+                if (markdownPreview) {
+                    markdownPreview.hidden = true;
+                }
+                if (markdownPreviewBody) {
+                    markdownPreviewBody.innerHTML = '';
+                }
+                setStatus('Result will appear here.');
+            });
+        }
+
+        if (downloadButton) {
+            downloadButton.addEventListener('click', function () {
+                downloadOutput(downloadButton.getAttribute('data-developer-download'));
+            });
+        }
+
+        if (mode === 'markdown-to-html-converter' && input) {
+            input.addEventListener('input', function () {
+                if (!input.value.trim()) {
+                    setOutput('');
+                    clearError();
+                    if (markdownPreview) {
+                        markdownPreview.hidden = true;
+                    }
+                    if (markdownPreviewBody) {
+                        markdownPreviewBody.innerHTML = '';
+                    }
+                    setStatus('Result will appear here.');
+                    return;
+                }
+
+                run('convert');
+            });
+        }
+
+        if (shareButton) {
+            shareButton.addEventListener('click', function () {
+                if (navigator.share) {
+                    navigator.share({ title: document.title, url: window.location.href }).catch(function () {});
+                    return;
+                }
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(window.location.href).then(function () {
+                        setStatus('Share link copied.');
+                    });
+                }
+            });
+        }
+    });
+
     document.querySelectorAll('[data-pdf-tool]').forEach(function (tool) {
         var mode = tool.getAttribute('data-pdf-mode');
         var input = tool.querySelector('[data-pdf-input]');
@@ -1630,6 +2333,940 @@
                     navigator.clipboard.writeText(window.location.href).then(function () {
                         setStatus('Share link copied');
                     });
+                }
+            });
+        });
+    });
+
+    document.querySelectorAll('[data-local-tool]').forEach(function (tool) {
+        var mode = tool.getAttribute('data-local-mode');
+        var output = tool.querySelector('[data-local-output]');
+        var preview = tool.querySelector('[data-local-preview]');
+        var clearButton = tool.querySelector('[data-local-clear]');
+        var downloadButtons = tool.querySelectorAll('[data-local-download]');
+        var lastSvg = '';
+        var lastPngCanvas = null;
+        var faviconAssets = [];
+        var pickedPalette = [];
+
+        function setOutput(text) {
+            output.value = text || '';
+        }
+
+        function downloadText(text, filename, type) {
+            var blob = new Blob([text], { type: type + ';charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            var link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function clamp(value, min, max) {
+            return Math.max(min, Math.min(max, Number(value) || 0));
+        }
+
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(function (value) {
+                return Math.round(clamp(value, 0, 255)).toString(16).padStart(2, '0');
+            }).join('');
+        }
+
+        function hexToRgb(hex) {
+            var clean = String(hex || '').trim().replace(/^#/, '');
+            if (clean.length === 3) {
+                clean = clean.split('').map(function (char) { return char + char; }).join('');
+            }
+            if (!/^[0-9a-f]{6}$/i.test(clean)) {
+                return null;
+            }
+            return {
+                r: parseInt(clean.slice(0, 2), 16),
+                g: parseInt(clean.slice(2, 4), 16),
+                b: parseInt(clean.slice(4, 6), 16)
+            };
+        }
+
+        function rgbToHsl(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            var max = Math.max(r, g, b);
+            var min = Math.min(r, g, b);
+            var h = 0;
+            var s = 0;
+            var l = (max + min) / 2;
+            var d;
+
+            if (max !== min) {
+                d = max - min;
+                s = l > .5 ? d / (2 - max - min) : d / (max + min);
+                if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+                if (max === g) h = (b - r) / d + 2;
+                if (max === b) h = (r - g) / d + 4;
+                h /= 6;
+            }
+
+            return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+        }
+
+        function hslToRgb(h, s, l) {
+            h = clamp(h, 0, 360) / 360;
+            s = clamp(s, 0, 100) / 100;
+            l = clamp(l, 0, 100) / 100;
+            var r;
+            var g;
+            var b;
+
+            function hue(p, q, t) {
+                if (t < 0) t += 1;
+                if (t > 1) t -= 1;
+                if (t < 1 / 6) return p + (q - p) * 6 * t;
+                if (t < 1 / 2) return q;
+                if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                return p;
+            }
+
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                var q = l < .5 ? l * (1 + s) : l + s - l * s;
+                var p = 2 * l - q;
+                r = hue(p, q, h + 1 / 3);
+                g = hue(p, q, h);
+                b = hue(p, q, h - 1 / 3);
+            }
+
+            return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+        }
+
+        function renderColor(rgb) {
+            var hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+            var hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+            var swatch = tool.querySelector('[data-color-preview]');
+            tool.querySelector('[data-color-hex]').value = hex;
+            tool.querySelector('[data-color-r]').value = rgb.r;
+            tool.querySelector('[data-color-g]').value = rgb.g;
+            tool.querySelector('[data-color-b]').value = rgb.b;
+            tool.querySelector('[data-color-h]').value = hsl.h;
+            tool.querySelector('[data-color-s]').value = hsl.s;
+            tool.querySelector('[data-color-l]').value = hsl.l;
+            if (swatch) swatch.style.background = hex;
+            setOutput(['HEX: ' + hex, 'RGB: rgb(' + rgb.r + ', ' + rgb.g + ', ' + rgb.b + ')', 'HSL: hsl(' + hsl.h + ', ' + hsl.s + '%, ' + hsl.l + '%)'].join('\n'));
+        }
+
+        function processColor(action) {
+            var rgb;
+            if (action === 'hex') {
+                rgb = hexToRgb(tool.querySelector('[data-color-hex]').value);
+                if (!rgb) {
+                    setOutput('Enter a valid HEX color.');
+                    return;
+                }
+            } else if (action === 'hsl-rgb') {
+                rgb = hslToRgb(tool.querySelector('[data-color-h]').value, tool.querySelector('[data-color-s]').value, tool.querySelector('[data-color-l]').value);
+            } else {
+                rgb = {
+                    r: clamp(tool.querySelector('[data-color-r]').value, 0, 255),
+                    g: clamp(tool.querySelector('[data-color-g]').value, 0, 255),
+                    b: clamp(tool.querySelector('[data-color-b]').value, 0, 255)
+                };
+            }
+            renderColor(rgb);
+        }
+
+        var code39 = {
+            '0': 'nnnwwnwnn', '1': 'wnnwnnnnw', '2': 'nnwwnnnnw', '3': 'wnwwnnnnn', '4': 'nnnwwnnnw',
+            '5': 'wnnwwnnnn', '6': 'nnwwwnnnn', '7': 'nnnwnnwnw', '8': 'wnnwnnwnn', '9': 'nnwwnnwnn',
+            'A': 'wnnnnwnnw', 'B': 'nnwnnwnnw', 'C': 'wnwnnwnnn', 'D': 'nnnnwwnnw', 'E': 'wnnnwwnnn',
+            'F': 'nnwnwwnnn', 'G': 'nnnnnwwnw', 'H': 'wnnnnwwnn', 'I': 'nnwnnwwnn', 'J': 'nnnnwwwnn',
+            'K': 'wnnnnnnww', 'L': 'nnwnnnnww', 'M': 'wnwnnnnwn', 'N': 'nnnnwnnww', 'O': 'wnnnwnnwn',
+            'P': 'nnwnwnnwn', 'Q': 'nnnnnnwww', 'R': 'wnnnnnwwn', 'S': 'nnwnnnwwn', 'T': 'nnnnwnwwn',
+            'U': 'wwnnnnnnw', 'V': 'nwwnnnnnw', 'W': 'wwwnnnnnn', 'X': 'nwnnwnnnw', 'Y': 'wwnnwnnnn',
+            'Z': 'nwwnwnnnn', '-': 'nwnnnnwnw', '.': 'wwnnnnwnn', ' ': 'nwwnnnwnn', '$': 'nwnwnwnnn',
+            '/': 'nwnwnnnwn', '+': 'nwnnnwnwn', '%': 'nnnwnwnwn', '*': 'nwnnwnwnn'
+        };
+
+        var eanL = ['0001101','0011001','0010011','0111101','0100011','0110001','0101111','0111011','0110111','0001011'];
+        var eanG = ['0100111','0110011','0011011','0100001','0011101','0111001','0000101','0010001','0001001','0010111'];
+        var eanR = ['1110010','1100110','1101100','1000010','1011100','1001110','1010000','1000100','1001000','1110100'];
+        var eanParity = ['LLLLLL','LLGLGG','LLGGLG','LLGGGL','LGLLGG','LGGLLG','LGGGLL','LGLGLG','LGLGGL','LGGLGL'];
+
+        function checksumUpc(value) {
+            var sum = value.split('').reduce(function (total, digit, index) {
+                return total + Number(digit) * (index % 2 === 0 ? 3 : 1);
+            }, 0);
+            return String((10 - sum % 10) % 10);
+        }
+
+        function checksumEan(value) {
+            var sum = value.split('').reduce(function (total, digit, index) {
+                return total + Number(digit) * (index % 2 === 0 ? 1 : 3);
+            }, 0);
+            return String((10 - sum % 10) % 10);
+        }
+
+        function barcodeBits(type, value) {
+            var bits = '';
+            var index;
+            var parity;
+
+            if (type === 'code39' || type === 'code128') {
+                value = String(value || '').toUpperCase().replace(/[^0-9A-Z .\-$/+%]/g, '');
+                if (!value) value = 'TOOLEXA';
+                value = '*' + value + '*';
+                value.split('').forEach(function (char) {
+                    var pattern = code39[char] || code39['-'];
+                    for (var i = 0; i < pattern.length; i++) {
+                        bits += (i % 2 === 0 ? '1' : '0').repeat(pattern[i] === 'w' ? 3 : 1);
+                    }
+                    bits += '0';
+                });
+                return { bits: bits, label: value.replace(/\*/g, ''), value: value.replace(/\*/g, '') };
+            }
+
+            value = String(value || '').replace(/\D/g, '');
+            if (type === 'upca') {
+                value = value.slice(0, 11).padStart(11, '0');
+                value += checksumUpc(value);
+                bits = '101';
+                for (index = 0; index < 6; index++) bits += eanL[Number(value[index])];
+                bits += '01010';
+                for (index = 6; index < 12; index++) bits += eanR[Number(value[index])];
+                bits += '101';
+                return { bits: bits, label: value, value: value };
+            }
+
+            value = value.slice(0, 12).padStart(12, '0');
+            value += checksumEan(value);
+            parity = eanParity[Number(value[0])];
+            bits = '101';
+            for (index = 1; index <= 6; index++) bits += (parity[index - 1] === 'L' ? eanL : eanG)[Number(value[index])];
+            bits += '01010';
+            for (index = 7; index <= 12; index++) bits += eanR[Number(value[index])];
+            bits += '101';
+            return { bits: bits, label: value, value: value };
+        }
+
+        function renderBarcode() {
+            var type = tool.querySelector('[data-barcode-type]').value;
+            var encoded = barcodeBits(type, tool.querySelector('[data-barcode-value]').value);
+            var barWidth = type === 'code39' || type === 'code128' ? 2 : 3;
+            var height = 100;
+            var width = encoded.bits.length * barWidth + 24;
+            var rects = '';
+
+            encoded.bits.split('').forEach(function (bit, index) {
+                if (bit === '1') {
+                    rects += '<rect x="' + (12 + index * barWidth) + '" y="12" width="' + barWidth + '" height="' + height + '" fill="#0f172a"/>';
+                }
+            });
+
+            lastSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="150" viewBox="0 0 ' + width + ' 150"><rect width="100%" height="100%" fill="#fff"/>' + rects + '<text x="' + (width / 2) + '" y="136" text-anchor="middle" font-family="Arial" font-size="16">' + encoded.label + '</text></svg>';
+            tool.querySelector('[data-barcode-preview]').innerHTML = lastSvg;
+            setOutput(['Type: ' + type.toUpperCase(), 'Value: ' + encoded.value, 'Format: SVG/PNG ready'].join('\n'));
+        }
+
+        function barcodePng() {
+            var svg = new Blob([lastSvg], { type: 'image/svg+xml;charset=utf-8' });
+            var url = URL.createObjectURL(svg);
+            var image = new Image();
+            image.onload = function () {
+                var canvas = document.createElement('canvas');
+                canvas.width = image.width;
+                canvas.height = image.height;
+                canvas.getContext('2d').drawImage(image, 0, 0);
+                lastPngCanvas = canvas;
+                URL.revokeObjectURL(url);
+                canvas.toBlob(function (blob) {
+                    var pngUrl = URL.createObjectURL(blob);
+                    var link = document.createElement('a');
+                    link.href = pngUrl;
+                    link.download = 'toolexa-barcode.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(pngUrl);
+                }, 'image/png');
+            };
+            image.src = url;
+        }
+
+        function imageToBase64() {
+            var input = tool.querySelector('[data-image-base64-input]');
+            var file = input.files && input.files[0];
+            var image = tool.querySelector('[data-image-base64-preview]');
+
+            if (!file) {
+                setOutput('Upload an image first.');
+                return;
+            }
+
+            var reader = new FileReader();
+            reader.onload = function () {
+                image.src = reader.result;
+                image.hidden = false;
+                setOutput(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function vat(action) {
+            var amount = Number(tool.querySelector('[data-vat-amount]').value);
+            var rate = Number(tool.querySelector('[data-vat-rate]').value);
+            var net;
+            var vatAmount;
+            var total;
+
+            if (!Number.isFinite(amount) || !Number.isFinite(rate) || amount < 0 || rate < 0) {
+                setOutput('Enter a valid amount and VAT rate.');
+                return;
+            }
+
+            if (action === 'vat-remove') {
+                total = amount;
+                net = total / (1 + rate / 100);
+                vatAmount = total - net;
+            } else {
+                net = amount;
+                vatAmount = net * rate / 100;
+                total = net + vatAmount;
+            }
+
+            setOutput(['Net Amount: ' + net.toFixed(2), 'VAT Rate: ' + rate.toFixed(2) + '%', 'VAT Amount: ' + vatAmount.toFixed(2), 'Total Amount: ' + total.toFixed(2)].join('\n'));
+        }
+
+        function robotsTxt() {
+            var agent = (tool.querySelector('[data-robots-agent]').value || '*').trim() || '*';
+            var allow = (tool.querySelector('[data-robots-allow]').value || '').split(/\r?\n/).map(function (line) { return line.trim(); }).filter(Boolean);
+            var disallow = (tool.querySelector('[data-robots-disallow]').value || '').split(/\r?\n/).map(function (line) { return line.trim(); }).filter(Boolean);
+            var sitemap = (tool.querySelector('[data-robots-sitemap]').value || '').trim();
+            var lines = ['User-agent: ' + agent];
+
+            allow.forEach(function (rule) { lines.push('Allow: ' + rule); });
+            disallow.forEach(function (rule) { lines.push('Disallow: ' + rule); });
+            if (sitemap) {
+                lines.push('', 'Sitemap: ' + sitemap);
+            }
+
+            setOutput(lines.join('\n') + '\n');
+        }
+
+        function passwordStrength() {
+            var value = tool.querySelector('[data-password-strength-input]').value || '';
+            var score = 0;
+            var suggestions = [];
+            var meter = tool.querySelector('[data-strength-meter] span');
+            var charset = 0;
+            var label;
+            var crackSeconds;
+
+            if (value.length >= 8) score += 20; else suggestions.push('Use at least 8 characters.');
+            if (value.length >= 12) score += 20; else suggestions.push('Use 12 or more characters for stronger protection.');
+            if (/[a-z]/.test(value)) { score += 10; charset += 26; } else suggestions.push('Add lowercase letters.');
+            if (/[A-Z]/.test(value)) { score += 10; charset += 26; } else suggestions.push('Add uppercase letters.');
+            if (/\d/.test(value)) { score += 10; charset += 10; } else suggestions.push('Add numbers.');
+            if (/[^A-Za-z0-9]/.test(value)) { score += 15; charset += 32; } else suggestions.push('Add symbols.');
+            if (!/(.)\1{2,}/.test(value)) score += 10; else suggestions.push('Avoid repeated characters.');
+            if (!/(password|qwerty|admin|welcome|letmein|123456)/i.test(value)) score += 5; else suggestions.push('Avoid common password words.');
+
+            score = Math.max(0, Math.min(100, score));
+            label = score >= 75 ? 'Strong' : (score >= 45 ? 'Medium' : 'Weak');
+            crackSeconds = Math.pow(Math.max(charset, 1), Math.max(value.length, 1)) / 1000000000;
+
+            function time(seconds) {
+                if (seconds < 60) return 'Less than a minute';
+                if (seconds < 3600) return Math.round(seconds / 60) + ' minutes';
+                if (seconds < 86400) return Math.round(seconds / 3600) + ' hours';
+                if (seconds < 31536000) return Math.round(seconds / 86400) + ' days';
+                return Math.min(999999, Math.round(seconds / 31536000)) + ' years';
+            }
+
+            if (meter) {
+                meter.style.width = score + '%';
+                meter.style.background = score >= 75 ? '#0f766e' : (score >= 45 ? '#f59e0b' : '#e11d48');
+            }
+
+            setOutput([
+                'Score: ' + score + '/100',
+                'Strength: ' + label,
+                'Estimated crack time: ' + time(crackSeconds),
+                'Length: ' + value.length,
+                'Lowercase: ' + (/[a-z]/.test(value) ? 'Yes' : 'No'),
+                'Uppercase: ' + (/[A-Z]/.test(value) ? 'Yes' : 'No'),
+                'Numbers: ' + (/\d/.test(value) ? 'Yes' : 'No'),
+                'Symbols: ' + (/[^A-Za-z0-9]/.test(value) ? 'Yes' : 'No'),
+                'Suggestions: ' + (suggestions.length ? suggestions.join(' ') : 'Looks good. Use a unique password and enable MFA.')
+            ].join('\n'));
+        }
+
+        function parseCsv(text) {
+            var rows = [];
+            var row = [];
+            var cell = '';
+            var quote = false;
+            var i;
+            var char;
+            var next;
+
+            for (i = 0; i < text.length; i++) {
+                char = text[i];
+                next = text[i + 1];
+                if (char === '"' && quote && next === '"') {
+                    cell += '"';
+                    i += 1;
+                } else if (char === '"') {
+                    quote = !quote;
+                } else if (char === ',' && !quote) {
+                    row.push(cell);
+                    cell = '';
+                } else if ((char === '\n' || char === '\r') && !quote) {
+                    if (char === '\r' && next === '\n') i += 1;
+                    row.push(cell);
+                    rows.push(row);
+                    row = [];
+                    cell = '';
+                } else {
+                    cell += char;
+                }
+            }
+            row.push(cell);
+            rows.push(row);
+            return rows.filter(function (item) { return item.some(function (value) { return value.trim() !== ''; }); });
+        }
+
+        function csvToJson() {
+            var text = tool.querySelector('[data-csv-input]').value.trim();
+            var rows;
+            var headers;
+            var data;
+
+            if (!text) {
+                setOutput('Paste CSV text or upload a CSV file first.');
+                return;
+            }
+
+            rows = parseCsv(text);
+            headers = rows.shift() || [];
+            data = rows.map(function (row) {
+                var item = {};
+                headers.forEach(function (header, index) {
+                    item[(header || 'column_' + (index + 1)).trim()] = row[index] || '';
+                });
+                return item;
+            });
+
+            setOutput(JSON.stringify(data, null, 2));
+        }
+
+        function timestamp(action) {
+            var unix = tool.querySelector('[data-timestamp-unix]');
+            var human = tool.querySelector('[data-timestamp-human]');
+            var date;
+            var seconds;
+
+            if (action === 'timestamp-current') {
+                date = new Date();
+            } else if (action === 'timestamp-human') {
+                seconds = Number(unix.value);
+                if (!Number.isFinite(seconds)) {
+                    setOutput('Enter a valid Unix timestamp.');
+                    return;
+                }
+                date = new Date(String(Math.round(seconds)).length > 10 ? seconds : seconds * 1000);
+            } else {
+                if (!human.value) {
+                    setOutput('Choose a human date first.');
+                    return;
+                }
+                date = new Date(human.value);
+            }
+
+            seconds = Math.floor(date.getTime() / 1000);
+            unix.value = seconds;
+            human.value = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            setOutput(['Unix Timestamp: ' + seconds, 'Milliseconds: ' + date.getTime(), 'Local Date: ' + date.toString(), 'UTC ISO: ' + date.toISOString()].join('\n'));
+        }
+
+        function webpToPng() {
+            var input = tool.querySelector('[data-webp-input]');
+            var files = Array.prototype.slice.call(input.files || []);
+            var wrap = tool.querySelector('[data-webp-preview]');
+            var summaries = [];
+
+            if (!files.length) {
+                setOutput('Upload one or more WebP images first.');
+                return;
+            }
+
+            wrap.innerHTML = '';
+            files.forEach(function (file) {
+                if (file.type !== 'image/webp') {
+                    summaries.push(file.name + ': skipped (not WebP)');
+                    return;
+                }
+
+                var reader = new FileReader();
+                reader.onload = function () {
+                    var image = new Image();
+                    image.onload = function () {
+                        var canvas = document.createElement('canvas');
+                        var card = document.createElement('div');
+                        var img = document.createElement('img');
+                        var button = document.createElement('button');
+                        canvas.width = image.naturalWidth;
+                        canvas.height = image.naturalHeight;
+                        canvas.getContext('2d').drawImage(image, 0, 0);
+                        img.src = canvas.toDataURL('image/png');
+                        img.alt = file.name + ' PNG preview';
+                        img.className = 'image-output-preview';
+                        button.type = 'button';
+                        button.className = 'btn btn-secondary btn-sm';
+                        button.textContent = 'Download PNG';
+                        button.addEventListener('click', function () {
+                            var link = document.createElement('a');
+                            link.href = img.src;
+                            link.download = file.name.replace(/\.webp$/i, '') + '.png';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        });
+                        card.className = 'finance-result-item';
+                        card.appendChild(img);
+                        card.appendChild(button);
+                        wrap.appendChild(card);
+                    };
+                    image.src = reader.result;
+                };
+                reader.readAsDataURL(file);
+                summaries.push(file.name + ': ready');
+            });
+
+            setOutput(summaries.join('\n'));
+        }
+
+        function keywordDensity() {
+            var text = tool.querySelector('[data-keyword-text]').value || '';
+            var stop = 'a,an,and,are,as,at,be,by,for,from,has,he,in,is,it,its,of,on,that,the,to,was,were,will,with,you,your,or,if,not,this,these,those,can,into,than,then,they,their,we,our'.split(',');
+            var words = (text.toLowerCase().match(/[a-z0-9]+(?:'[a-z]+)?/g) || []);
+            var counts = {};
+            var filtered;
+            var unique;
+            var rows;
+
+            words.forEach(function (word) {
+                if (stop.indexOf(word) === -1 && word.length > 1) {
+                    counts[word] = (counts[word] || 0) + 1;
+                }
+            });
+
+            unique = Object.keys(counts).length;
+            filtered = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; }).slice(0, 20);
+            rows = [
+                'Total Words: ' + words.length,
+                'Unique Words: ' + unique,
+                '',
+                'Top Keywords:'
+            ];
+            filtered.forEach(function (word, index) {
+                rows.push((index + 1) + '. ' + word + ' - ' + counts[word] + ' times - ' + (words.length ? (counts[word] / words.length * 100).toFixed(2) : '0.00') + '%');
+            });
+            setOutput(rows.join('\n'));
+        }
+
+        function canvasBlob(canvas) {
+            return new Promise(function (resolve) {
+                canvas.toBlob(resolve, 'image/png');
+            });
+        }
+
+        function resizeImageToCanvas(image, size) {
+            var canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            canvas.getContext('2d').drawImage(image, 0, 0, size, size);
+            return canvas;
+        }
+
+        function faviconGenerator() {
+            var input = tool.querySelector('[data-favicon-input]');
+            var file = input.files && input.files[0];
+            var sizes = [16, 32, 48, 64, 180, 192, 512];
+            var previewBox = tool.querySelector('[data-favicon-preview]');
+
+            if (!file) {
+                setOutput('Upload an image first.');
+                return Promise.reject(new Error('No image selected'));
+            }
+
+            faviconAssets = [];
+            previewBox.innerHTML = '';
+
+            return new Promise(function (resolve, reject) {
+                var image = new Image();
+                var url = URL.createObjectURL(file);
+
+                image.onload = async function () {
+                    try {
+                        for (var i = 0; i < sizes.length; i++) {
+                            var canvas = resizeImageToCanvas(image, sizes[i]);
+                            var blob = await canvasBlob(canvas);
+                            var dataUrl = canvas.toDataURL('image/png');
+                            var card = document.createElement('div');
+                            var img = document.createElement('img');
+                            var label = document.createElement('strong');
+                            img.src = dataUrl;
+                            img.alt = sizes[i] + ' favicon preview';
+                            img.className = 'image-output-preview';
+                            label.textContent = sizes[i] + 'x' + sizes[i];
+                            card.className = 'finance-result-item';
+                            card.appendChild(img);
+                            card.appendChild(label);
+                            previewBox.appendChild(card);
+                            faviconAssets.push({ name: 'favicon-' + sizes[i] + 'x' + sizes[i] + '.png', size: sizes[i], blob: blob, dataUrl: dataUrl });
+                        }
+                        URL.revokeObjectURL(url);
+                        setOutput('Generated favicon sizes:\n' + sizes.map(function (size) { return size + 'x' + size; }).join('\n'));
+                        resolve(faviconAssets);
+                    } catch (error) {
+                        URL.revokeObjectURL(url);
+                        reject(error);
+                    }
+                };
+                image.onerror = function () {
+                    URL.revokeObjectURL(url);
+                    setOutput('Could not read this image. Try a PNG, JPG or WebP file.');
+                    reject(new Error('Invalid image'));
+                };
+                image.src = url;
+            });
+        }
+
+        async function icoBlob() {
+            if (!faviconAssets.length) {
+                await faviconGenerator();
+            }
+            var assets = faviconAssets.filter(function (asset) { return [16, 32, 48, 64].indexOf(asset.size) !== -1; });
+            var buffers = await Promise.all(assets.map(function (asset) { return asset.blob.arrayBuffer(); }));
+            var headerSize = 6 + assets.length * 16;
+            var total = headerSize + buffers.reduce(function (sum, buffer) { return sum + buffer.byteLength; }, 0);
+            var bytes = new Uint8Array(total);
+            var view = new DataView(bytes.buffer);
+            var offset = headerSize;
+            view.setUint16(0, 0, true);
+            view.setUint16(2, 1, true);
+            view.setUint16(4, assets.length, true);
+            assets.forEach(function (asset, index) {
+                var base = 6 + index * 16;
+                var buffer = new Uint8Array(buffers[index]);
+                view.setUint8(base, asset.size === 256 ? 0 : asset.size);
+                view.setUint8(base + 1, asset.size === 256 ? 0 : asset.size);
+                view.setUint8(base + 2, 0);
+                view.setUint8(base + 3, 0);
+                view.setUint16(base + 4, 1, true);
+                view.setUint16(base + 6, 32, true);
+                view.setUint32(base + 8, buffer.byteLength, true);
+                view.setUint32(base + 12, offset, true);
+                bytes.set(buffer, offset);
+                offset += buffer.byteLength;
+            });
+            return new Blob([bytes], { type: 'image/x-icon' });
+        }
+
+        function crc32(bytes) {
+            var table = window.__crcTable || (window.__crcTable = Array.from({ length: 256 }, function (_, n) {
+                for (var k = 0; k < 8; k++) n = n & 1 ? 0xedb88320 ^ (n >>> 1) : n >>> 1;
+                return n >>> 0;
+            }));
+            var crc = -1;
+            for (var i = 0; i < bytes.length; i++) crc = (crc >>> 8) ^ table[(crc ^ bytes[i]) & 255];
+            return (crc ^ -1) >>> 0;
+        }
+
+        async function zipBlob() {
+            var files = [];
+            if (!faviconAssets.length) await faviconGenerator();
+            for (var i = 0; i < faviconAssets.length; i++) {
+                files.push({ name: faviconAssets[i].name, data: new Uint8Array(await faviconAssets[i].blob.arrayBuffer()) });
+            }
+            files.push({ name: 'favicon.ico', data: new Uint8Array(await (await icoBlob()).arrayBuffer()) });
+            var chunks = [];
+            var central = [];
+            var offset = 0;
+
+            function u16(value) { return [value & 255, value >>> 8 & 255]; }
+            function u32(value) { return [value & 255, value >>> 8 & 255, value >>> 16 & 255, value >>> 24 & 255]; }
+            function strBytes(value) { return Array.from(new TextEncoder().encode(value)); }
+
+            files.forEach(function (file) {
+                var name = strBytes(file.name);
+                var crc = crc32(file.data);
+                var local = new Uint8Array([].concat(u32(0x04034b50), u16(20), u16(0), u16(0), u16(0), u16(0), u32(crc), u32(file.data.length), u32(file.data.length), u16(name.length), u16(0), name));
+                chunks.push(local, file.data);
+                central.push({ file: file, name: name, crc: crc, offset: offset });
+                offset += local.length + file.data.length;
+            });
+            var centralStart = offset;
+            central.forEach(function (item) {
+                var dir = new Uint8Array([].concat(u32(0x02014b50), u16(20), u16(20), u16(0), u16(0), u16(0), u16(0), u32(item.crc), u32(item.file.data.length), u32(item.file.data.length), u16(item.name.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(item.offset), item.name));
+                chunks.push(dir);
+                offset += dir.length;
+            });
+            chunks.push(new Uint8Array([].concat(u32(0x06054b50), u16(0), u16(0), u16(files.length), u16(files.length), u32(offset - centralStart), u32(centralStart), u16(0))));
+            return new Blob(chunks, { type: 'application/zip' });
+        }
+
+        function mortgage() {
+            var loan = Number(tool.querySelector('[data-mortgage-loan]').value);
+            var rate = Number(tool.querySelector('[data-mortgage-rate]').value) / 100 / 12;
+            var months = Number(tool.querySelector('[data-mortgage-years]').value) * 12;
+            if (!Number.isFinite(loan) || !Number.isFinite(rate) || !Number.isFinite(months) || loan <= 0 || months <= 0) {
+                setOutput('Enter a valid loan amount, interest rate and loan term.');
+                return;
+            }
+            var payment = rate === 0 ? loan / months : loan * rate * Math.pow(1 + rate, months) / (Math.pow(1 + rate, months) - 1);
+            var balance = loan;
+            var totalInterest = 0;
+            var yearly = [];
+            for (var month = 1; month <= months; month++) {
+                var interest = balance * rate;
+                var principal = payment - interest;
+                balance = Math.max(0, balance - principal);
+                totalInterest += interest;
+                if (month % 12 === 0 || month === months) yearly.push('Year ' + Math.ceil(month / 12) + ': Balance ' + balance.toFixed(2));
+            }
+            setOutput(['Monthly Payment: ' + payment.toFixed(2), 'Total Payment: ' + (payment * months).toFixed(2), 'Total Interest: ' + totalInterest.toFixed(2), '', 'Amortization Summary:', yearly.slice(0, 30).join('\n')].join('\n'));
+        }
+
+        function slugify() {
+            var text = tool.querySelector('[data-slug-text]').value || '';
+            var slug = text.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-');
+            setOutput(slug);
+        }
+
+        function loadPickerImage() {
+            var input = tool.querySelector('[data-picker-input]');
+            var file = input.files && input.files[0];
+            var canvas = tool.querySelector('[data-picker-canvas]');
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function () {
+                var image = new Image();
+                image.onload = function () {
+                    var max = 680;
+                    var scale = Math.min(1, max / image.naturalWidth);
+                    canvas.width = Math.round(image.naturalWidth * scale);
+                    canvas.height = Math.round(image.naturalHeight * scale);
+                    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+                    canvas.hidden = false;
+                    setOutput('Click the image to pick a color.');
+                };
+                image.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function pickColor(event) {
+            var canvas = tool.querySelector('[data-picker-canvas]');
+            var rect = canvas.getBoundingClientRect();
+            var x = Math.floor((event.clientX - rect.left) * canvas.width / rect.width);
+            var y = Math.floor((event.clientY - rect.top) * canvas.height / rect.height);
+            var data = canvas.getContext('2d').getImageData(x, y, 1, 1).data;
+            var rgb = { r: data[0], g: data[1], b: data[2] };
+            var hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+            var hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+            var row = 'HEX: ' + hex + ' | RGB: rgb(' + rgb.r + ', ' + rgb.g + ', ' + rgb.b + ') | HSL: hsl(' + hsl.h + ', ' + hsl.s + '%, ' + hsl.l + '%)';
+            pickedPalette.unshift(row);
+            setOutput(pickedPalette.slice(0, 20).join('\n'));
+        }
+
+        tool.querySelectorAll('[data-local-action]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var action = button.getAttribute('data-local-action');
+                if (mode === 'hex-rgb-hsl-color-converter') processColor(action);
+                if (mode === 'barcode-generator') renderBarcode();
+                if (mode === 'image-to-base64-converter') imageToBase64();
+                if (mode === 'vat-calculator') vat(action);
+                if (mode === 'robots-txt-generator') robotsTxt();
+                if (mode === 'password-strength-checker') passwordStrength();
+                if (mode === 'csv-to-json-converter') csvToJson();
+                if (mode === 'timestamp-converter') timestamp(action);
+                if (mode === 'webp-to-png-converter') webpToPng();
+                if (mode === 'keyword-density-checker') keywordDensity();
+                if (mode === 'ico-favicon-generator') faviconGenerator();
+                if (mode === 'mortgage-calculator') mortgage();
+                if (mode === 'url-slug-generator') slugify();
+                if (mode === 'color-picker-from-image') loadPickerImage();
+            });
+        });
+
+        var csvFile = tool.querySelector('[data-csv-file]');
+        if (csvFile) {
+            csvFile.addEventListener('change', function () {
+                var file = csvFile.files && csvFile.files[0];
+                if (!file) return;
+                var reader = new FileReader();
+                reader.onload = function () {
+                    tool.querySelector('[data-csv-input]').value = reader.result;
+                };
+                reader.readAsText(file);
+            });
+        }
+
+        var pickerInput = tool.querySelector('[data-picker-input]');
+        if (pickerInput) {
+            pickerInput.addEventListener('change', loadPickerImage);
+        }
+
+        var pickerCanvas = tool.querySelector('[data-picker-canvas]');
+        if (pickerCanvas) {
+            pickerCanvas.addEventListener('click', pickColor);
+        }
+
+        if (mode === 'hex-rgb-hsl-color-converter') {
+            processColor('hex');
+        }
+
+        if (mode === 'barcode-generator') {
+            renderBarcode();
+        }
+
+        if (clearButton) {
+            clearButton.addEventListener('click', function () {
+                setOutput('');
+                if (mode === 'image-to-base64-converter') {
+                    var input = tool.querySelector('[data-image-base64-input]');
+                    var image = tool.querySelector('[data-image-base64-preview]');
+                    input.value = '';
+                    image.hidden = true;
+                    image.removeAttribute('src');
+                }
+                if (mode === 'barcode-generator') {
+                    tool.querySelector('[data-barcode-preview]').innerHTML = '';
+                    lastSvg = '';
+                }
+                if (mode === 'password-strength-checker') {
+                    tool.querySelector('[data-password-strength-input]').value = '';
+                    var meter = tool.querySelector('[data-strength-meter] span');
+                    if (meter) meter.style.width = '0%';
+                }
+                if (mode === 'csv-to-json-converter') {
+                    tool.querySelector('[data-csv-input]').value = '';
+                    tool.querySelector('[data-csv-file]').value = '';
+                }
+                if (mode === 'webp-to-png-converter') {
+                    tool.querySelector('[data-webp-input]').value = '';
+                    tool.querySelector('[data-webp-preview]').innerHTML = '';
+                }
+                if (mode === 'keyword-density-checker') tool.querySelector('[data-keyword-text]').value = '';
+                if (mode === 'ico-favicon-generator') {
+                    tool.querySelector('[data-favicon-input]').value = '';
+                    tool.querySelector('[data-favicon-preview]').innerHTML = '';
+                    faviconAssets = [];
+                }
+                if (mode === 'mortgage-calculator') {
+                    tool.querySelector('[data-mortgage-loan]').value = '';
+                    tool.querySelector('[data-mortgage-rate]').value = '';
+                    tool.querySelector('[data-mortgage-years]').value = '';
+                }
+                if (mode === 'url-slug-generator') tool.querySelector('[data-slug-text]').value = '';
+                if (mode === 'color-picker-from-image') {
+                    tool.querySelector('[data-picker-input]').value = '';
+                    tool.querySelector('[data-picker-canvas]').hidden = true;
+                    pickedPalette = [];
+                }
+            });
+        }
+
+        downloadButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                var type = button.getAttribute('data-local-download');
+                if (type === 'svg') {
+                    if (!lastSvg) renderBarcode();
+                    downloadText(lastSvg, 'toolexa-barcode.svg', 'image/svg+xml');
+                } else if (type === 'png') {
+                    if (!lastSvg) renderBarcode();
+                    barcodePng();
+                } else if (type === 'txt') {
+                    if (!output.value) {
+                        imageToBase64();
+                    }
+                    if (output.value) {
+                        downloadText(output.value, 'toolexa-image-base64.txt', 'text/plain');
+                    }
+                } else if (type === 'robots') {
+                    if (!output.value) robotsTxt();
+                    downloadText(output.value, 'robots.txt', 'text/plain');
+                } else if (type === 'json') {
+                    if (!output.value) csvToJson();
+                    downloadText(output.value, 'toolexa-csv.json', 'application/json');
+                } else if (type === 'png-batch') {
+                    var first = tool.querySelector('[data-webp-preview] img');
+                    if (first) {
+                        var link = document.createElement('a');
+                        link.href = first.src;
+                        link.download = 'toolexa-webp-converted.png';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
+                } else if (type === 'ico') {
+                    icoBlob().then(function (blob) {
+                        var url = URL.createObjectURL(blob);
+                        var link = document.createElement('a');
+                        link.href = url;
+                        link.download = 'favicon.ico';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                    }).catch(function () {});
+                } else if (type === 'favicon-zip') {
+                    zipBlob().then(function (blob) {
+                        var url = URL.createObjectURL(blob);
+                        var link = document.createElement('a');
+                        link.href = url;
+                        link.download = 'toolexa-favicons.zip';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                    }).catch(function () {});
+                } else if (type === 'palette') {
+                    downloadText(output.value || '', 'toolexa-palette.txt', 'text/plain');
+                }
+            });
+        });
+
+        tool.querySelectorAll('[data-local-print]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var html;
+                if (mode === 'barcode-generator') {
+                    if (!lastSvg) renderBarcode();
+                    html = lastSvg;
+                } else {
+                    if (!output.value && mode === 'mortgage-calculator') mortgage();
+                    html = '<pre style="font-family:Arial,sans-serif;white-space:pre-wrap;line-height:1.6;font-size:16px">' + (output.value || '').replace(/[&<>"']/g, function (char) {
+                        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+                    }) + '</pre>';
+                }
+                var win = window.open('', '_blank');
+                if (!win) return;
+                win.document.write('<!doctype html><title>Print Result</title><body style="display:grid;place-items:center;min-height:100vh;padding:32px">' + html + '<script>window.print();<\/script></body>');
+                win.document.close();
+            });
+        });
+
+        tool.querySelectorAll('[data-share-url]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                if (navigator.share) {
+                    navigator.share({ title: document.title, url: window.location.href }).catch(function () {});
+                    return;
+                }
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(window.location.href);
                 }
             });
         });
