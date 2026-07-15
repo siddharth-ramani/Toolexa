@@ -287,6 +287,7 @@ class SiteController extends Controller
     public function ads()
     {
         $publisherId = trim((string) config('services.google.adsense_publisher_id'));
+        $publisherId = preg_replace('/^ca-/', '', $publisherId);
         $content = $publisherId
             ? 'google.com, '.$publisherId.', DIRECT, f08c47fec0942fa0'."\n"
             : '';
