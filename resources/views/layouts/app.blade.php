@@ -141,6 +141,12 @@
     <link rel="stylesheet" href="{{ $assetRoot }}/css/bootstrap-lite.css">
     <link rel="stylesheet" href="{{ $assetRoot }}/css/style.css">
 
+    @if(config('services.google.adsense_publisher_id'))
+        <script async
+                src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ config('services.google.adsense_publisher_id') }}"
+                crossorigin="anonymous"></script>
+    @endif
+
     @if(config('services.google.analytics_id'))
         <script async src="https://www.googletagmanager.com/gtag/js?id={{ config('services.google.analytics_id') }}"></script>
         <script>
