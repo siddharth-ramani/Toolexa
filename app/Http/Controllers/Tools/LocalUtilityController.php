@@ -18,6 +18,7 @@ class LocalUtilityController extends Controller
         'webp-to-png-converter',
         'keyword-density-checker',
         'ico-favicon-generator',
+        'favicon-generator',
         'mortgage-calculator',
         'url-slug-generator',
         'color-picker-from-image',

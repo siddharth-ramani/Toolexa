@@ -72,6 +72,26 @@ class ToolController extends Controller
         'flipkart-label-cropper' => SellerToolController::class,
         'myntra-label-cropper' => SellerToolController::class,
         'ajio-label-cropper' => SellerToolController::class,
+        'sha-256-hash-generator' => AdvancedBrowserToolController::class,
+        'url-parser' => AdvancedBrowserToolController::class,
+        'color-palette-generator' => AdvancedBrowserToolController::class,
+        'pdf-splitter' => AdvancedBrowserToolController::class,
+        'text-compare-tool' => AdvancedBrowserToolController::class,
+        'open-graph-meta-tag-generator' => AdvancedBrowserToolController::class,
+        'html-entity-encoder-decoder' => AdvancedBrowserToolController::class,
+        'time-zone-converter' => AdvancedBrowserToolController::class,
+        'favicon-generator' => LocalUtilityController::class,
+        'uuid-batch-generator' => AdvancedBrowserToolController::class,
+        'xml-sitemap-generator' => AdvancedBrowserToolController::class,
+        'json-minifier' => AdvancedBrowserToolController::class,
+        'css-gradient-generator' => AdvancedBrowserToolController::class,
+        'png-to-svg-converter' => AdvancedBrowserToolController::class,
+        'text-sorter' => AdvancedBrowserToolController::class,
+        'image-rotator-flipper' => AdvancedBrowserToolController::class,
+        'regex-tester' => AdvancedBrowserToolController::class,
+        'uuid-decoder-inspector' => AdvancedBrowserToolController::class,
+        'reading-time-calculator' => AdvancedBrowserToolController::class,
+        'screen-resolution-checker' => AdvancedBrowserToolController::class,
     ];
 
     public function show(string $slug)
@@ -110,6 +130,10 @@ class ToolController extends Controller
 
         if ($this->controllers[$slug] === SellerToolController::class) {
             return app(SellerToolController::class)->index($slug);
+        }
+
+        if ($this->controllers[$slug] === AdvancedBrowserToolController::class) {
+            return app(AdvancedBrowserToolController::class)->index($slug);
         }
 
         return app($this->controllers[$slug])->index();

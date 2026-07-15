@@ -56,7 +56,7 @@
             'cagr-calculator',
         ]);
         $utilityNavTools = collect(\App\Http\Controllers\Tools\HomeController::tools())
-            ->filter(fn ($tool) => in_array($tool['category'], ['Utility', 'Utility Tools', 'Text Tools', 'Developer Tools', 'SEO Tools', 'Security Tools', 'Date & Time Tools', 'Color Tools', 'Business Tools', 'Image Tools', 'PDF Tools', 'Seller Tools', 'Math', 'Shopping'], true))
+            ->filter(fn ($tool) => in_array($tool['category'], ['Utility', 'Utility Tools', 'Text Tools', 'Developer Tools', 'SEO Tools', 'Security Tools', 'Date & Time Tools', 'Color Tools', 'Business Tools', 'Image Tools', 'PDF Tools', 'Seller Tools', 'Web Tools', 'Math', 'Shopping'], true))
             ->take(8)
             ->values();
         $footerGuides = class_exists(\App\Support\BlogRepository::class)

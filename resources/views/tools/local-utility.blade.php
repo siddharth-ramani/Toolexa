@@ -116,7 +116,7 @@
                     <textarea id="keywordText" class="form-control" rows="12" maxlength="100000" placeholder="Paste article, page copy or SEO content..." data-keyword-text></textarea>
                 </div>
                 <button class="btn btn-primary w-100" type="button" data-local-action="keyword-density">Analyze Keyword Density</button>
-            @elseif($mode === 'ico-favicon-generator')
+            @elseif(in_array($mode, ['ico-favicon-generator', 'favicon-generator'], true))
                 <div class="mb-3">
                     <label for="faviconInput">Upload image</label>
                     <input id="faviconInput" class="form-control" type="file" accept="image/png,image/jpeg,image/webp" data-favicon-input>
@@ -178,7 +178,7 @@
                     <div class="strength-meter" data-strength-meter><span></span></div>
                 @elseif($mode === 'webp-to-png-converter')
                     <div class="image-preview-grid" data-webp-preview></div>
-                @elseif($mode === 'ico-favicon-generator')
+                @elseif(in_array($mode, ['ico-favicon-generator', 'favicon-generator'], true))
                     <div class="image-preview-grid" data-favicon-preview></div>
                 @elseif($mode === 'color-picker-from-image')
                     <canvas class="picker-canvas" data-picker-canvas hidden></canvas>
@@ -202,7 +202,7 @@
                     <button class="btn btn-secondary" type="button" data-local-download="json">Download JSON</button>
                 @elseif($mode === 'webp-to-png-converter')
                     <button class="btn btn-secondary" type="button" data-local-download="png-batch">Download PNG</button>
-                @elseif($mode === 'ico-favicon-generator')
+                @elseif(in_array($mode, ['ico-favicon-generator', 'favicon-generator'], true))
                     <button class="btn btn-secondary" type="button" data-local-download="ico">Download .ico</button>
                     <button class="btn btn-secondary" type="button" data-local-download="favicon-zip">Download ZIP</button>
                 @elseif($mode === 'color-picker-from-image')

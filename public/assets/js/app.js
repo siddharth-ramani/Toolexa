@@ -2892,7 +2892,7 @@
         function faviconGenerator() {
             var input = tool.querySelector('[data-favicon-input]');
             var file = input.files && input.files[0];
-            var sizes = [16, 32, 48, 64, 180, 192, 512];
+            var sizes = mode === 'favicon-generator' ? [16, 32, 48, 180, 192, 512] : [16, 32, 48, 64, 180, 192, 512];
             var previewBox = tool.querySelector('[data-favicon-preview]');
 
             if (!file) {
@@ -3094,7 +3094,7 @@
                 if (mode === 'timestamp-converter') timestamp(action);
                 if (mode === 'webp-to-png-converter') webpToPng();
                 if (mode === 'keyword-density-checker') keywordDensity();
-                if (mode === 'ico-favicon-generator') faviconGenerator();
+                if (mode === 'ico-favicon-generator' || mode === 'favicon-generator') faviconGenerator();
                 if (mode === 'mortgage-calculator') mortgage();
                 if (mode === 'url-slug-generator') slugify();
                 if (mode === 'color-picker-from-image') loadPickerImage();
@@ -3160,7 +3160,7 @@
                     tool.querySelector('[data-webp-preview]').innerHTML = '';
                 }
                 if (mode === 'keyword-density-checker') tool.querySelector('[data-keyword-text]').value = '';
-                if (mode === 'ico-favicon-generator') {
+                if (mode === 'ico-favicon-generator' || mode === 'favicon-generator') {
                     tool.querySelector('[data-favicon-input]').value = '';
                     tool.querySelector('[data-favicon-preview]').innerHTML = '';
                     faviconAssets = [];
@@ -3270,6 +3270,203 @@
                 }
             });
         });
+    });
+
+    document.querySelectorAll('[data-advanced-tool]').forEach(function (tool) {
+        var mode = tool.dataset.mode;
+        var output = tool.querySelector('[data-output]');
+        var clear = tool.querySelector('[data-clear]');
+        var outputBytes = null;
+
+        function downloadBlob(blob, name) {
+            var url = URL.createObjectURL(blob), link = document.createElement('a');
+            link.href = url; link.download = name; document.body.appendChild(link); link.click(); link.remove();
+            window.setTimeout(function () { URL.revokeObjectURL(url); }, 500);
+        }
+
+        async function hash() {
+            var value = tool.querySelector('[data-hash-input]').value;
+            if (!value) { output.value = ''; return; }
+            if (!window.crypto || !window.crypto.subtle) { output.value = 'SHA-256 requires a secure modern browser context.'; return; }
+            var digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+            output.value = Array.from(new Uint8Array(digest)).map(function (byte) { return byte.toString(16).padStart(2, '0'); }).join('');
+        }
+
+        function parseUrl() {
+            var panel = tool.querySelector('[data-url-result]');
+            panel.innerHTML = '';
+            try {
+                var url = new URL(tool.querySelector('[data-url-input]').value.trim());
+                var params = Array.from(url.searchParams.entries());
+                var rows = [['Protocol', url.protocol.replace(':', '')], ['Host', url.hostname], ['Port', url.port || (url.protocol === 'https:' ? '443 (default)' : url.protocol === 'http:' ? '80 (default)' : 'Not specified')], ['Path', url.pathname || '/'], ['Fragment', url.hash ? url.hash.slice(1) : 'None']];
+                var list = document.createElement('div'); list.className = 'browser-result-list';
+                rows.concat([['Query Parameters', params.length ? params.map(function (p) { return p[0] + ' = ' + p[1]; }).join(', ') : 'None']]).forEach(function (row) {
+                    var item = document.createElement('div'), code = document.createElement('code'); code.textContent = row[0] + ': ' + row[1]; item.appendChild(code); list.appendChild(item);
+                });
+                panel.appendChild(list);
+                output.value = rows.map(function (r) { return r[0] + ': ' + r[1]; }).concat(['Query Parameters:', params.length ? params.map(function (p) { return '  ' + p[0] + ': ' + p[1]; }).join('\n') : '  None']).join('\n');
+            } catch (error) { panel.textContent = 'Enter a valid absolute URL including its protocol.'; output.value = ''; }
+        }
+
+        var palette = [];
+        function randomColor() { return '#' + Array.from(crypto.getRandomValues(new Uint8Array(3))).map(function (x) { return x.toString(16).padStart(2, '0'); }).join('').toUpperCase(); }
+        function rgb(hex) { return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)]; }
+        function renderPalette(generate) {
+            var wrap = tool.querySelector('[data-palette]'); if (!wrap) return;
+            if (!palette.length) palette = Array.from({length:5}, function () { return {hex:randomColor(), locked:false}; });
+            if (generate) palette.forEach(function (color) { if (!color.locked) color.hex = randomColor(); });
+            wrap.innerHTML = '';
+            palette.forEach(function (color, index) {
+                var values = rgb(color.hex), swatch = document.createElement('div'); swatch.className = 'palette-swatch'; swatch.style.background = color.hex;
+                var hex = document.createElement('strong'); hex.textContent = color.hex; var rgbText = document.createElement('small'); rgbText.textContent = 'rgb(' + values.join(', ') + ')';
+                var copy = document.createElement('button'); copy.className = 'btn btn-secondary btn-sm'; copy.type = 'button'; copy.textContent = 'Copy'; copy.onclick = function () { navigator.clipboard.writeText(color.hex); };
+                var lock = document.createElement('button'); lock.className = 'btn btn-secondary btn-sm'; lock.type = 'button'; lock.textContent = color.locked ? 'Unlock' : 'Lock'; lock.setAttribute('aria-pressed', color.locked); lock.onclick = function () { palette[index].locked = !palette[index].locked; renderPalette(false); };
+                swatch.append(hex, rgbText, copy, lock); wrap.appendChild(swatch);
+            });
+            output.value = palette.map(function (c) { return c.hex + ' | rgb(' + rgb(c.hex).join(', ') + ')'; }).join('\n');
+        }
+
+        function selectedPages(value, total) {
+            var pages = [];
+            value.split(',').forEach(function (part) {
+                var bits = part.trim().split('-'), start = Number(bits[0]), end = bits.length > 1 ? Number(bits[1]) : start;
+                if (!Number.isInteger(start) || !Number.isInteger(end) || start < 1 || end < start || end > total) throw new Error('Invalid range');
+                for (var page = start; page <= end; page++) if (pages.indexOf(page - 1) < 0) pages.push(page - 1);
+            });
+            if (!pages.length) throw new Error('No pages'); return pages;
+        }
+        async function inspectPdf() {
+            var file = tool.querySelector('[data-pdf-input]').files[0], label = tool.querySelector('[data-page-count]'); outputBytes = null; tool.querySelector('[data-download]').classList.add('disabled');
+            if (!file) { label.textContent = 'Select a PDF to preview its page count.'; return; }
+            try { var pdf = await PDFLib.PDFDocument.load(await file.arrayBuffer()); label.textContent = 'Detected ' + pdf.getPageCount() + ' page(s) in ' + file.name + '.'; }
+            catch (e) { label.textContent = 'Could not read this PDF. It may be protected or damaged.'; }
+        }
+        async function splitPdf() {
+            var panel = tool.querySelector('[data-pdf-result]'), file = tool.querySelector('[data-pdf-input]').files[0];
+            if (!file || !window.PDFLib) { panel.textContent = !file ? 'Choose a PDF first.' : 'PDF library is still loading. Try again.'; return; }
+            try { var source = await PDFLib.PDFDocument.load(await file.arrayBuffer()), indices = selectedPages(tool.querySelector('[data-ranges]').value, source.getPageCount()), result = await PDFLib.PDFDocument.create(), pages = await result.copyPages(source, indices); pages.forEach(function (p) { result.addPage(p); }); outputBytes = await result.save(); panel.textContent = 'Extracted ' + indices.length + ' of ' + source.getPageCount() + ' pages. Your new PDF is ready.'; tool.querySelector('[data-download]').classList.remove('disabled'); }
+            catch (e) { panel.textContent = 'Check the page range and ensure every page is within the PDF page count.'; }
+        }
+
+        function markedChars(text, other) {
+            var fragment = document.createDocumentFragment();
+            Array.from(text).forEach(function (char, i) { var span = document.createElement('span'); span.textContent = char; if (char !== Array.from(other)[i]) span.className = 'diff-char'; fragment.appendChild(span); }); return fragment;
+        }
+        function compare() {
+            var a = tool.querySelector('[data-original]').value, b = tool.querySelector('[data-changed]').value, left = a.split('\n'), right = b.split('\n'), diff = tool.querySelector('[data-diff]'), max = Math.max(left.length, right.length), added=0, removed=0, changed=0, plain=[]; diff.innerHTML='';
+            for (var i=0;i<max;i++) { var old=left[i], newer=right[i]; if (old===newer) addLine(' ', old || '', 'diff-same'); else if (old===undefined) { added++; addLine('+',newer,'diff-add'); } else if (newer===undefined) { removed++; addLine('-',old,'diff-remove'); } else { changed++; addLine('-',old,'diff-remove',newer); addLine('+',newer,'diff-add',old); } }
+            function addLine(sign,textValue,klass,other) { var row=document.createElement('div'), mark=document.createElement('b'), body=document.createElement('span'); row.className='diff-line '+klass; mark.textContent=sign; body.appendChild(other===undefined?document.createTextNode(textValue):markedChars(textValue,other)); row.append(mark,body); diff.appendChild(row); plain.push(sign+' '+textValue); }
+            tool.querySelector('[data-compare-summary]').textContent='Original: '+left.length+' lines / '+a.length+' characters · Changed: '+right.length+' lines / '+b.length+' characters · Added: '+added+' · Removed: '+removed+' · Modified: '+changed; output.value=plain.join('\n');
+        }
+
+        function htmlAttribute(value) {
+            return String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+        function openGraph() {
+            var rows = [['og:title', tool.querySelector('[data-og-title]').value], ['og:description', tool.querySelector('[data-og-description]').value], ['og:image', tool.querySelector('[data-og-image]').value], ['og:url', tool.querySelector('[data-og-url]').value], ['og:type', tool.querySelector('[data-og-type]').value]];
+            output.value = rows.map(function (row) { return '<meta property="' + row[0] + '" content="' + htmlAttribute(row[1]) + '">'; }).join('\n');
+        }
+
+        function convertEntity() {
+            var input = tool.querySelector('[data-entity-input]').value, conversion = tool.querySelector('[data-entity-mode]').value;
+            if (conversion === 'encode') { output.value = input.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); return; }
+            var area = document.createElement('textarea'); area.innerHTML = input; output.value = area.value;
+        }
+
+        var fallbackZones = ['UTC','Asia/Kolkata','Asia/Dubai','Asia/Singapore','Asia/Tokyo','Australia/Sydney','Europe/London','Europe/Paris','Europe/Berlin','Africa/Johannesburg','America/New_York','America/Chicago','America/Denver','America/Los_Angeles','America/Toronto','America/Sao_Paulo','Pacific/Auckland'];
+        function allZones() { return typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : fallbackZones; }
+        function validZone(zone) { try { new Intl.DateTimeFormat('en-US',{timeZone:zone}).format(); return true; } catch(e) { return false; } }
+        function zoneParts(date, zone) {
+            var result = {}, parts = new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(date);
+            parts.forEach(function(p){ if(p.type!=='literal') result[p.type]=Number(p.value); }); return result;
+        }
+        function localInZone(value, zone) {
+            var match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/); if(!match) throw new Error('date');
+            var wanted = Date.UTC(+match[1],+match[2]-1,+match[3],+match[4],+match[5],0), guess = wanted;
+            for(var i=0;i<3;i++){ var p=zoneParts(new Date(guess),zone), shown=Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second); guess += wanted-shown; }
+            return new Date(guess);
+        }
+        function zoneLabel(date, zone) { return new Intl.DateTimeFormat('en-IN',{timeZone:zone,dateStyle:'full',timeStyle:'long'}).format(date); }
+        function updateZoneClocks() {
+            if(mode!=='time-zone-converter') return; var source=tool.querySelector('[data-source-zone]').value, target=tool.querySelector('[data-target-zone]').value, now=new Date();
+            tool.querySelector('[data-source-current]').textContent=validZone(source)?zoneLabel(now,source):'Choose a valid zone'; tool.querySelector('[data-target-current]').textContent=validZone(target)?zoneLabel(now,target):'Choose a valid zone';
+        }
+        function convertTimeZone() {
+            var source=tool.querySelector('[data-source-zone]').value.trim(), target=tool.querySelector('[data-target-zone]').value.trim(), value=tool.querySelector('[data-zone-datetime]').value;
+            if(!validZone(source)||!validZone(target)||!value){ output.value='Choose valid source and destination time zones, then enter a date and time.'; return; }
+            try { var instant=localInZone(value,source); output.value=['Source: '+zoneLabel(instant,source)+' ('+source+')','Destination: '+zoneLabel(instant,target)+' ('+target+')','UTC: '+instant.toISOString()].join('\n'); } catch(e){ output.value='Could not convert this local time. Check the selected values.'; }
+        }
+
+        function uuidV4() {
+            if (crypto.randomUUID) return crypto.randomUUID();
+            var bytes=crypto.getRandomValues(new Uint8Array(16)); bytes[6]=(bytes[6]&15)|64; bytes[8]=(bytes[8]&63)|128;
+            var hex=Array.from(bytes).map(function(b){return b.toString(16).padStart(2,'0');}).join(''); return hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);
+        }
+        function generateUuids() {
+            var quantity=Number(tool.querySelector('[data-uuid-quantity]').value); if(!Number.isInteger(quantity)||quantity<1||quantity>1000){output.value='';tool.querySelector('[data-uuid-summary]').textContent='Enter a whole number from 1 to 1,000.';return;}
+            output.value=Array.from({length:quantity},uuidV4).join('\n'); tool.querySelector('[data-uuid-summary]').textContent='Generated '+quantity+' UUID v4 value'+(quantity===1?'':'s')+'.';
+        }
+
+        function xmlEscape(value) { return String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;'); }
+        function addSitemapRow(values) {
+            var wrap=tool.querySelector('[data-sitemap-rows]'),row=document.createElement('div');row.className='sitemap-row';
+            row.innerHTML='<div><label>URL</label><input class="form-control" type="url" placeholder="https://example.com/page" data-sm-url></div><div><label>Change frequency</label><select class="form-control" data-sm-frequency><option value="">Not specified</option><option>always</option><option>hourly</option><option>daily</option><option>weekly</option><option>monthly</option><option>yearly</option><option>never</option></select></div><div><label>Priority</label><input class="form-control" type="number" min="0" max="1" step="0.1" value="0.5" data-sm-priority></div><div><label>Last modified</label><input class="form-control" type="date" data-sm-date></div><button class="btn btn-secondary btn-sm" type="button">Remove</button>';
+            if(values){row.querySelector('[data-sm-url]').value=values.url||'';row.querySelector('[data-sm-frequency]').value=values.frequency||'';row.querySelector('[data-sm-priority]').value=values.priority||'0.5';row.querySelector('[data-sm-date]').value=values.date||'';}
+            row.querySelector('button').addEventListener('click',function(){row.remove();});wrap.appendChild(row);
+        }
+        function generateSitemap() {
+            var entries=[],invalid=false;tool.querySelectorAll('.sitemap-row').forEach(function(row){var url=row.querySelector('[data-sm-url]').value.trim(),priority=row.querySelector('[data-sm-priority]').value,frequency=row.querySelector('[data-sm-frequency]').value,date=row.querySelector('[data-sm-date]').value;if(!url)return;try{var parsed=new URL(url);if(!/^https?:$/.test(parsed.protocol))throw new Error();}catch(e){invalid=true;return;}if(Number(priority)<0||Number(priority)>1){invalid=true;return;}entries.push({url:url,priority:priority,frequency:frequency,date:date});});
+            if(invalid||!entries.length){output.value=invalid?'Correct invalid URLs or priority values before generating.':'Add at least one complete URL.';return;}
+            var lines=['<?xml version="1.0" encoding="UTF-8"?>','<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'];entries.forEach(function(e){lines.push('  <url>','    <loc>'+xmlEscape(e.url)+'</loc>');if(e.date)lines.push('    <lastmod>'+e.date+'</lastmod>');if(e.frequency)lines.push('    <changefreq>'+e.frequency+'</changefreq>');if(e.priority!=='')lines.push('    <priority>'+Number(e.priority).toFixed(1)+'</priority>');lines.push('  </url>');});lines.push('</urlset>');output.value=lines.join('\n');
+        }
+        function minifyJson() { var status=tool.querySelector('[data-json-status]'),input=tool.querySelector('[data-json-min-input]').value;try{output.value=JSON.stringify(JSON.parse(input));status.textContent='Valid JSON minified from '+input.length+' to '+output.value.length+' characters.';}catch(e){output.value='';status.textContent='Invalid JSON: '+e.message;} }
+        function gradientCss() { var type=tool.querySelector('[data-gradient-type]').value,angle=tool.querySelector('[data-gradient-angle]').value,one=tool.querySelector('[data-gradient-one]').value,two=tool.querySelector('[data-gradient-two]').value,gradient=type==='radial'?'radial-gradient(circle, '+one+', '+two+')':'linear-gradient('+angle+'deg, '+one+', '+two+')';tool.querySelector('[data-gradient-preview]').style.background=gradient;tool.querySelector('[data-angle-label]').textContent=angle+'°';tool.querySelector('[data-gradient-angle]').disabled=type==='radial';output.value='background: '+gradient+';'; }
+
+        function tracePng() {
+            var input=tool.querySelector('[data-png-input]'),file=input.files&&input.files[0],status=tool.querySelector('[data-svg-status]'),preview=tool.querySelector('[data-svg-preview]');if(!file){status.textContent='Upload a PNG first.';return;}if(file.type!=='image/png'){status.textContent='Only PNG files are supported.';return;}
+            var url=URL.createObjectURL(file),image=new Image();image.onload=function(){var max=160,scale=Math.min(1,max/image.naturalWidth,max/image.naturalHeight),width=Math.max(1,Math.round(image.naturalWidth*scale)),height=Math.max(1,Math.round(image.naturalHeight*scale)),canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;var ctx=canvas.getContext('2d');ctx.drawImage(image,0,0,width,height);URL.revokeObjectURL(url);var data=ctx.getImageData(0,0,width,height).data,step=Number(tool.querySelector('[data-color-step]').value),rects=[];
+                function colorAt(x,y){var i=(y*width+x)*4,a=data[i+3];if(a<16)return null;function q(v){return step===1?v:Math.min(255,Math.round(v/step)*step);}return [q(data[i]),q(data[i+1]),q(data[i+2]),a];}
+                for(var y=0;y<height;y++){var x=0;while(x<width){var color=colorAt(x,y);if(!color){x++;continue;}var end=x+1;while(end<width){var next=colorAt(end,y);if(!next||next.join(',')!==color.join(','))break;end++;}var fill='rgb('+color.slice(0,3).join(',')+')',opacity=color[3]===255?'':' fill-opacity="'+(color[3]/255).toFixed(3)+'"';rects.push('<rect x="'+x+'" y="'+y+'" width="'+(end-x)+'" height="1" fill="'+fill+'"'+opacity+'/>');x=end;}}
+                var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+width+' '+height+'" width="'+image.naturalWidth+'" height="'+image.naturalHeight+'" shape-rendering="crispEdges">\n'+rects.map(function(r){return '  '+r;}).join('\n')+'\n</svg>';output.value=svg;preview.innerHTML=svg;status.textContent='Created '+rects.length+' colored SVG runs at '+width+'×'+height+' trace resolution. Best results come from simple flat graphics.';
+            };image.onerror=function(){URL.revokeObjectURL(url);status.textContent='Could not read this PNG.';};image.src=url;
+        }
+        function sortText() { var input=tool.querySelector('[data-sort-input]').value,lines=input.split('\n'),original=lines.length,ignore=tool.querySelector('[data-sort-ignore]').checked,remove=tool.querySelector('[data-sort-empty]').checked,modeValue=tool.querySelector('[data-sort-mode]').value;if(remove)lines=lines.filter(function(line){return line.trim()!=='';});function compare(a,b){var left=ignore?a.toLocaleLowerCase():a,right=ignore?b.toLocaleLowerCase():b;return left.localeCompare(right,undefined,{numeric:true});}lines.sort(function(a,b){if(modeValue==='length')return a.length-b.length||compare(a,b);var result=compare(a,b);return modeValue==='za'?-result:result;});output.value=lines.join('\n');tool.querySelector('[data-sort-summary]').textContent='Sorted '+original+' original line'+(original===1?'':'s')+' into '+lines.length+' output line'+(lines.length===1?'':'s')+'.'; }
+
+        function transformImages() {
+            var files=Array.from(tool.querySelector('[data-rotate-input]').files||[]),operation=tool.querySelector('[data-image-operation]').value,wrap=tool.querySelector('[data-transform-previews]'),status=tool.querySelector('[data-image-status]');wrap.innerHTML='';if(!files.length){status.textContent='Choose one or more images first.';return;}status.textContent='Processing '+files.length+' image(s)…';var done=0;
+            files.forEach(function(file,index){var url=URL.createObjectURL(file),image=new Image();image.onload=function(){var rotate=['90','180','270'].indexOf(operation)>=0?Number(operation):0,swap=rotate===90||rotate===270,canvas=document.createElement('canvas');canvas.width=swap?image.naturalHeight:image.naturalWidth;canvas.height=swap?image.naturalWidth:image.naturalHeight;var ctx=canvas.getContext('2d');ctx.translate(canvas.width/2,canvas.height/2);if(rotate)ctx.rotate(rotate*Math.PI/180);if(operation==='flip-h')ctx.scale(-1,1);if(operation==='flip-v')ctx.scale(1,-1);ctx.drawImage(image,-image.naturalWidth/2,-image.naturalHeight/2);URL.revokeObjectURL(url);var type=file.type==='image/png'?'image/png':'image/jpeg',ext=type==='image/png'?'.png':'.jpg',card=document.createElement('div'),preview=document.createElement('img'),label=document.createElement('strong'),button=document.createElement('button');card.className='finance-result-item';preview.className='image-output-preview';preview.alt='Transformed preview of '+file.name;preview.src=canvas.toDataURL(type,.92);label.textContent=file.name;button.type='button';button.className='btn btn-secondary btn-sm';button.textContent='Download Image';button.onclick=function(){var link=document.createElement('a');link.href=preview.src;link.download=file.name.replace(/\.[^.]+$/,'')+'-'+operation+ext;document.body.appendChild(link);link.click();link.remove();};card.append(preview,label,button);wrap.appendChild(card);done++;status.textContent='Processed '+done+' of '+files.length+' image(s).';};image.onerror=function(){URL.revokeObjectURL(url);done++;status.textContent='Processed '+done+' of '+files.length+' image(s); one file could not be read.';};image.src=url;});
+        }
+        var regexExamples={email:{pattern:'\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\b',flags:'gi',text:'Contact hello@toolexa.in or support@example.com.'},url:{pattern:'https?:\\/\\/[^\\s]+',flags:'gi',text:'Visit https://toolexa.in/tools or http://example.com.'},number:{pattern:'-?\\d+(?:\\.\\d+)?',flags:'g',text:'Values: 42, -7 and 3.14.'},space:{pattern:'\\s{2,}',flags:'g',text:'Find   repeated    spaces.'}};
+        function testRegex() { var pattern=tool.querySelector('[data-regex-pattern]').value,flags=tool.querySelector('[data-regex-flags]').value,textValue=tool.querySelector('[data-regex-text]').value,status=tool.querySelector('[data-regex-status]'),highlight=tool.querySelector('[data-regex-highlight]');highlight.innerHTML='';try{var effectiveFlags=flags.indexOf('g')>=0?flags:flags+'g',regex=new RegExp(pattern,effectiveFlags),matches=[],last=0,match;while((match=regex.exec(textValue))!==null){matches.push({index:match.index,text:match[0],groups:match.slice(1)});if(match[0]==='')regex.lastIndex++;if(matches.length>=1000)break;}matches.forEach(function(item){highlight.appendChild(document.createTextNode(textValue.slice(last,item.index)));var mark=document.createElement('mark');mark.textContent=item.text||'∅';highlight.appendChild(mark);last=item.index+item.text.length;});highlight.appendChild(document.createTextNode(textValue.slice(last)));status.textContent=matches.length+' match'+(matches.length===1?'':'es')+' found.';output.value=matches.length?matches.map(function(item,i){return (i+1)+'. "'+item.text+'" at index '+item.index+(item.groups.length?' | Groups: '+item.groups.map(function(g){return g===undefined?'undefined':g;}).join(', '):'');}).join('\n'):'No matches found.';}catch(e){status.textContent='Invalid regular expression: '+e.message;highlight.textContent=textValue;output.value='';} }
+        function inspectUuid() { var value=tool.querySelector('[data-inspect-uuid]').value.trim().toLowerCase(),panel=tool.querySelector('[data-uuid-inspection]'),match=value.match(/^([0-9a-f]{8})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{12})$/);if(!match){panel.textContent='Invalid UUID. Enter the canonical 8-4-4-4-12 hexadecimal format.';output.value='Valid: No';return;}var version=parseInt(match[3][0],16),variantByte=parseInt(match[4].slice(0,2),16),variant=(variantByte&128)===0?'NCS backward compatibility':(variantByte&192)===128?'RFC 4122 / RFC 9562':(variantByte&224)===192?'Microsoft backward compatibility':'Future reserved',explanation=version===1?'Version 1 uses a time-based layout.':version===4?'Version 4 uses random or pseudorandom data.':version===7?'Version 7 begins with a Unix epoch millisecond timestamp.':'Version '+version+' determines how the remaining fields are interpreted.',rows=[['Valid','Yes'],['Normalized UUID',value],['Version',version],['Variant',variant],['time_low',match[1]],['time_mid',match[2]],['time_high_and_version',match[3]],['clock_seq',match[4]],['node',match[5]],['Explanation',explanation]];if(version===1){try{var ticks=BigInt('0x'+match[3].slice(1)+match[2]+match[1]),unix100ns=ticks-122192928000000000n,ms=Number(unix100ns/10000n);rows.push(['Version 1 Timestamp',new Date(ms).toISOString()]);}catch(e){}}panel.innerHTML='';var list=document.createElement('div');list.className='browser-result-list';rows.forEach(function(row){var item=document.createElement('div'),code=document.createElement('code');code.textContent=row[0]+': '+row[1];item.appendChild(code);list.appendChild(item);});panel.appendChild(list);output.value=rows.map(function(row){return row[0]+': '+row[1];}).join('\n'); }
+        function duration(seconds) { if(!seconds)return '0 seconds';var minutes=Math.floor(seconds/60),remaining=Math.ceil(seconds%60);return minutes?(minutes+' min '+remaining+' sec'):(remaining+' sec'); }
+        function calculateReading() { var textValue=tool.querySelector('[data-reading-text]').value.trim(),words=textValue?textValue.split(/\s+/u).filter(Boolean).length:0,characters=tool.querySelector('[data-reading-text]').value.length,speed=Number(tool.querySelector('[data-reading-speed]').value),reading=words/speed*60,speaking=words/130*60,rows=[['Words',words],['Characters',characters],['Reading Time',duration(reading)],['Speaking Time',duration(speaking)],['Reading Speed',speed+' WPM']],wrap=tool.querySelector('[data-reading-results]');wrap.innerHTML='';rows.forEach(function(row){var card=document.createElement('div'),label=document.createElement('span'),strong=document.createElement('strong');card.className='reading-metric';label.textContent=row[0];strong.textContent=row[1];card.append(label,strong);wrap.appendChild(card);});output.value=rows.map(function(row){return row[0]+': '+row[1];}).join('\n'); }
+        function screenDetails() { var orientation=screen.orientation&&screen.orientation.type?screen.orientation.type:(window.innerWidth>=window.innerHeight?'landscape':'portrait'),rows=[['Screen Resolution',screen.width+' × '+screen.height+' CSS px'],['Available Screen',screen.availWidth+' × '+screen.availHeight+' CSS px'],['Viewport Size',window.innerWidth+' × '+window.innerHeight+' CSS px'],['Browser Window Size',window.outerWidth+' × '+window.outerHeight+' CSS px'],['Device Pixel Ratio',window.devicePixelRatio||1],['Color Depth',screen.colorDepth+' bits'],['Pixel Depth',screen.pixelDepth+' bits'],['Orientation',orientation],['User Agent',navigator.userAgent]],wrap=tool.querySelector('[data-screen-results]');wrap.innerHTML='';rows.forEach(function(row){var card=document.createElement('div'),label=document.createElement('span'),strong=document.createElement('strong');card.className='reading-metric';label.textContent=row[0];strong.textContent=row[1];card.append(label,strong);wrap.appendChild(card);});output.value=rows.map(function(row){return row[0]+': '+row[1];}).join('\n'); }
+
+        tool.querySelectorAll('[data-action]').forEach(function (button) { button.addEventListener('click', function () { var action=button.dataset.action; if(action==='hash')hash(); if(action==='url')parseUrl(); if(action==='palette')renderPalette(true); if(action==='split')splitPdf(); if(action==='compare')compare(); if(action==='og')openGraph(); if(action==='entity')convertEntity(); if(action==='timezone')convertTimeZone(); if(action==='uuid')generateUuids(); if(action==='sitemap')generateSitemap(); if(action==='json-minify')minifyJson(); if(action==='png-svg')tracePng(); if(action==='sort')sortText(); if(action==='transform-images')transformImages(); if(action==='regex')testRegex(); if(action==='inspect-uuid')inspectUuid(); if(action==='reading')calculateReading(); if(action==='screen')screenDetails(); }); });
+        var hashInput=tool.querySelector('[data-hash-input]'); if(hashInput) hashInput.addEventListener('input', hash);
+        var pdfInput=tool.querySelector('[data-pdf-input]'); if(pdfInput) pdfInput.addEventListener('change', inspectPdf);
+        var exportButton=tool.querySelector('[data-export]'); if(exportButton) exportButton.addEventListener('click', function(){ downloadBlob(new Blob([JSON.stringify(palette.map(function(c){return {hex:c.hex,rgb:'rgb('+rgb(c.hex).join(', ')+')'};}),null,2)],{type:'application/json'}),'toolexa-color-palette.json'); });
+        var download=tool.querySelector('[data-download]'); if(download) download.addEventListener('click',function(){if(outputBytes)downloadBlob(new Blob([outputBytes],{type:'application/pdf'}),'toolexa-split.pdf');});
+        var entityInput=tool.querySelector('[data-entity-input]'), entityMode=tool.querySelector('[data-entity-mode]'); if(entityInput)entityInput.addEventListener('input',convertEntity);if(entityMode)entityMode.addEventListener('change',convertEntity);
+        if(mode==='open-graph-meta-tag-generator')tool.querySelectorAll('input, textarea, select').forEach(function(field){field.addEventListener('input',openGraph);field.addEventListener('change',openGraph);});
+        if(mode==='time-zone-converter'){
+            var zoneList=tool.querySelector('#timeZoneList');allZones().forEach(function(zone){var option=document.createElement('option');option.value=zone;zoneList.appendChild(option);});
+            var guessed=Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC';tool.querySelector('[data-source-zone]').value=guessed;tool.querySelector('[data-target-zone]').value=guessed==='UTC'?'Asia/Kolkata':'UTC';var now=new Date(),local=new Date(now.getTime()-now.getTimezoneOffset()*60000);tool.querySelector('[data-zone-datetime]').value=local.toISOString().slice(0,16);tool.querySelectorAll('[data-source-zone],[data-target-zone]').forEach(function(field){field.addEventListener('input',updateZoneClocks);});updateZoneClocks();window.setInterval(updateZoneClocks,30000);
+        }
+        var uuidDownload=tool.querySelector('[data-uuid-download]');if(uuidDownload)uuidDownload.addEventListener('click',function(){if(output.value)downloadBlob(new Blob([output.value+'\n'],{type:'text/plain;charset=utf-8'}),'toolexa-uuid-v4-batch.txt');});
+        var sitemapAdd=tool.querySelector('[data-sitemap-add]');if(sitemapAdd){sitemapAdd.addEventListener('click',function(){addSitemapRow();});addSitemapRow({priority:'1.0',frequency:'weekly'});}
+        var sitemapDownload=tool.querySelector('[data-sitemap-download]');if(sitemapDownload)sitemapDownload.addEventListener('click',function(){if(!output.value||output.value.indexOf('<?xml')!==0)generateSitemap();if(output.value.indexOf('<?xml')===0)downloadBlob(new Blob([output.value+'\n'],{type:'application/xml'}),'sitemap.xml');});
+        var jsonDownload=tool.querySelector('[data-json-download]');if(jsonDownload)jsonDownload.addEventListener('click',function(){if(output.value)downloadBlob(new Blob([output.value+'\n'],{type:'application/json'}),'toolexa-minified.json');});
+        if(mode==='css-gradient-generator'){tool.querySelectorAll('[data-gradient-type],[data-gradient-angle],[data-gradient-one],[data-gradient-two]').forEach(function(field){field.addEventListener('input',gradientCss);field.addEventListener('change',gradientCss);});gradientCss();}
+        var gradientDownload=tool.querySelector('[data-gradient-download]');if(gradientDownload)gradientDownload.addEventListener('click',function(){downloadBlob(new Blob(['.gradient {\n  '+output.value+'\n}\n'],{type:'text/css'}),'toolexa-gradient.css');});
+        var svgDownload=tool.querySelector('[data-svg-download]');if(svgDownload)svgDownload.addEventListener('click',function(){if(output.value.indexOf('<svg')===0)downloadBlob(new Blob([output.value],{type:'image/svg+xml'}),'toolexa-traced.svg');});
+        var sortDownload=tool.querySelector('[data-sort-download]');if(sortDownload)sortDownload.addEventListener('click',function(){if(output.value)downloadBlob(new Blob([output.value+'\n'],{type:'text/plain;charset=utf-8'}),'toolexa-sorted-text.txt');});
+        var regexExample=tool.querySelector('[data-regex-example]');if(regexExample)regexExample.addEventListener('change',function(){var example=regexExamples[regexExample.value];if(!example)return;tool.querySelector('[data-regex-pattern]').value=example.pattern;tool.querySelector('[data-regex-flags]').value=example.flags;tool.querySelector('[data-regex-text]').value=example.text;testRegex();});
+        var readingText=tool.querySelector('[data-reading-text]'),readingSpeed=tool.querySelector('[data-reading-speed]');if(readingText){readingText.addEventListener('input',calculateReading);readingSpeed.addEventListener('change',calculateReading);calculateReading();}
+        if(mode==='screen-resolution-checker'){screenDetails();window.addEventListener('resize',screenDetails);window.addEventListener('orientationchange',screenDetails);}
+        if(clear) clear.addEventListener('click',function(){ tool.querySelectorAll('input, textarea').forEach(function(el){if(el.type!=='button')el.value='';}); if(output)output.value=''; var diff=tool.querySelector('[data-diff]');if(diff)diff.innerHTML=''; var panel=tool.querySelector('[data-pdf-result]');if(panel)panel.textContent='The extraction summary will appear here.'; outputBytes=null;if(download)download.classList.add('disabled'); });
+        if(mode==='color-palette-generator')renderPalette(false);
     });
 
     document.querySelectorAll('img:not([loading])').forEach(function (image) {

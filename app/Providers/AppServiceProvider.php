@@ -25,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
             $viewSlugMap = collect(HomeController::tools())
                 ->mapWithKeys(fn ($tool) => ['tools.'.$tool['view'] => $tool['slug']])
                 ->all();
-            $routeSlugViews = ['tools.finance-calculator', 'tools.text-utility', 'tools.image-utility', 'tools.browser-utility', 'tools.developer-utility', 'tools.local-utility', 'tools.pdf-utility', 'tools.seller-label'];
+            $routeSlugViews = ['tools.finance-calculator', 'tools.text-utility', 'tools.image-utility', 'tools.browser-utility', 'tools.developer-utility', 'tools.local-utility', 'tools.pdf-utility', 'tools.seller-label', 'tools.advanced-browser-tool'];
             $viewData = $view->getData();
             $slug = in_array($view->getName(), $routeSlugViews, true)
                 ? (request()->route('slug') ?: ($viewData['slug'] ?? null))
