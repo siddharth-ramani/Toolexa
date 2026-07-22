@@ -20,26 +20,9 @@
     RewriteRule ^ index.php [L]
 </IfModule>
 
-<IfModule mod_mime.c>
-    AddEncoding br .br
-    AddEncoding gzip .gz
-    AddType text/css .css.br .css.gz
-    AddType application/javascript .js.br .js.gz
-</IfModule>
-
-<IfModule mod_rewrite.c>
-    RewriteCond %{HTTP:Accept-Encoding} br
-    RewriteCond %{REQUEST_FILENAME}.br -f
-    RewriteRule ^(.+\.(?:css|js))$ $1.br [L]
-    RewriteCond %{HTTP:Accept-Encoding} gzip
-    RewriteCond %{REQUEST_FILENAME}.gz -f
-    RewriteRule ^(.+\.(?:css|js))$ $1.gz [L]
-</IfModule>
-
 <IfModule mod_headers.c>
     <FilesMatch "\.(css|js|ico|json|png|jpg|jpeg|gif|webp|avif|svg|woff|woff2)(\.br|\.gz)?$">
         Header set Cache-Control "public, max-age=31536000, immutable"
-        Header append Vary "Accept-Encoding"
     </FilesMatch>
     <FilesMatch "\.(html|php)$">
         Header set Cache-Control "no-cache, no-store, must-revalidate"

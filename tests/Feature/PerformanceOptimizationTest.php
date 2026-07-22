@@ -11,12 +11,12 @@ class PerformanceOptimizationTest extends TestCase
         $home = $this->get('/')->assertOk()->getContent();
 
         $this->assertStringContainsString('/assets/css/style.min.css', $home);
-        $this->assertStringContainsString('/assets/js/app.min.js" defer', $home);
+        $this->assertMatchesRegularExpression('~/assets/js/app\.min\.js\?v=[a-f0-9]+" defer~', $home);
         $this->assertStringNotContainsString('/assets/js/workspace.min.js', $home);
         $this->assertStringNotContainsString('/assets/js/dashboard.min.js', $home);
 
-        $this->get('/dashboard')->assertOk()->assertSee('/assets/js/dashboard.min.js" defer', false);
-        $this->get('/workspace')->assertOk()->assertSee('/assets/js/workspace.min.js" defer', false);
+        $this->get('/dashboard')->assertOk()->assertSee('/assets/js/dashboard.min.js?v=', false);
+        $this->get('/workspace')->assertOk()->assertSee('/assets/js/workspace.min.js?v=', false);
     }
 
     public function test_critical_images_reserve_space_and_have_modern_fallback(): void

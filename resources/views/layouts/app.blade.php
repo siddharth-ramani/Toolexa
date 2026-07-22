@@ -30,6 +30,7 @@
         $manifestUrl = ($basePath === '' || str_ends_with($basePath, '/public'))
             ? $basePath.'/site.webmanifest'
             : $basePath.'/public/site.webmanifest';
+        $assetVersion = substr(sha1((string) filemtime(public_path('assets/css/style.min.css')).'|'.(string) filemtime(public_path('assets/js/app.min.js'))), 0, 10);
         $faviconUrl = file_exists(public_path('assets/images/favicon.png'))
             ? $assetRoot.'/images/favicon.png'
             : (($basePath === '' || str_ends_with($basePath, '/public'))
@@ -149,8 +150,8 @@
     <meta name="twitter:title" content="{{ $pageTitle }}">
     <meta name="twitter:description" content="{{ $pageDescription }}">
     <meta name="twitter:image" content="{{ $socialImageUrl }}">
-    <link rel="stylesheet" href="{{ $assetRoot }}/css/bootstrap-lite.min.css">
-    <link rel="stylesheet" href="{{ $assetRoot }}/css/style.min.css">
+    <link rel="stylesheet" href="{{ $assetRoot }}/css/bootstrap-lite.min.css?v={{ $assetVersion }}">
+    <link rel="stylesheet" href="{{ $assetRoot }}/css/style.min.css?v={{ $assetVersion }}">
 
     @if(config('services.google.adsense_publisher_id'))
         <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin>
@@ -385,11 +386,11 @@
     @endunless
 
     @if($dashboardPageItem || request()->is('dashboard'))
-        <script src="{{ $assetRoot }}/js/dashboard.min.js" defer></script>
+        <script src="{{ $assetRoot }}/js/dashboard.min.js?v={{ $assetVersion }}" defer></script>
     @endif
     @if(request()->is('workspace'))
-        <script src="{{ $assetRoot }}/js/workspace.min.js" defer></script>
+        <script src="{{ $assetRoot }}/js/workspace.min.js?v={{ $assetVersion }}" defer></script>
     @endif
-    <script src="{{ $assetRoot }}/js/app.min.js" defer></script>
+    <script src="{{ $assetRoot }}/js/app.min.js?v={{ $assetVersion }}" defer></script>
 </body>
 </html>
