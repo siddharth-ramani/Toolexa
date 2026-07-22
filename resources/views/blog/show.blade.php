@@ -15,7 +15,7 @@
 
         <figure class="blog-featured">
             @if($article['featured_image'])
-                <img src="{{ $article['featured_image'] }}" alt="{{ $article['title'] }}" loading="eager" decoding="async">
+                <img src="{{ $article['featured_image'] }}" alt="{{ $article['title'] }}" width="1200" height="675" loading="eager" fetchpriority="high" decoding="async">
             @else
                 <div>
                     <span>{{ $article['category'] }}</span>
@@ -65,17 +65,7 @@
             </section>
         </section>
 
-        @if(count($relatedTools))
-            <section class="info-panel">
-                <span class="eyebrow">Related Tools</span>
-                <h2>Try these Toolexa tools</h2>
-                <div class="mini-tool-grid">
-                    @foreach($relatedTools as $tool)
-                        @include('partials.tool-card', ['tool' => $tool])
-                    @endforeach
-                </div>
-            </section>
-        @endif
+        <x-related-tools :tools="$relatedTools" heading="Try these Toolexa tools" />
 
         <section class="info-panel blog-author-box">
             <span class="eyebrow">Author</span>
@@ -94,29 +84,7 @@
             @endforeach
         </section>
 
-        @if(count($relatedArticles))
-            <section class="info-panel blog-keep-reading">
-                <div class="section-head">
-                    <div>
-                        <span class="eyebrow">Related Articles</span>
-                        <h2>Keep Reading</h2>
-                    </div>
-                    <a class="btn btn-sm" href="{{ route('blog.index') }}">All Articles</a>
-                </div>
-                <div class="blog-related-grid">
-                    @foreach($relatedArticles as $relatedArticle)
-                        <a class="related-article-card" href="{{ route('blog.show', $relatedArticle['slug']) }}">
-                            <span class="related-article-mark">{{ strtoupper(substr($relatedArticle['category'], 0, 2)) }}</span>
-                            <span class="related-article-content">
-                                <span class="related-article-meta">{{ $relatedArticle['category'] }} · {{ $relatedArticle['reading_time'] }} min read</span>
-                                <strong>{{ $relatedArticle['title'] }}</strong>
-                                <small>{{ $relatedArticle['excerpt'] }}</small>
-                            </span>
-                        </a>
-                    @endforeach
-                </div>
-            </section>
-        @endif
+        <x-related-articles :articles="$relatedArticles" heading="Keep Reading" />
 
         <nav class="blog-adjacent" aria-label="Previous and next articles">
             @if($previousArticle)

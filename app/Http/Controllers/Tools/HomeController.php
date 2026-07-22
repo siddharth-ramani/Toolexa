@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Tools;
 
-use App\Support\BlogRepository;
+use App\Services\HomepageService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Str;
 
@@ -24,6 +24,12 @@ class HomeController extends Controller
 
     public static function tools(): array
     {
+        static $resolvedTools;
+
+        if ($resolvedTools !== null) {
+            return $resolvedTools;
+        }
+
         $tools = [
             [
                 'name' => 'GST Calculator',
@@ -282,7 +288,7 @@ class HomeController extends Controller
             ],
         ];
 
-        return self::enrichTools(array_merge($tools, self::textTools(), self::developerTools(), self::localTools(), self::utilityTools(), self::imageTools(), self::pdfTools(), self::sellerTools(), self::financeTools(), self::newBrowserTools(), self::latestBrowserTools(), self::newestBrowserTools(), self::browserTools100()));
+        return $resolvedTools = self::enrichTools(array_merge($tools, self::textTools(), self::developerTools(), self::localTools(), self::utilityTools(), self::imageTools(), self::pdfTools(), self::sellerTools(), self::financeTools(), self::newBrowserTools(), self::latestBrowserTools(), self::newestBrowserTools(), self::browserTools100()));
     }
 
     public static function newBrowserTools(): array
@@ -2186,13 +2192,10 @@ class HomeController extends Controller
 
     public static function toolBySlug(string $slug): ?array
     {
-        foreach (self::tools() as $tool) {
-            if ($tool['slug'] === $slug) {
-                return $tool;
-            }
-        }
+        static $toolsBySlug;
+        $toolsBySlug ??= collect(self::tools())->keyBy('slug')->all();
 
-        return null;
+        return $toolsBySlug[$slug] ?? null;
     }
 
     public static function toolsBySlugs(array $slugs): array
@@ -2217,15 +2220,22 @@ class HomeController extends Controller
 
     public static function categories(): array
     {
-        return collect(self::tools())
+        static $categories;
+
+        return $categories ??= collect(self::tools())
             ->pluck('category')
             ->unique()
             ->values()
-            ->map(fn ($category) => [
+            ->map(function ($category) {
+                static $counts;
+                $counts ??= collect(self::tools())->countBy('category');
+
+                return [
                 'name' => $category,
                 'slug' => Str::slug($category),
-                'count' => collect(self::tools())->where('category', $category)->count(),
-            ])
+                'count' => $counts[$category] ?? 0,
+                ];
+            })
             ->all();
     }
 
@@ -2250,66 +2260,13 @@ class HomeController extends Controller
         ];
     }
 
-    public function index()
+    public function index(HomepageService $homepage)
     {
-        $tools = self::tools();
-        $popularSlugs = self::popularSlugs();
-        $popular = self::toolsBySlugs($popularSlugs);
-        $homepageCategories = self::homepageCategories();
-        $recentTools = self::recentTools(8);
-        $latestArticles = collect(BlogRepository::all())->take(3)->values()->all();
-        $schemaJsonLd = [
-            [
-                '@context' => 'https://schema.org',
-                '@type' => 'CollectionPage',
-                'name' => 'Toolexa Free Online Tools',
-                'description' => 'Free online calculators, PDF tools, image tools, text utilities, developer tools and seller tools.',
-                'url' => url('/'),
-                'mainEntity' => [
-                    '@type' => 'ItemList',
-                    'itemListElement' => collect($popular)
-                        ->values()
-                        ->map(fn ($tool, $index) => [
-                            '@type' => 'ListItem',
-                            'position' => $index + 1,
-                            'name' => $tool['name'],
-                            'url' => url('tools/'.$tool['slug']),
-                        ])
-                        ->all(),
-                ],
-            ],
-            [
-                '@context' => 'https://schema.org',
-                '@type' => 'FAQPage',
-                'mainEntity' => [
-                    [
-                        '@type' => 'Question',
-                        'name' => 'Are all Toolexa tools free?',
-                        'acceptedAnswer' => [
-                            '@type' => 'Answer',
-                            'text' => 'Yes, Toolexa tools are free to use in the browser without registration.',
-                        ],
-                    ],
-                    [
-                        '@type' => 'Question',
-                        'name' => 'Do I need an account to use Toolexa?',
-                        'acceptedAnswer' => [
-                            '@type' => 'Answer',
-                            'text' => 'No account is required. You can open a tool and use it directly.',
-                        ],
-                    ],
-                    [
-                        '@type' => 'Question',
-                        'name' => 'Does Toolexa store my tool inputs?',
-                        'acceptedAnswer' => [
-                            '@type' => 'Answer',
-                            'text' => 'Toolexa tools are designed for quick browser-based use and do not require storing personal tool inputs.',
-                        ],
-                    ],
-                ],
-            ],
-        ];
+        return view('home', $homepage->data());
+    }
 
-        return view('home', compact('tools', 'popular', 'popularSlugs', 'homepageCategories', 'recentTools', 'latestArticles', 'schemaJsonLd'));
+    public function redirectHome()
+    {
+        return redirect('/');
     }
 }

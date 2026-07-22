@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Http\Controllers\Tools\HomeController;
+use App\Services\InternalLinkingService;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -36,8 +37,10 @@ class AppServiceProvider extends ServiceProvider
                 return;
             }
 
+            $linking = app(InternalLinkingService::class);
             $popularTools = HomeController::toolsBySlugs(HomeController::popularSlugs());
-            $relatedTools = HomeController::toolsBySlugs($tool['related'] ?? []);
+            $relatedTools = $linking->relatedToolsForTool($tool);
+            $relatedArticles = $linking->relatedArticlesForTool($tool);
             $recentTools = HomeController::recentTools();
             $breadcrumbs = [
                 ['name' => 'Home', 'url' => url('/')],
@@ -54,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
                 'seoKeywords' => $tool['keywords'],
                 'popularTools' => $popularTools,
                 'relatedTools' => $relatedTools,
+                'relatedArticles' => $relatedArticles,
                 'recentTools' => $recentTools,
                 'breadcrumbs' => $breadcrumbs,
                 'schemaJsonLd' => $schema,

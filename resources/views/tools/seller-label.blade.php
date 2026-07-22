@@ -149,6 +149,6 @@
     </section>
 
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js" defer></script>
-    <script src="{{ $sellerAssetRoot }}/js/seller-crop-engine.js" defer></script>
+    <script src="{{ $sellerAssetRoot }}/js/seller-crop-engine.min.js" defer></script>
     @include('partials.ad-slot', ['class' => 'ad-inline', 'label' => 'Seller tools ad'])
 @endsection

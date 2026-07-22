@@ -3469,6 +3469,284 @@
         if(mode==='color-palette-generator')renderPalette(false);
     });
 
+    document.querySelectorAll('[data-smart-search]').forEach(function (search) {
+        var input = search.querySelector('[data-search-input]');
+        var results = search.querySelector('[data-search-results]');
+        var empty = search.querySelector('[data-search-empty]');
+        var discovery = search.querySelector('[data-search-discovery]');
+        var loader = search.querySelector('[data-search-loader]');
+        var status = search.querySelector('[data-search-status]');
+        var filters = Array.from(search.querySelectorAll('[data-search-filter]'));
+        var recentSection = search.querySelector('[data-recent-searches]');
+        var recentList = search.querySelector('[data-recent-list]');
+        var stateNode = search.querySelector('[data-search-state]');
+        var initialState = stateNode ? JSON.parse(stateNode.textContent) : {query: '', filter: 'all', results: null};
+        var activeFilter = initialState.filter || 'all';
+        var activeIndex = -1;
+        var debounceTimer = null;
+        var requestController = null;
+        var responseCache = new Map();
+        var recentKey = 'toolexa_recent_searches';
+
+        function escapeRegExp(value) {
+            return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function addHighlightedText(element, text, query) {
+            var terms = query.trim().split(/\s+/).filter(function (term) { return term.length > 0; });
+            if (!terms.length) {
+                element.textContent = text;
+                return;
+            }
+            var expression = new RegExp('(' + terms.map(escapeRegExp).join('|') + ')', 'gi');
+            text.split(expression).forEach(function (part) {
+                if (terms.some(function (term) { return part.toLowerCase() === term.toLowerCase(); })) {
+                    var mark = document.createElement('mark');
+                    mark.textContent = part;
+                    element.appendChild(mark);
+                } else {
+                    element.appendChild(document.createTextNode(part));
+                }
+            });
+        }
+
+        function resultCard(item, query) {
+            var link = document.createElement('a');
+            var icon = document.createElement('span');
+            var body = document.createElement('span');
+            var title = document.createElement('strong');
+            var category = document.createElement('span');
+            var description = document.createElement('small');
+            var action = document.createElement('span');
+            link.className = 'smart-search-card';
+            link.href = item.url;
+            link.setAttribute('data-search-option', '');
+            link.setAttribute('role', 'option');
+            link.tabIndex = -1;
+            icon.className = 'tool-icon';
+            icon.setAttribute('aria-hidden', 'true');
+            icon.textContent = item.icon;
+            body.className = 'smart-search-card-body';
+            addHighlightedText(title, item.title, query);
+            addHighlightedText(category, item.category, query);
+            addHighlightedText(description, item.description, query);
+            action.className = 'btn btn-primary btn-sm';
+            action.textContent = 'Open';
+            body.append(title, category, description);
+            link.append(icon, body, action);
+            link.addEventListener('click', function () { saveRecent(query); });
+            return link;
+        }
+
+        function render(payload) {
+            var headings = {tools: 'Tools', articles: 'Articles', categories: 'Categories'};
+            results.innerHTML = '';
+            activeIndex = -1;
+            Object.keys(headings).forEach(function (groupName) {
+                var items = payload.groups[groupName] || [];
+                if (!items.length) return;
+                var section = document.createElement('section');
+                var heading = document.createElement('h2');
+                var list = document.createElement('div');
+                section.className = 'smart-search-group';
+                section.setAttribute('data-result-group', groupName);
+                heading.textContent = headings[groupName];
+                items.forEach(function (item) { list.appendChild(resultCard(item, payload.query)); });
+                section.append(heading, list);
+                results.appendChild(section);
+            });
+            results.hidden = payload.total === 0;
+            empty.hidden = payload.total !== 0;
+            discovery.hidden = true;
+            input.setAttribute('aria-expanded', payload.total ? 'true' : 'false');
+            status.textContent = payload.total === 1 ? '1 result found' : payload.total + ' results found';
+        }
+
+        function updateAddress(query) {
+            var url = new URL(window.location.href);
+            if (query) url.searchParams.set('q', query); else url.searchParams.delete('q');
+            if (activeFilter !== 'all') url.searchParams.set('filter', activeFilter); else url.searchParams.delete('filter');
+            window.history.replaceState({}, '', url.pathname + url.search);
+            var robots = document.querySelector('meta[name="robots"]');
+            if (robots) robots.content = query ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+        }
+
+        function performSearch() {
+            var query = input.value.trim();
+            updateAddress(query);
+            if (!query.length) {
+                if (requestController) requestController.abort();
+                results.hidden = true;
+                empty.hidden = true;
+                discovery.hidden = false;
+                input.setAttribute('aria-expanded', 'false');
+                status.textContent = 'Enter a character to search';
+                loader.classList.remove('active');
+                return;
+            }
+            var key = activeFilter + ':' + query.toLowerCase();
+            if (responseCache.has(key)) {
+                render(responseCache.get(key));
+                return;
+            }
+            if (requestController) requestController.abort();
+            requestController = new AbortController();
+            loader.classList.add('active');
+            fetch(search.getAttribute('data-endpoint') + '?q=' + encodeURIComponent(query) + '&filter=' + encodeURIComponent(activeFilter), {
+                headers: {'Accept': 'application/json'},
+                signal: requestController.signal
+            }).then(function (response) {
+                if (!response.ok) throw new Error('Search request failed');
+                return response.json();
+            }).then(function (payload) {
+                responseCache.set(key, payload);
+                render(payload);
+            }).catch(function (error) {
+                if (error.name !== 'AbortError') status.textContent = 'Search is temporarily unavailable. Please try again.';
+            }).finally(function () {
+                loader.classList.remove('active');
+            });
+        }
+
+        function scheduleSearch() {
+            window.clearTimeout(debounceTimer);
+            debounceTimer = window.setTimeout(performSearch, 250);
+        }
+
+        function getRecent() {
+            if (window.ToolexaStorage) return window.ToolexaStorage.getRecentSearches();
+            try {
+                var stored = JSON.parse(window.localStorage.getItem(recentKey) || '[]');
+                return Array.isArray(stored) ? stored.slice(0, 20) : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function saveRecent(query) {
+            query = query.trim();
+            if (!query) return;
+            if (window.ToolexaStorage) {
+                window.ToolexaStorage.addRecentSearch(query);
+                renderRecent();
+                return;
+            }
+            var recent = getRecent().filter(function (item) { return item.toLowerCase() !== query.toLowerCase(); });
+            recent.unshift(query);
+            try { window.localStorage.setItem(recentKey, JSON.stringify(recent.slice(0, 20))); } catch (error) {}
+            renderRecent();
+        }
+
+        function useSearch(value) {
+            input.value = value;
+            input.focus();
+            performSearch();
+        }
+
+        function renderRecent() {
+            var recent = getRecent();
+            recentList.innerHTML = '';
+            recentSection.hidden = recent.length === 0;
+            recent.forEach(function (item) {
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.textContent = item;
+                button.addEventListener('click', function () { useSearch(item); });
+                recentList.appendChild(button);
+            });
+        }
+
+        function selectableResults() {
+            return Array.from(results.querySelectorAll('[data-search-option]'));
+        }
+
+        function selectResult(index) {
+            var options = selectableResults();
+            if (!options.length) return;
+            options.forEach(function (option) { option.removeAttribute('aria-selected'); });
+            activeIndex = (index + options.length) % options.length;
+            options[activeIndex].setAttribute('aria-selected', 'true');
+            options[activeIndex].focus({preventScroll: true});
+            options[activeIndex].scrollIntoView({block: 'nearest'});
+        }
+
+        input.addEventListener('input', scheduleSearch);
+        input.addEventListener('keydown', function (event) {
+            if (event.key === 'ArrowDown') { event.preventDefault(); selectResult(activeIndex + 1); }
+            if (event.key === 'ArrowUp') { event.preventDefault(); selectResult(activeIndex - 1); }
+            if (event.key === 'Enter') {
+                var options = selectableResults();
+                if (activeIndex >= 0 && options[activeIndex]) { event.preventDefault(); saveRecent(input.value); window.location.href = options[activeIndex].href; }
+            }
+            if (event.key === 'Escape') { results.hidden = true; input.setAttribute('aria-expanded', 'false'); activeIndex = -1; }
+        });
+        results.addEventListener('keydown', function (event) {
+            if (event.key === 'ArrowDown') { event.preventDefault(); selectResult(activeIndex + 1); }
+            if (event.key === 'ArrowUp') { event.preventDefault(); selectResult(activeIndex - 1); }
+            if (event.key === 'Escape') { event.preventDefault(); input.focus(); results.hidden = true; input.setAttribute('aria-expanded', 'false'); }
+        });
+        filters.forEach(function (button) {
+            button.addEventListener('click', function () {
+                activeFilter = button.getAttribute('data-search-filter');
+                filters.forEach(function (filter) {
+                    var active = filter === button;
+                    filter.classList.toggle('active', active);
+                    filter.setAttribute('aria-selected', active ? 'true' : 'false');
+                });
+                performSearch();
+            });
+        });
+        search.querySelectorAll('[data-search-chip]').forEach(function (button) {
+            button.addEventListener('click', function () { useSearch(button.getAttribute('data-search-chip')); });
+        });
+        var clearRecent = search.querySelector('[data-clear-recent]');
+        if (clearRecent) clearRecent.addEventListener('click', function () {
+            if (window.ToolexaStorage) { var state = window.ToolexaStorage.read(); state.recent.searches = []; window.ToolexaStorage.write(state); }
+            try { window.localStorage.removeItem(recentKey); } catch (error) {}
+            renderRecent();
+        });
+        renderRecent();
+        if (initialState.query && initialState.results) { render(initialState.results); saveRecent(initialState.query); }
+    });
+
+    var counters = document.querySelectorAll('[data-counter]');
+    if (counters.length) {
+        var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        function completeCounter(counter) {
+            counter.textContent = Number(counter.getAttribute('data-counter')).toLocaleString() + (counter.getAttribute('data-counter-suffix') || '');
+        }
+        function animateCounter(counter) {
+            if (counter.getAttribute('data-counted')) return;
+            counter.setAttribute('data-counted', 'true');
+            var target = Number(counter.getAttribute('data-counter'));
+            var suffix = counter.getAttribute('data-counter-suffix') || '';
+            if (reduceMotion) { completeCounter(counter); return; }
+            var started = performance.now();
+            function frame(now) {
+                var progress = Math.min(1, (now - started) / 700);
+                counter.textContent = Math.round(target * (1 - Math.pow(1 - progress, 3))).toLocaleString() + suffix;
+                if (progress < 1) window.requestAnimationFrame(frame);
+            }
+            window.requestAnimationFrame(frame);
+        }
+        if ('IntersectionObserver' in window) {
+            var counterObserver = new IntersectionObserver(function (entries, observer) {
+                entries.forEach(function (entry) { if (entry.isIntersecting) { animateCounter(entry.target); observer.unobserve(entry.target); } });
+            }, {threshold: .3});
+            counters.forEach(function (counter) { counterObserver.observe(counter); });
+        } else {
+            counters.forEach(completeCounter);
+        }
+    }
+
+    document.querySelectorAll('[data-newsletter-form]').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            var status = form.querySelector('[data-newsletter-status]');
+            if (status) status.textContent = 'Thanks for your interest. Newsletter delivery will be available soon.';
+        });
+    });
+
     document.querySelectorAll('img:not([loading])').forEach(function (image) {
         image.setAttribute('loading', 'lazy');
         image.setAttribute('decoding', 'async');

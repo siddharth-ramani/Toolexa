@@ -1,80 +1,105 @@
 @extends('layouts.app')
 
 @section('content')
-    <section class="tool-hero">
-        <span class="eyebrow">Search</span>
-        <h1>Search Tools</h1>
-        <p>Find calculators and utility tools by name, category or keyword.</p>
-    </section>
+    <header class="tool-hero smart-search-hero">
+        <span class="eyebrow">Intelligent search</span>
+        <h1>Find tools, articles and categories</h1>
+        <p>Search the complete Toolexa library instantly. Spelling mistakes are welcome.</p>
+    </header>
 
-    <section class="form-panel search-panel">
-        <form method="GET" action="{{ route('search') }}" class="search-form">
-            <div>
-                <label for="q">Search keyword</label>
-                <input id="q" class="form-control" type="search" name="q" value="{{ $query }}" placeholder="GST, EMI, QR, password">
+    <section class="smart-search-shell" data-smart-search data-endpoint="{{ route('search.api') }}">
+        <div class="smart-search-bar">
+            <label for="smart-search-input">What are you looking for?</label>
+            <div class="smart-search-input-wrap">
+                <span aria-hidden="true">⌕</span>
+                <input
+                    id="smart-search-input"
+                    class="form-control"
+                    type="search"
+                    value="{{ $query }}"
+                    placeholder="Try GST, passwrod or json formater"
+                    autocomplete="off"
+                    aria-autocomplete="list"
+                    aria-controls="smart-search-results"
+                    aria-expanded="{{ $query ? 'true' : 'false' }}"
+                    data-search-input
+                >
+                <span class="smart-search-loader" data-search-loader aria-hidden="true"></span>
             </div>
 
-            <div>
-                <label for="category">Category</label>
-                <select id="category" class="form-control" name="category">
-                    <option value="">All Categories</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category['slug'] }}" @selected($selectedCategory === $category['slug'])>
-                            {{ $category['name'] }}
-                        </option>
+            <div class="smart-search-filters" role="tablist" aria-label="Filter search results">
+                @foreach(['all' => 'All', 'tools' => 'Tools', 'articles' => 'Articles', 'categories' => 'Categories'] as $value => $label)
+                    <button type="button" role="tab" data-search-filter="{{ $value }}" aria-selected="{{ $selectedFilter === $value ? 'true' : 'false' }}" class="{{ $selectedFilter === $value ? 'active' : '' }}">{{ $label }}</button>
+                @endforeach
+            </div>
+
+            <p class="sr-only" aria-live="polite" data-search-status></p>
+        </div>
+
+        <div class="smart-search-discovery" data-search-discovery @if($query) hidden @endif>
+            <section>
+                <h2>Trending searches</h2>
+                <div class="search-chip-list">
+                    @foreach($trendingSearches as $search)
+                        <button type="button" data-search-chip="{{ $search }}">{{ $search }}</button>
                     @endforeach
-                </select>
-            </div>
-
-            <button class="btn btn-primary" type="submit">Search</button>
-        </form>
-    </section>
-
-    <section class="info-panel">
-        <span class="eyebrow">{{ $tools->total() }} found</span>
-        <h2>{{ $query ? 'Results for "'.$query.'"' : 'All Tools' }}</h2>
-
-        @if($tools->count())
-            <div class="tool-grid">
-                @foreach($tools as $tool)
-                    <a class="card tool-card" href="{{ url('tools/'.$tool['slug']) }}">
-                        <span class="tool-icon">{{ $tool['icon'] }}</span>
-                        <h3>{{ $tool['name'] }}</h3>
-                        <p>{{ $tool['desc'] }}</p>
-                        <span class="btn btn-primary btn-sm">{{ $tool['category'] }}</span>
-                    </a>
-                @endforeach
-            </div>
-
-            {{ $tools->links('partials.pagination') }}
-        @else
-            <p class="empty-state">No tools found. Try a different keyword or category.</p>
-        @endif
-    </section>
-
-    @if(isset($articles) && $articles->count())
-        <section class="info-panel search-articles-panel">
-            <div class="section-head">
-                <div>
-                    <span class="eyebrow">{{ $articles->count() }} articles</span>
-                    <h2>Related Blog Articles</h2>
                 </div>
-                <a class="btn btn-sm" href="{{ route('blog.index') }}">View Blog</a>
-            </div>
+            </section>
+            <section data-recent-searches hidden>
+                <div class="search-section-heading">
+                    <h2>Recent searches</h2>
+                    <button type="button" data-clear-recent>Clear</button>
+                </div>
+                <div class="search-chip-list" data-recent-list></div>
+            </section>
+        </div>
 
-            <div class="search-article-list">
-                @foreach($articles as $article)
-                    <a class="search-article-card" href="{{ route('blog.show', $article['slug']) }}">
-                        <span class="search-article-badge">{{ $article['category'] }}</span>
-                        <span class="search-article-body">
-                            <strong>{{ $article['title'] }}</strong>
-                            <small>{{ $article['excerpt'] }}</small>
-                            <span>{{ $article['reading_time'] }} min read</span>
-                        </span>
-                        <span class="search-article-arrow" aria-hidden="true">›</span>
-                    </a>
-                @endforeach
+        <div id="smart-search-results" class="smart-search-results" role="listbox" aria-label="Search suggestions" data-search-results @if(!$query) hidden @endif>
+            @foreach(['tools' => 'Tools', 'articles' => 'Articles', 'categories' => 'Categories'] as $group => $heading)
+                @if(count($initialResults['groups'][$group]))
+                    <section class="smart-search-group" data-result-group="{{ $group }}">
+                        <h2>{{ $heading }}</h2>
+                        <div>
+                            @foreach($initialResults['groups'][$group] as $item)
+                                <x-search-result-card :item="$item" />
+                            @endforeach
+                        </div>
+                    </section>
+                @endif
+            @endforeach
+        </div>
+
+        <div class="smart-search-empty" data-search-empty @if(!$query || $initialResults['total']) hidden @endif>
+            <span class="tool-icon" aria-hidden="true">?</span>
+            <h2>No results found</h2>
+            <p>Try a shorter phrase, check another spelling, or explore these popular recommendations.</p>
+            <div class="smart-search-popular-grid">
+                <section>
+                    <h3>Popular Tools</h3>
+                    @foreach($popularContent['tools'] as $tool)
+                        <a href="{{ url('tools/'.$tool['slug']) }}">{{ $tool['name'] }}</a>
+                    @endforeach
+                </section>
+                <section>
+                    <h3>Popular Articles</h3>
+                    @foreach($popularContent['articles'] as $article)
+                        <a href="{{ route('blog.show', $article['slug']) }}">{{ $article['title'] }}</a>
+                    @endforeach
+                </section>
             </div>
-        </section>
-    @endif
+        </div>
+
+        <noscript>
+            <form class="smart-search-noscript" method="GET" action="{{ route('search') }}">
+                <label for="fallback-search">Search Toolexa</label>
+                <input id="fallback-search" class="form-control" type="search" name="q" value="{{ $query }}" required>
+                <button class="btn btn-primary" type="submit">Search</button>
+            </form>
+        </noscript>
+
+        @php
+            $searchState = ['query' => $query, 'filter' => $selectedFilter, 'results' => $initialResults];
+        @endphp
+        <script type="application/json" data-search-state>@json($searchState, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)</script>
+    </section>
 @endsection

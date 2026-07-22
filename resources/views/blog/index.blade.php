@@ -20,7 +20,7 @@
                 <article class="card blog-card">
                     <a class="blog-card-media" href="{{ route('blog.show', $article['slug']) }}" aria-label="{{ $article['title'] }}">
                         @if($article['featured_image'])
-                            <img src="{{ $article['featured_image'] }}" alt="{{ $article['title'] }}" loading="lazy" decoding="async">
+                            <img src="{{ $article['featured_image'] }}" alt="{{ $article['title'] }}" width="720" height="405" loading="lazy" decoding="async">
                         @else
                             <span>{{ strtoupper(substr($article['category'], 0, 2)) }}</span>
                         @endif

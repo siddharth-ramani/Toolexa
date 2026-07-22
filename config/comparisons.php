@@ -1,0 +1,111 @@
+<?php
+
+return [
+    'pairs' => [
+        ['left' => 'jpg', 'right' => 'png'],
+        ['left' => 'webp', 'right' => 'png'],
+        ['left' => 'fd', 'right' => 'sip'],
+        ['left' => 'json', 'right' => 'xml'],
+    ],
+
+    'subjects' => [
+        'jpg' => [
+            'name' => 'JPG', 'category' => 'Image Tools', 'tool' => 'jpg-to-png-converter',
+            'summary' => 'JPG is a widely supported lossy image format designed for photographs and compact visual files.',
+            'advantages' => ['Small files for photographs', 'Excellent compatibility across devices and software', 'Fast to encode, download and share'],
+            'disadvantages' => ['No transparent backgrounds', 'Repeated saving can reduce quality', 'Sharp text and logos may show compression artifacts'],
+            'use_cases' => ['Photographs', 'Email attachments', 'Social media and general web images'],
+            'attributes' => [
+                'Purpose' => ['value' => 'Photographs and compact raster images', 'score' => 4], 'Quality' => ['value' => 'Good, but lossy', 'score' => 3],
+                'Compression' => ['value' => 'Lossy compression', 'score' => 5], 'Transparency' => ['value' => 'Not supported', 'score' => 1],
+                'Web use' => ['value' => 'Excellent compatibility', 'score' => 4], 'Printing' => ['value' => 'Good at high quality', 'score' => 4],
+                'Typical file size' => ['value' => 'Small', 'score' => 5], 'Ease of use' => ['value' => 'Very easy', 'score' => 5],
+                'Compatibility' => ['value' => 'Universal', 'score' => 5], 'Security' => ['value' => 'Standard image-file considerations', 'score' => 3],
+            ],
+        ],
+        'png' => [
+            'name' => 'PNG', 'category' => 'Image Tools', 'tool' => 'png-to-jpg-converter',
+            'summary' => 'PNG is a lossless raster format valued for transparency, sharp edges and repeatable editing.',
+            'advantages' => ['Lossless image quality', 'Full alpha transparency', 'Sharp output for interfaces, text and diagrams'],
+            'disadvantages' => ['Photographs can become large', 'Usually heavier than modern web formats', 'Not intended for animation beyond limited extensions'],
+            'use_cases' => ['Logos and icons', 'Screenshots and diagrams', 'Transparent web graphics'],
+            'attributes' => [
+                'Purpose' => ['value' => 'Graphics, screenshots and transparency', 'score' => 5], 'Quality' => ['value' => 'Lossless', 'score' => 5],
+                'Compression' => ['value' => 'Lossless compression', 'score' => 3], 'Transparency' => ['value' => 'Full alpha transparency', 'score' => 5],
+                'Web use' => ['value' => 'Excellent for UI assets', 'score' => 4], 'Printing' => ['value' => 'Sharp, but color workflow is limited', 'score' => 3],
+                'Typical file size' => ['value' => 'Medium to large', 'score' => 2], 'Ease of use' => ['value' => 'Very easy', 'score' => 5],
+                'Compatibility' => ['value' => 'Universal', 'score' => 5], 'Security' => ['value' => 'Standard image-file considerations', 'score' => 3],
+            ],
+        ],
+        'webp' => [
+            'name' => 'WebP', 'category' => 'Image Tools', 'tool' => 'webp-to-png-converter',
+            'summary' => 'WebP is a modern web image format offering efficient lossy or lossless compression and transparency.',
+            'advantages' => ['Excellent size-to-quality ratio', 'Supports transparency and animation', 'Designed for faster web delivery'],
+            'disadvantages' => ['Older software may not open it', 'Editing workflows can require conversion', 'Print-oriented applications may prefer traditional formats'],
+            'use_cases' => ['Website photographs', 'Performance-focused graphics', 'Animated and transparent web assets'],
+            'attributes' => [
+                'Purpose' => ['value' => 'Modern web delivery', 'score' => 5], 'Quality' => ['value' => 'Lossy or lossless', 'score' => 5],
+                'Compression' => ['value' => 'Highly efficient', 'score' => 5], 'Transparency' => ['value' => 'Supported', 'score' => 5],
+                'Web use' => ['value' => 'Excellent in modern browsers', 'score' => 5], 'Printing' => ['value' => 'Conversion is often preferable', 'score' => 2],
+                'Typical file size' => ['value' => 'Very small', 'score' => 5], 'Ease of use' => ['value' => 'Easy on the web', 'score' => 4],
+                'Compatibility' => ['value' => 'Modern software and browsers', 'score' => 4], 'Security' => ['value' => 'Standard image-file considerations', 'score' => 3],
+            ],
+        ],
+        'fd' => [
+            'name' => 'FD', 'category' => 'Finance', 'tool' => 'fd-calculator',
+            'summary' => 'A fixed deposit places a lump sum with a bank or institution for a defined term and stated interest rate.',
+            'advantages' => ['Predictable maturity value', 'Simple to understand', 'Lower volatility than market-linked investments'],
+            'disadvantages' => ['Returns may not beat inflation', 'Early withdrawal can attract penalties', 'Interest may be taxable'],
+            'use_cases' => ['Short- to medium-term goals', 'Capital preservation', 'Predictable interest income'],
+            'attributes' => [
+                'Purpose' => ['value' => 'Predictable lump-sum saving', 'score' => 5], 'Return potential' => ['value' => 'Fixed and moderate', 'score' => 3],
+                'Predictability' => ['value' => 'High', 'score' => 5], 'Liquidity' => ['value' => 'Moderate; penalties may apply', 'score' => 3],
+                'Market risk' => ['value' => 'Low', 'score' => 5], 'Regular investing' => ['value' => 'Usually lump sum', 'score' => 2],
+                'Ease of use' => ['value' => 'Very easy', 'score' => 5], 'Time horizon' => ['value' => 'Short to medium', 'score' => 4],
+                'Tax treatment' => ['value' => 'Interest is generally taxable', 'score' => 2], 'Flexibility' => ['value' => 'Limited during the term', 'score' => 2],
+            ],
+        ],
+        'sip' => [
+            'name' => 'SIP', 'category' => 'Finance', 'tool' => 'sip-calculator',
+            'summary' => 'A systematic investment plan invests a recurring amount into a mutual fund or similar market-linked investment.',
+            'advantages' => ['Supports disciplined recurring investing', 'Offers long-term growth potential', 'Reduces the need to time one large market entry'],
+            'disadvantages' => ['Returns are not guaranteed', 'Value can fluctuate with markets', 'Fund choice, costs and time horizon matter'],
+            'use_cases' => ['Long-term wealth building', 'Monthly goal-based investing', 'Retirement or education planning'],
+            'attributes' => [
+                'Purpose' => ['value' => 'Recurring market-linked investing', 'score' => 5], 'Return potential' => ['value' => 'Potentially higher, not guaranteed', 'score' => 5],
+                'Predictability' => ['value' => 'Low to moderate', 'score' => 2], 'Liquidity' => ['value' => 'Varies by fund', 'score' => 4],
+                'Market risk' => ['value' => 'Moderate to high', 'score' => 2], 'Regular investing' => ['value' => 'Excellent', 'score' => 5],
+                'Ease of use' => ['value' => 'Easy after setup', 'score' => 4], 'Time horizon' => ['value' => 'Usually medium to long', 'score' => 5],
+                'Tax treatment' => ['value' => 'Depends on fund and holding period', 'score' => 3], 'Flexibility' => ['value' => 'Contributions can usually be changed', 'score' => 5],
+            ],
+        ],
+        'json' => [
+            'name' => 'JSON', 'category' => 'Developer Tools', 'tool' => 'json-formatter',
+            'summary' => 'JSON is a compact text data format built around objects, arrays and familiar primitive value types.',
+            'advantages' => ['Compact and readable syntax', 'Native fit for JavaScript and web APIs', 'Built-in numbers, booleans, arrays and null'],
+            'disadvantages' => ['No native comments in the standard', 'Less suited to richly marked document content', 'Schemas and namespaces require separate conventions'],
+            'use_cases' => ['REST APIs', 'Application configuration', 'Browser and mobile data exchange'],
+            'attributes' => [
+                'Purpose' => ['value' => 'Lightweight structured data', 'score' => 5], 'Readability' => ['value' => 'Concise and approachable', 'score' => 5],
+                'File size' => ['value' => 'Usually compact', 'score' => 5], 'Data types' => ['value' => 'Native primitive types', 'score' => 5],
+                'Validation' => ['value' => 'JSON Schema or application rules', 'score' => 4], 'Comments' => ['value' => 'Not supported by standard JSON', 'score' => 1],
+                'Web compatibility' => ['value' => 'Excellent', 'score' => 5], 'Parsing speed' => ['value' => 'Typically fast', 'score' => 5],
+                'Namespaces' => ['value' => 'No native namespace system', 'score' => 1], 'Ease of use' => ['value' => 'Very easy for common APIs', 'score' => 5],
+            ],
+        ],
+        'xml' => [
+            'name' => 'XML', 'category' => 'Developer Tools', 'tool' => 'xml-to-json-converter',
+            'summary' => 'XML is an extensible markup format for structured documents and data with attributes, namespaces and schemas.',
+            'advantages' => ['Powerful schemas and namespaces', 'Suitable for document-style mixed content', 'Mature tooling in enterprise systems'],
+            'disadvantages' => ['More verbose than JSON', 'Parsing and authoring can be more complex', 'Values are text unless a schema defines types'],
+            'use_cases' => ['Enterprise integrations', 'Document formats and feeds', 'Schema-governed data exchange'],
+            'attributes' => [
+                'Purpose' => ['value' => 'Structured data and documents', 'score' => 5], 'Readability' => ['value' => 'Explicit but verbose', 'score' => 3],
+                'File size' => ['value' => 'Usually larger', 'score' => 2], 'Data types' => ['value' => 'Schema-defined', 'score' => 4],
+                'Validation' => ['value' => 'Powerful XSD and DTD options', 'score' => 5], 'Comments' => ['value' => 'Supported', 'score' => 5],
+                'Web compatibility' => ['value' => 'Broad, but less common for new APIs', 'score' => 3], 'Parsing speed' => ['value' => 'Often more processing', 'score' => 3],
+                'Namespaces' => ['value' => 'Native namespace support', 'score' => 5], 'Ease of use' => ['value' => 'More complex', 'score' => 2],
+            ],
+        ],
+    ],
+];

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Tools\HomeController;
 use App\Support\BlogRepository;
+use App\Services\InternalLinkingService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
@@ -35,13 +36,13 @@ class BlogController extends Controller
         ]);
     }
 
-    public function show(string $slug)
+    public function show(string $slug, InternalLinkingService $linking)
     {
         $article = BlogRepository::find($slug);
         abort_unless($article, 404);
 
-        $relatedTools = HomeController::toolsBySlugs($article['related_tools']);
-        $relatedArticles = BlogRepository::related($slug);
+        $relatedTools = $linking->relatedToolsForArticle($article);
+        $relatedArticles = $linking->relatedArticlesForArticle($article);
         $adjacent = BlogRepository::adjacent($slug);
         $toc = BlogRepository::tableOfContents($article);
         $canonicalUrl = route('blog.show', $article['slug']);

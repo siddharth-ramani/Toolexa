@@ -2,6 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\ComparisonController;
+use App\Http\Controllers\TopicHubController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\Tools\HomeController;
 use App\Http\Controllers\Tools\GstController;
@@ -30,13 +34,22 @@ use App\Http\Controllers\Tools\FinanceCalculatorController;
 */
 
 Route::get('/', [HomeController::class, 'index']);
-Route::post('/', fn () => redirect('/'));
+Route::post('/', [HomeController::class, 'redirectHome']);
 Route::get('/sitemap.xml', [SiteController::class, 'sitemap'])->name('sitemap');
 Route::get('/robots.txt', [SiteController::class, 'robots'])->name('robots');
 Route::get('/ads.txt', [SiteController::class, 'ads'])->name('ads');
 Route::get('/search', [SiteController::class, 'search'])->name('search');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/workspace', [WorkspaceController::class, 'index'])->name('workspace');
+Route::get('/api/search', [SiteController::class, 'searchApi'])->name('search.api')->middleware('throttle:120,1');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+Route::get('/compare', [ComparisonController::class, 'index'])->name('compare.index');
+Route::get('/compare/{slug}', [ComparisonController::class, 'show'])->name('compare.show');
+Route::get('/topics', [TopicHubController::class, 'index'])->name('hub.index');
+Route::get('/{hub}', [TopicHubController::class, 'show'])
+    ->whereIn('hub', array_keys(config('hubs.topics', [])))
+    ->name('hub.show');
 Route::get('/{page}', [SiteController::class, 'page'])
     ->whereIn('page', ['about', 'contact', 'privacy-policy', 'terms', 'disclaimer'])
     ->name('page.show');

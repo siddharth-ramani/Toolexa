@@ -52,29 +52,9 @@
     @endforeach
 </section>
 
-@if(! empty($relatedTools))
-    <section class="info-panel">
-        <span class="eyebrow">Related tools</span>
-        <h2>Related Tools</h2>
-        <div class="mini-tool-grid">
-            @foreach($relatedTools as $tool)
-                @include('partials.tool-card', ['tool' => $tool])
-            @endforeach
-        </div>
-    </section>
-@endif
+<x-related-tools :tools="$relatedTools ?? []" />
 
-@if(! empty($popularTools))
-    <section class="info-panel">
-        <span class="eyebrow">Popular tools</span>
-        <h2>Popular Tools</h2>
-        <div class="mini-tool-grid">
-            @foreach(collect($popularTools)->reject(fn ($tool) => $tool['slug'] === $toolMeta['slug'])->take(6) as $tool)
-                @include('partials.tool-card', ['tool' => $tool])
-            @endforeach
-        </div>
-    </section>
-@endif
+<x-related-articles :articles="$relatedArticles ?? []" heading="Learn more about this tool" />
 
 <section class="tool-actions" data-tool-actions>
     <button class="btn btn-primary" type="button" data-copy-url>Copy Link</button>

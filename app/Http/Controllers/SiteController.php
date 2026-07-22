@@ -4,9 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Tools\HomeController;
 use App\Support\BlogRepository;
+use App\Services\CategoryLandingService;
+use App\Services\InternalLinkingService;
+use App\Services\IntelligentSearchService;
+use App\Services\ComparisonService;
+use App\Services\TopicHubService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 class SiteController extends Controller
 {
@@ -217,6 +223,8 @@ class SiteController extends Controller
 
     public function sitemap()
     {
+        $cacheKey = 'sitemap:v3:'.sha1((string) config('app.url').'|'.request()->getSchemeAndHttpHost());
+        $urls = Cache::remember($cacheKey, now()->addHours(6), function () {
         $urls = [
             ['loc' => url('/'), 'priority' => '1.0', 'changefreq' => 'daily', 'lastmod' => now()->toDateString()],
             ['loc' => url('search'), 'priority' => '0.6', 'changefreq' => 'weekly', 'lastmod' => now()->toDateString()],
@@ -259,10 +267,33 @@ class SiteController extends Controller
             ];
         }
 
+        $urls[] = ['loc' => route('compare.index'), 'priority' => '0.7', 'changefreq' => 'weekly', 'lastmod' => now()->toDateString()];
+        foreach (app(ComparisonService::class)->all() as $comparison) {
+            $urls[] = [
+                'loc' => route('compare.show', $comparison['slug']),
+                'priority' => '0.8',
+                'changefreq' => 'monthly',
+                'lastmod' => date('Y-m-d', filemtime(config_path('comparisons.php')) ?: time()),
+            ];
+        }
+
+        $urls[] = ['loc' => route('hub.index'), 'priority' => '0.8', 'changefreq' => 'weekly', 'lastmod' => now()->toDateString()];
+        foreach (app(TopicHubService::class)->all() as $hub) {
+            $urls[] = [
+                'loc' => route('hub.show', $hub['slug']),
+                'priority' => '0.9',
+                'changefreq' => 'weekly',
+                'lastmod' => date('Y-m-d', filemtime(config_path('hubs.php')) ?: time()),
+            ];
+        }
+
+        return $urls;
+        });
+
         return response()
             ->view('sitemap', ['urls' => $urls])
             ->header('Content-Type', 'application/xml; charset=UTF-8')
-            ->header('Cache-Control', 'public, max-age=3600');
+            ->header('Cache-Control', 'public, max-age=21600, stale-while-revalidate=86400');
     }
 
     public function robots()
@@ -297,44 +328,19 @@ class SiteController extends Controller
             ->header('Cache-Control', 'public, max-age=3600');
     }
 
-    public function search(Request $request)
+    public function search(Request $request, IntelligentSearchService $searchService)
     {
         $query = trim((string) $request->query('q', ''));
-        $category = trim((string) $request->query('category', ''));
-        $tools = collect(HomeController::tools());
-        $articles = collect(BlogRepository::all());
-
-        if ($query !== '') {
-            $needle = Str::lower($query);
-            $tools = $tools->filter(function ($tool) use ($needle) {
-                return str_contains(Str::lower($tool['name']), $needle)
-                    || str_contains(Str::lower($tool['desc']), $needle)
-                    || str_contains(Str::lower($tool['category']), $needle)
-                    || str_contains(Str::lower($tool['keywords']), $needle);
-            });
-
-            $articles = $articles->filter(function ($article) use ($needle) {
-                return str_contains(Str::lower($article['title']), $needle)
-                    || str_contains(Str::lower($article['excerpt']), $needle)
-                    || str_contains(Str::lower($article['category']), $needle)
-                    || str_contains(Str::lower($article['meta_description']), $needle);
-            });
-        }
-
-        if ($category !== '') {
-            $tools = $tools->filter(fn ($tool) => Str::slug($tool['category']) === $category);
-            $articles = collect();
-        }
-
-        $tools = $tools->values();
-        $paginatedTools = $this->paginate($tools->all(), 8, $request, 'search');
+        $filter = trim((string) $request->query('filter', 'all'));
+        $initialResults = $searchService->search($query, $filter);
+        $popular = $searchService->popularContent();
 
         return view('search', [
-            'tools' => $paginatedTools,
-            'articles' => $articles->values(),
             'query' => $query,
-            'selectedCategory' => $category,
-            'categories' => HomeController::categories(),
+            'selectedFilter' => $filter,
+            'initialResults' => $initialResults,
+            'popularContent' => $popular,
+            'trendingSearches' => $searchService->trendingSearches(),
             'breadcrumbs' => [
                 ['name' => 'Home', 'url' => url('/')],
                 ['name' => 'Search', 'url' => route('search')],
@@ -343,37 +349,115 @@ class SiteController extends Controller
             'seoTitle' => $query ? 'Search results for '.$query.' - Toolexa' : 'Search Free Online Tools - Toolexa',
             'seoDescription' => 'Search Toolexa calculators and utility tools by name, category or keyword.',
             'seoKeywords' => 'search tools, online calculators, free utility tools',
-            'robotsMeta' => $query || $category ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+            'robotsMeta' => $query ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
         ]);
     }
 
-    public function category(Request $request, string $category)
+    public function searchApi(Request $request, IntelligentSearchService $searchService)
     {
-        $categoryMeta = collect(HomeController::categories())->firstWhere('slug', $category);
-        abort_unless($categoryMeta, 404);
-        $categoryLabel = str_contains($categoryMeta['name'], 'Tools')
-            ? $categoryMeta['name']
-            : $categoryMeta['name'].' Tools';
+        $query = mb_substr(trim((string) $request->query('q', '')), 0, 100);
+        $filter = trim((string) $request->query('filter', 'all'));
 
-        $tools = collect(HomeController::tools())
+        return response()->json($searchService->search($query, $filter))
+            ->header('Cache-Control', 'public, max-age=300');
+    }
+
+    public function category(Request $request, string $category, CategoryLandingService $landingService, InternalLinkingService $linkingService)
+    {
+        $allCategories = HomeController::categories();
+        $allTools = HomeController::tools();
+        $categoryMeta = collect($allCategories)->firstWhere('slug', $category);
+        abort_unless($categoryMeta, 404);
+
+        $categoryTools = collect($allTools)
             ->filter(fn ($tool) => Str::slug($tool['category']) === $category)
             ->values();
+        $landing = $landingService->landing($categoryMeta, $categoryTools->all());
+        $query = trim((string) $request->query('q', ''));
+        $tools = $categoryTools;
 
-        $paginatedTools = $this->paginate($tools->all(), 8, $request, 'category.'.$category);
+        if ($query !== '') {
+            $needle = Str::lower($query);
+            $tools = $tools->filter(fn (array $tool) => str_contains(Str::lower(implode(' ', [
+                $tool['name'], $tool['desc'], $tool['keywords'] ?? '',
+            ])), $needle))->values();
+        }
+
+        $paginatedTools = $this->paginate($tools->all(), 12, $request, 'all-tools');
+        $relatedArticles = $linkingService->relatedArticlesForTool([
+            'name' => $landing['label'],
+            'slug' => 'category-'.$category,
+            'category' => $categoryMeta['name'],
+            'keywords' => $categoryTools->pluck('keywords')->implode(' '),
+            'desc' => $landing['description'],
+        ], 4);
+        $relatedCategories = $landingService->relatedCategories($categoryMeta, $allCategories, $allTools);
+        $canonicalUrl = route('category.show', $category);
+        $page = max(1, (int) $request->query('page', 1));
+
+        if ($page > 1 && $query === '') {
+            $canonicalUrl .= '?page='.$page;
+        }
+
+        $breadcrumbs = [
+            ['name' => 'Home', 'url' => url('/')],
+            ['name' => $landing['label'], 'url' => route('category.show', $category)],
+        ];
+        $schemaJsonLd = $this->categorySchema($categoryMeta, $landing, $categoryTools->all(), $breadcrumbs, $canonicalUrl);
 
         return view('category', [
             'tools' => $paginatedTools,
+            'allToolCount' => $categoryTools->count(),
             'category' => $categoryMeta,
-            'breadcrumbs' => [
-                ['name' => 'Home', 'url' => url('/')],
-                ['name' => 'Categories', 'url' => route('search')],
-                ['name' => $categoryMeta['name'], 'url' => route('category.show', $category)],
-            ],
-            'canonicalUrl' => url('category/'.$category),
-            'seoTitle' => $categoryLabel.' - Free Online Tools on Toolexa',
-            'seoDescription' => 'Browse free '.$categoryLabel.' on Toolexa. Fast, responsive, private and easy-to-use tools for everyday tasks.',
-            'seoKeywords' => Str::lower($categoryMeta['name']).' tools, online calculators, free tools',
+            'landing' => $landing,
+            'query' => $query,
+            'relatedArticles' => $relatedArticles,
+            'relatedCategories' => $relatedCategories,
+            'breadcrumbs' => $breadcrumbs,
+            'canonicalUrl' => $canonicalUrl,
+            'seoTitle' => $landing['meta_title'],
+            'seoDescription' => $landing['meta_description'],
+            'seoKeywords' => Str::lower($landing['label']).', online '.Str::lower($categoryMeta['name']).', free tools',
+            'robotsMeta' => $query !== '' ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+            'schemaJsonLd' => $schemaJsonLd,
         ]);
+    }
+
+    private function categorySchema(array $category, array $landing, array $tools, array $breadcrumbs, string $canonicalUrl): array
+    {
+        $items = collect($tools)->values()->map(fn (array $tool, int $index) => [
+            '@type' => 'ListItem',
+            'position' => $index + 1,
+            'name' => $tool['name'],
+            'url' => url('tools/'.$tool['slug']),
+        ])->all();
+
+        return [
+            [
+                '@context' => 'https://schema.org',
+                '@type' => 'CollectionPage',
+                'name' => $landing['label'],
+                'description' => $landing['description'],
+                'url' => $canonicalUrl,
+                'mainEntity' => ['@type' => 'ItemList', 'numberOfItems' => count($tools), 'itemListElement' => $items],
+            ],
+            [
+                '@context' => 'https://schema.org',
+                '@type' => 'BreadcrumbList',
+                'itemListElement' => collect($breadcrumbs)->values()->map(fn (array $item, int $index) => [
+                    '@type' => 'ListItem', 'position' => $index + 1, 'name' => $item['name'], 'item' => $item['url'],
+                ])->all(),
+            ],
+            [
+                '@context' => 'https://schema.org',
+                '@type' => 'FAQPage',
+                'mainEntity' => collect($landing['faqs'])->map(fn (array $faq) => [
+                    '@type' => 'Question',
+                    'name' => $faq['question'],
+                    'acceptedAnswer' => ['@type' => 'Answer', 'text' => $faq['answer']],
+                ])->all(),
+            ],
+        ];
     }
 
     private function paginate(array $items, int $perPage, Request $request, string $pageName): LengthAwarePaginator
