@@ -9,6 +9,8 @@ use App\Services\InternalLinkingService;
 use App\Services\IntelligentSearchService;
 use App\Services\ComparisonService;
 use App\Services\TopicHubService;
+use App\Services\AuthorityPageService;
+use App\Services\EditorialService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
@@ -223,7 +225,7 @@ class SiteController extends Controller
 
     public function sitemap()
     {
-        $cacheKey = 'sitemap:v3:'.sha1((string) config('app.url').'|'.request()->getSchemeAndHttpHost());
+        $cacheKey = 'sitemap:v5:'.sha1((string) config('app.url').'|'.request()->getSchemeAndHttpHost());
         $urls = Cache::remember($cacheKey, now()->addHours(6), function () {
         $urls = [
             ['loc' => url('/'), 'priority' => '1.0', 'changefreq' => 'daily', 'lastmod' => now()->toDateString()],
@@ -237,6 +239,24 @@ class SiteController extends Controller
                 'priority' => '0.5',
                 'changefreq' => 'monthly',
                 'lastmod' => now()->toDateString(),
+            ];
+        }
+
+        foreach (array_keys(config('trust.pages', [])) as $page) {
+            $urls[] = [
+                'loc' => route('trust.'.$page),
+                'priority' => $page === 'trust' ? '0.8' : '0.6',
+                'changefreq' => 'monthly',
+                'lastmod' => config('trust.last_updated_iso'),
+            ];
+        }
+
+        foreach (array_keys(config('editorial.authors', [])) as $author) {
+            $urls[] = [
+                'loc' => route('authors.show', $author),
+                'priority' => '0.6',
+                'changefreq' => 'monthly',
+                'lastmod' => config('editorial.default_updated_at'),
             ];
         }
 
@@ -362,7 +382,15 @@ class SiteController extends Controller
             ->header('Cache-Control', 'public, max-age=300');
     }
 
-    public function category(Request $request, string $category, CategoryLandingService $landingService, InternalLinkingService $linkingService)
+    public function category(
+        Request $request,
+        string $category,
+        CategoryLandingService $landingService,
+        InternalLinkingService $linkingService,
+        ComparisonService $comparisonService,
+        AuthorityPageService $authorityService,
+        EditorialService $editorial
+    )
     {
         $allCategories = HomeController::categories();
         $allTools = HomeController::tools();
@@ -374,6 +402,8 @@ class SiteController extends Controller
             ->values();
         $landing = $landingService->landing($categoryMeta, $categoryTools->all());
         $query = trim((string) $request->query('q', ''));
+        $sort = (string) $request->query('sort', 'featured');
+        $filter = (string) $request->query('filter', 'all');
         $tools = $categoryTools;
 
         if ($query !== '') {
@@ -382,6 +412,14 @@ class SiteController extends Controller
                 $tool['name'], $tool['desc'], $tool['keywords'] ?? '',
             ])), $needle))->values();
         }
+        if ($filter === 'featured') {
+            $tools = $tools->whereIn('slug', collect($landing['featured'])->pluck('tool.slug'))->values();
+        }
+        $tools = match ($sort) {
+            'name' => $tools->sortBy('name')->values(),
+            'recent' => $tools->reverse()->values(),
+            default => $tools,
+        };
 
         $paginatedTools = $this->paginate($tools->all(), 12, $request, 'all-tools');
         $relatedArticles = $linkingService->relatedArticlesForTool([
@@ -392,6 +430,19 @@ class SiteController extends Controller
             'desc' => $landing['description'],
         ], 4);
         $relatedCategories = $landingService->relatedCategories($categoryMeta, $allCategories, $allTools);
+        $comparisons = collect($comparisonService->all())->filter(fn (array $comparison) => in_array($categoryMeta['name'], [
+            $comparison['left']['category'], $comparison['right']['category'],
+        ], true))->values()->all();
+        $authorityArticles = collect(BlogRepository::all())->where('category', $categoryMeta['name'])->values()->all();
+        $authority = $authorityService->build('category-'.$category, array_merge($landing, [
+            'title' => $landing['label'],
+        ]), $categoryTools->all(), $authorityArticles, $comparisons);
+        $authorityContent = [
+            'slug' => 'category-'.$category,
+            'reading_time' => $authority['reading_time'],
+            'updated_at' => $authority['last_updated'],
+        ];
+        $editorialMeta = $editorial->metadata('categories', $authorityContent);
         $canonicalUrl = route('category.show', $category);
         $page = max(1, (int) $request->query('page', 1));
 
@@ -403,7 +454,7 @@ class SiteController extends Controller
             ['name' => 'Home', 'url' => url('/')],
             ['name' => $landing['label'], 'url' => route('category.show', $category)],
         ];
-        $schemaJsonLd = $this->categorySchema($categoryMeta, $landing, $categoryTools->all(), $breadcrumbs, $canonicalUrl);
+        $schemaJsonLd = $this->categorySchema($categoryMeta, $landing, $categoryTools->all(), $breadcrumbs, $canonicalUrl, $authority);
 
         return view('category', [
             'tools' => $paginatedTools,
@@ -413,17 +464,22 @@ class SiteController extends Controller
             'query' => $query,
             'relatedArticles' => $relatedArticles,
             'relatedCategories' => $relatedCategories,
+            'comparisons' => $comparisons,
+            'authority' => $authority,
+            'editorialMeta' => $editorialMeta,
+            'sort' => $sort,
+            'filter' => $filter,
             'breadcrumbs' => $breadcrumbs,
             'canonicalUrl' => $canonicalUrl,
             'seoTitle' => $landing['meta_title'],
             'seoDescription' => $landing['meta_description'],
             'seoKeywords' => Str::lower($landing['label']).', online '.Str::lower($categoryMeta['name']).', free tools',
-            'robotsMeta' => $query !== '' ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+            'robotsMeta' => $query !== '' || $sort !== 'featured' || $filter !== 'all' ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
             'schemaJsonLd' => $schemaJsonLd,
         ]);
     }
 
-    private function categorySchema(array $category, array $landing, array $tools, array $breadcrumbs, string $canonicalUrl): array
+    private function categorySchema(array $category, array $landing, array $tools, array $breadcrumbs, string $canonicalUrl, array $authority): array
     {
         $items = collect($tools)->values()->map(fn (array $tool, int $index) => [
             '@type' => 'ListItem',
@@ -439,7 +495,15 @@ class SiteController extends Controller
                 'name' => $landing['label'],
                 'description' => $landing['description'],
                 'url' => $canonicalUrl,
+                'dateModified' => $authority['last_updated'],
                 'mainEntity' => ['@type' => 'ItemList', 'numberOfItems' => count($tools), 'itemListElement' => $items],
+            ],
+            [
+                '@context' => 'https://schema.org',
+                '@type' => 'ItemList',
+                'name' => $landing['label'].' directory',
+                'numberOfItems' => count($tools),
+                'itemListElement' => $items,
             ],
             [
                 '@context' => 'https://schema.org',
@@ -451,11 +515,18 @@ class SiteController extends Controller
             [
                 '@context' => 'https://schema.org',
                 '@type' => 'FAQPage',
-                'mainEntity' => collect($landing['faqs'])->map(fn (array $faq) => [
+                'mainEntity' => collect($authority['faqs'])->map(fn (array $faq) => [
                     '@type' => 'Question',
                     'name' => $faq['question'],
                     'acceptedAnswer' => ['@type' => 'Answer', 'text' => $faq['answer']],
                 ])->all(),
+            ],
+            [
+                '@context' => 'https://schema.org',
+                '@type' => 'Organization',
+                'name' => 'Toolexa',
+                'url' => url('/'),
+                'logo' => asset('assets/images/favicon.png'),
             ],
         ];
     }

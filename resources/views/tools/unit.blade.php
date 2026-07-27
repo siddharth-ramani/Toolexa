@@ -5,6 +5,7 @@
     <section class="tool-hero">
         <span class="eyebrow">Utility tool</span>
         <h1>Unit Converter</h1>
+        @include('partials.tool-editorial-meta')
         <p>Convert common distance and weight units in a clean, quick interface.</p>
     </section>
 

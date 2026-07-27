@@ -5,6 +5,7 @@
     <section class="tool-hero">
         <span class="eyebrow">Math tool</span>
         <h1>Percentage Calculator</h1>
+        @include('partials.tool-editorial-meta')
         <p>Find what percentage one value is of a total number.</p>
     </section>
 

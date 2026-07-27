@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Tools\HomeController;
 use App\Support\BlogRepository;
 use App\Services\InternalLinkingService;
+use App\Services\EditorialService;
+use App\Services\BlogQualityService;
+use App\Services\ComparisonService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
@@ -36,7 +39,13 @@ class BlogController extends Controller
         ]);
     }
 
-    public function show(string $slug, InternalLinkingService $linking)
+    public function show(
+        string $slug,
+        InternalLinkingService $linking,
+        EditorialService $editorial,
+        BlogQualityService $quality,
+        ComparisonService $comparisons
+    )
     {
         $article = BlogRepository::find($slug);
         abort_unless($article, 404);
@@ -44,15 +53,22 @@ class BlogController extends Controller
         $relatedTools = $linking->relatedToolsForArticle($article);
         $relatedArticles = $linking->relatedArticlesForArticle($article);
         $adjacent = BlogRepository::adjacent($slug);
-        $toc = BlogRepository::tableOfContents($article);
+        $qualityContent = $quality->build($article);
+        $article['reading_time'] = $qualityContent['reading_time'];
+        $toc = $this->qualityTableOfContents($qualityContent);
+        $relatedComparisons = $this->relatedComparisons($article, $comparisons->all());
         $canonicalUrl = route('blog.show', $article['slug']);
         $publishedDate = $article['published_at'];
+        $editorialMeta = $editorial->metadata('articles', $article);
 
         return view('blog.show', [
             'article' => $article,
+            'editorialMeta' => $editorialMeta,
+            'qualityContent' => $qualityContent,
             'toc' => $toc,
             'relatedTools' => $relatedTools,
             'relatedArticles' => $relatedArticles,
+            'relatedComparisons' => $relatedComparisons,
             'previousArticle' => $adjacent['previous'],
             'nextArticle' => $adjacent['next'],
             'breadcrumbs' => [
@@ -72,11 +88,10 @@ class BlogController extends Controller
                     'description' => $article['meta_description'],
                     'url' => $canonicalUrl,
                     'datePublished' => $publishedDate,
-                    'dateModified' => $publishedDate,
-                    'author' => [
-                        '@type' => 'Organization',
-                        'name' => $article['author'],
-                    ],
+                    'dateModified' => $editorialMeta['updated_at'],
+                    'author' => $editorial->personSchema($editorialMeta['author']),
+                    'reviewedBy' => $editorial->reviewerSchema($editorialMeta['reviewer']),
+                    'wordCount' => str_word_count(strip_tags(json_encode($qualityContent))),
                     'publisher' => [
                         '@type' => 'Organization',
                         'name' => 'Toolexa',
@@ -114,7 +129,7 @@ class BlogController extends Controller
                 [
                     '@context' => 'https://schema.org',
                     '@type' => 'FAQPage',
-                    'mainEntity' => collect($article['faqs'])->map(fn (array $faq) => [
+                    'mainEntity' => collect($qualityContent['faqs'])->map(fn (array $faq) => [
                         '@type' => 'Question',
                         'name' => $faq['question'],
                         'acceptedAnswer' => [
@@ -123,8 +138,58 @@ class BlogController extends Controller
                         ],
                     ])->all(),
                 ],
+                array_merge(['@context' => 'https://schema.org'], $editorial->personSchema($editorialMeta['author'])),
+                [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'Organization',
+                    'name' => 'Toolexa',
+                    'url' => url('/'),
+                    'logo' => asset('assets/images/favicon.png'),
+                ],
             ],
         ]);
+    }
+
+    private function qualityTableOfContents(array $content): array
+    {
+        $fixed = [
+            ['id' => 'introduction', 'title' => 'Introduction'],
+            ['id' => 'step-by-step-guide', 'title' => 'Step-by-Step Guide'],
+        ];
+        $sections = collect($content['sections'])->map(fn (array $section) => [
+            'id' => Str::slug($section['heading']),
+            'title' => $section['heading'],
+        ])->all();
+        $ending = [
+            ['id' => 'common-mistakes', 'title' => 'Common Mistakes'],
+            ['id' => 'faq', 'title' => 'Frequently Asked Questions'],
+        ];
+        if (count($content['references'])) {
+            $ending[] = ['id' => 'official-references', 'title' => 'Official References'];
+        }
+
+        return collect(array_merge($fixed, $sections, $ending))->unique('id')->values()->all();
+    }
+
+    private function relatedComparisons(array $article, array $comparisons): array
+    {
+        $terms = collect(preg_split('/[^\pL\pN]+/u', Str::lower($article['title'].' '.$article['slug'])) ?: [])
+            ->filter(fn (string $term) => mb_strlen($term) > 2)
+            ->all();
+
+        return collect($comparisons)->map(function (array $comparison) use ($terms) {
+            $haystack = Str::lower($comparison['title'].' '.$comparison['slug'].' '.$comparison['left']['category'].' '.$comparison['right']['category']);
+            $comparison['_score'] = collect($terms)->filter(fn (string $term) => str_contains($haystack, $term))->count();
+
+            return $comparison;
+        })->filter(fn (array $comparison) => $comparison['_score'] > 0)
+            ->sortByDesc('_score')
+            ->take(4)
+            ->map(function (array $comparison) {
+                unset($comparison['_score']);
+
+                return $comparison;
+            })->values()->all();
     }
 
     private function paginate(array $items, int $perPage, Request $request): LengthAwarePaginator

@@ -135,16 +135,21 @@
     <link rel="apple-touch-icon" href="{{ $faviconUrl }}">
     <link rel="manifest" href="{{ $manifestUrl }}">
     <meta property="og:site_name" content="{{ $brandName }}">
-    <meta property="og:type" content="{{ request()->is('blog/*') ? 'article' : 'website' }}">
+    <meta property="og:type" content="{{ request()->is('blog/*') || request()->is('compare/*') ? 'article' : 'website' }}">
     <meta property="og:title" content="{{ $pageTitle }}">
     <meta property="og:description" content="{{ $pageDescription }}">
     <meta property="og:url" content="{{ $pageCanonical }}">
     <meta property="og:image" content="{{ $socialImageUrl }}">
     @if(request()->is('blog/*') && isset($article))
         <meta property="article:published_time" content="{{ $article['published_at'] }}">
-        <meta property="article:modified_time" content="{{ $article['published_at'] }}">
+        <meta property="article:modified_time" content="{{ $editorialMeta['updated_at'] ?? $article['published_at'] }}">
         <meta property="article:author" content="{{ $article['author'] }}">
         <meta property="article:section" content="{{ $article['category'] }}">
+    @elseif(request()->is('compare/*') && isset($comparison))
+        <meta property="article:published_time" content="{{ $comparison['published_at'] }}">
+        <meta property="article:modified_time" content="{{ $editorialMeta['updated_at'] }}">
+        <meta property="article:author" content="{{ $editorialMeta['author']['name'] }}">
+        <meta property="article:section" content="{{ $comparison['left']['category'] }}">
     @endif
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ $pageTitle }}">
@@ -249,7 +254,7 @@
                 </div>
 
                 <div class="nav-dropdown">
-                    <button class="nav-link dropdown-button {{ request()->is('about', 'contact', 'privacy-policy', 'terms', 'disclaimer') ? 'active' : '' }}" type="button" data-dropdown-toggle aria-expanded="false">
+                    <button class="nav-link dropdown-button {{ request()->is('about', 'contact', 'privacy-policy', 'terms', 'disclaimer', 'trust', 'editorial-policy', 'accuracy-policy', 'how-we-test-tools') ? 'active' : '' }}" type="button" data-dropdown-toggle aria-expanded="false">
                         Company
                     </button>
                     <div class="dropdown-panel">
@@ -258,6 +263,7 @@
                         <a href="{{ route('page.show', 'privacy-policy') }}">Privacy Policy</a>
                         <a href="{{ route('page.show', 'terms') }}">Terms</a>
                         <a href="{{ route('page.show', 'disclaimer') }}">Disclaimer</a>
+                        <a href="{{ route('trust.trust') }}">Trust Center</a>
                     </div>
                 </div>
 
@@ -299,7 +305,7 @@
             </section>
 
             @unless(request()->is('/', 'dashboard', 'workspace') || $workspaceEmbed)
-                <aside class="sidebar-area" aria-label="Sponsored">
+                <aside class="sidebar-area" aria-label="Helpful links and sponsored content">
                     @include('partials.ad-slot', ['class' => 'ad-sidebar', 'label' => 'Sidebar ad'])
                     <div class="quick-box">
                         <span class="eyebrow">Popular</span>
@@ -366,6 +372,7 @@
                 <a href="{{ route('compare.index') }}">Comparisons</a>
                 <a href="{{ route('hub.index') }}">Topic Hubs</a>
                 <a href="{{ route('workspace') }}">Workspace</a>
+                <a href="{{ route('trust.trust') }}">Trust Center</a>
             </nav>
 
             <nav aria-label="Footer company">
@@ -376,6 +383,11 @@
                 <a href="{{ route('page.show', 'privacy-policy') }}">Privacy Policy</a>
                 <a href="{{ route('page.show', 'terms') }}">Terms & Conditions</a>
                 <a href="{{ route('page.show', 'disclaimer') }}">Disclaimer</a>
+                <a href="{{ route('trust.trust') }}">Trust</a>
+                <a href="{{ route('authors.show', 'toolexa-editorial-team') }}">Editorial Team</a>
+                <a href="{{ route('trust.editorial-policy') }}">Editorial Policy</a>
+                <a href="{{ route('trust.accuracy-policy') }}">Accuracy Policy</a>
+                <a href="{{ route('trust.how-we-test-tools') }}">How We Test Tools</a>
             </nav>
         </div>
 

@@ -220,6 +220,132 @@
         });
     });
 
+    document.querySelectorAll('[data-native-share]').forEach(function (button) {
+        if (!navigator.share) {
+            button.hidden = true;
+            return;
+        }
+
+        button.addEventListener('click', function () {
+            navigator.share({
+                title: button.getAttribute('data-share-title') || document.title,
+                url: button.getAttribute('data-share-url') || window.location.href
+            }).catch(function () {});
+        });
+    });
+
+    document.querySelectorAll('[data-article-feedback]').forEach(function (panel) {
+        var slug = panel.getAttribute('data-article-feedback');
+        var key = 'toolexa:article-feedback:' + slug;
+        var status = panel.querySelector('[data-article-feedback-status]');
+        var buttons = panel.querySelectorAll('[data-article-vote]');
+
+        function selectVote(vote, announce) {
+            buttons.forEach(function (button) {
+                var selected = button.getAttribute('data-article-vote') === vote;
+                button.classList.toggle('is-selected', selected);
+                button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+            });
+            if (status) {
+                status.textContent = announce ? 'Thanks for helping us improve this article.' : (vote ? 'Your feedback is saved on this device.' : '');
+            }
+        }
+
+        try {
+            selectVote(window.localStorage.getItem(key), false);
+        } catch (error) {}
+
+        buttons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                var vote = button.getAttribute('data-article-vote');
+                try {
+                    window.localStorage.setItem(key, vote);
+                } catch (error) {}
+                selectVote(vote, true);
+            });
+        });
+    });
+
+    document.querySelectorAll('[data-comparison-feedback]').forEach(function (panel) {
+        var slug = panel.getAttribute('data-comparison-feedback');
+        var key = 'toolexa:comparison-feedback:' + slug;
+        var status = panel.querySelector('[data-comparison-feedback-status]');
+        var buttons = panel.querySelectorAll('[data-comparison-vote]');
+
+        function selectVote(vote, announce) {
+            buttons.forEach(function (button) {
+                var selected = button.getAttribute('data-comparison-vote') === vote;
+                button.classList.toggle('is-selected', selected);
+                button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+            });
+            if (status) {
+                status.textContent = announce ? 'Thanks for helping us improve this comparison.' : (vote ? 'Your feedback is saved on this device.' : '');
+            }
+        }
+
+        try {
+            selectVote(window.localStorage.getItem(key), false);
+        } catch (error) {}
+
+        buttons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                var vote = button.getAttribute('data-comparison-vote');
+                try {
+                    window.localStorage.setItem(key, vote);
+                } catch (error) {}
+                selectVote(vote, true);
+            });
+        });
+    });
+
+    document.querySelectorAll('[data-authority-feedback]').forEach(function (panel) {
+        var slug = panel.getAttribute('data-authority-feedback');
+        var key = 'toolexa:authority-feedback:' + slug;
+        var status = panel.querySelector('[data-authority-feedback-status]');
+        var buttons = panel.querySelectorAll('[data-authority-vote]');
+
+        function selectVote(vote, announce) {
+            buttons.forEach(function (button) {
+                var selected = button.getAttribute('data-authority-vote') === vote;
+                button.classList.toggle('is-selected', selected);
+                button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+            });
+            status.textContent = announce ? 'Thanks for helping us improve this topic.' : (vote ? 'Your feedback is saved on this device.' : '');
+        }
+
+        try {
+            selectVote(window.localStorage.getItem(key), false);
+        } catch (error) {}
+
+        buttons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                var vote = button.getAttribute('data-authority-vote');
+                try {
+                    window.localStorage.setItem(key, vote);
+                } catch (error) {}
+                selectVote(vote, true);
+            });
+        });
+    });
+
+    document.querySelectorAll('[data-decision-guide]').forEach(function (guide) {
+        var checks = guide.querySelectorAll('[data-decision-check]');
+        var status = guide.querySelector('[data-decision-status]');
+
+        function updateDecisionStatus() {
+            var selected = Array.prototype.filter.call(checks, function (check) {
+                return check.checked;
+            }).length;
+            status.textContent = selected === 0
+                ? 'Select the statements that match your needs.'
+                : selected + ' of ' + checks.length + ' reasons match your priorities.';
+        }
+
+        checks.forEach(function (check) {
+            check.addEventListener('change', updateDecisionStatus);
+        });
+    });
+
     document.querySelectorAll('[data-clear-tool]').forEach(function (button) {
         button.addEventListener('click', function () {
             var form = button.closest('form');
@@ -3744,6 +3870,31 @@
             event.preventDefault();
             var status = form.querySelector('[data-newsletter-status]');
             if (status) status.textContent = 'Thanks for your interest. Newsletter delivery will be available soon.';
+        });
+    });
+
+    document.querySelectorAll('[data-tool-feedback]').forEach(function (panel) {
+        var slug = panel.getAttribute('data-tool-slug');
+        var key = 'toolexa_tool_feedback_' + slug;
+        var buttons = panel.querySelectorAll('[data-feedback-value]');
+        var status = panel.querySelector('[data-feedback-status]');
+        function select(value, announce) {
+            buttons.forEach(function (button) {
+                var active = button.getAttribute('data-feedback-value') === value;
+                button.classList.toggle('active', active);
+                button.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+            if (status) status.textContent = announce ? 'Thank you. Your feedback was saved on this device.' : (value ? 'Your saved response: ' + (value === 'yes' ? 'Helpful' : 'Not helpful') : '');
+        }
+        var saved = '';
+        try { saved = window.localStorage.getItem(key) || ''; } catch (error) {}
+        select(saved, false);
+        buttons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                var value = button.getAttribute('data-feedback-value');
+                try { window.localStorage.setItem(key, value); } catch (error) {}
+                select(value, true);
+            });
         });
     });
 

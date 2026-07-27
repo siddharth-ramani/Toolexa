@@ -5,6 +5,7 @@
     <section class="tool-hero">
         <span class="eyebrow">Text tool</span>
         <h1>Text Case Converter</h1>
+        @include('partials.tool-editorial-meta')
         <p>Convert text into uppercase, lowercase and title case formats.</p>
     </section>
 

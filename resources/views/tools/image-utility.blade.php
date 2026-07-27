@@ -8,6 +8,7 @@
     <section class="tool-hero">
         <span class="eyebrow">{{ $toolMeta['category'] }} tool</span>
         <h1>{{ $toolMeta['name'] }}</h1>
+        @include('partials.tool-editorial-meta')
         <p>{{ $toolMeta['desc'] }}</p>
     </section>
 

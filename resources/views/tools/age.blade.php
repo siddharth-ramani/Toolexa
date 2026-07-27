@@ -5,6 +5,7 @@
     <section class="tool-hero">
         <span class="eyebrow">Utility tool</span>
         <h1>Age Calculator</h1>
+        @include('partials.tool-editorial-meta')
         <p>Select your date of birth and get exact age in years, months and days.</p>
     </section>
 

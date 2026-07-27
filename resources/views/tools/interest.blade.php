@@ -5,6 +5,7 @@
     <section class="tool-hero">
         <span class="eyebrow">Finance tool</span>
         <h1>Simple Interest Calculator</h1>
+        @include('partials.tool-editorial-meta')
         <p>Calculate simple interest from principal amount, interest rate and time period.</p>
     </section>
 

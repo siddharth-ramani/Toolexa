@@ -5,6 +5,7 @@
     <section class="tool-hero">
         <span class="eyebrow">Shopping tool</span>
         <h1>Discount Calculator</h1>
+        @include('partials.tool-editorial-meta')
         <p>Calculate sale price and savings before you buy.</p>
     </section>
 

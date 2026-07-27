@@ -5,6 +5,7 @@
     <section class="tool-hero">
         <span class="eyebrow">Utility tool</span>
         <h1>QR Code Generator</h1>
+        @include('partials.tool-editorial-meta')
         <p>Generate QR codes for URLs, text, contact details or short notes.</p>
     </section>
 

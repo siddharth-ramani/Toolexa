@@ -40,22 +40,30 @@ class TopicHubService
             $category = collect(HomeController::categories())->firstWhere('name', $profile['category']);
             $featured = $category ? app(CategoryLandingService::class)->landing($category, $tools)['featured'] : [];
             $faqs = $this->faqs($profile);
+            $authority = app(AuthorityPageService::class)->build($slug, array_merge($profile, [
+                'title' => $profile['title'],
+                'faqs' => $faqs,
+                'guide' => $this->guide($profile),
+            ]), $tools, $articles, $comparisons);
+            $authority['article_count'] = $search['total'];
 
             return array_merge($profile, [
                 'slug' => $slug,
                 'tools' => $tools,
                 'tool_count' => count($tools),
                 'featured_tools' => collect($featured)->pluck('tool')->values()->all(),
+                'featured_selections' => $featured,
                 'articles' => $articles,
                 'article_count' => $search['total'],
                 'comparisons' => $comparisons,
                 'comparison_count' => count($comparisons),
                 'guide' => $this->guide($profile),
                 'faqs' => $faqs,
+                'authority' => $authority,
                 'related_hubs' => $this->relatedHubs($slug, $profile),
                 'meta_title' => $profile['title'].' Guide: Free Tools, Best Practices & Resources | Toolexa',
                 'meta_description' => Str::limit($profile['description'].' Explore free tools, detailed guides, comparisons, best practices, FAQs and essential terminology.', 158, ''),
-                'schema' => $this->schema($slug, $profile, $tools, $faqs),
+                'schema' => $this->schema($slug, $profile, $tools, $authority['faqs'], $authority['last_updated']),
             ]);
         });
     }
@@ -138,19 +146,21 @@ class TopicHubService
         return collect(preg_split('/[^\pL\pN]+/u', Str::lower($text)) ?: [])->filter(fn (string $term) => mb_strlen($term) > 3)->unique()->all();
     }
 
-    private function schema(string $slug, array $profile, array $tools, array $faqs): array
+    private function schema(string $slug, array $profile, array $tools, array $faqs, string $lastUpdated): array
     {
         $url = route('hub.show', $slug);
         $items = collect($tools)->values()->map(fn (array $tool, int $index) => ['@type' => 'ListItem', 'position' => $index + 1, 'name' => $tool['name'], 'url' => url('tools/'.$tool['slug'])])->all();
 
         return [
-            ['@context' => 'https://schema.org', '@type' => 'CollectionPage', 'name' => $profile['title'], 'description' => $profile['description'], 'url' => $url, 'mainEntity' => ['@type' => 'ItemList', 'numberOfItems' => count($tools), 'itemListElement' => $items]],
+            ['@context' => 'https://schema.org', '@type' => 'CollectionPage', 'name' => $profile['title'], 'description' => $profile['description'], 'url' => $url, 'dateModified' => $lastUpdated, 'mainEntity' => ['@type' => 'ItemList', 'numberOfItems' => count($tools), 'itemListElement' => $items]],
+            ['@context' => 'https://schema.org', '@type' => 'ItemList', 'name' => $profile['title'].' directory', 'numberOfItems' => count($tools), 'itemListElement' => $items],
             ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => [
                 ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => url('/')],
                 ['@type' => 'ListItem', 'position' => 2, 'name' => 'Topic Hubs', 'item' => route('hub.index')],
                 ['@type' => 'ListItem', 'position' => 3, 'name' => $profile['title'], 'item' => $url],
             ]],
             ['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => collect($faqs)->map(fn (array $faq) => ['@type' => 'Question', 'name' => $faq['question'], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $faq['answer']]])->all()],
+            ['@context' => 'https://schema.org', '@type' => 'Organization', 'name' => 'Toolexa', 'url' => url('/'), 'logo' => asset('assets/images/favicon.png')],
         ];
     }
 }

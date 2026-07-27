@@ -1,26 +1,31 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\AdSenseValidatorController;
+use App\Http\Controllers\Admin\SiteAuditController;
+use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ComparisonController;
-use App\Http\Controllers\TopicHubController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\SiteController;
-use App\Http\Controllers\Tools\HomeController;
-use App\Http\Controllers\Tools\GstController;
-use App\Http\Controllers\Tools\ToolController;
-use App\Http\Controllers\Tools\EmiController;
 use App\Http\Controllers\Tools\AgeController;
-use App\Http\Controllers\Tools\PercentageController;
 use App\Http\Controllers\Tools\DiscountController;
+use App\Http\Controllers\Tools\EmiController;
+use App\Http\Controllers\Tools\FinanceCalculatorController;
+use App\Http\Controllers\Tools\GstController;
+use App\Http\Controllers\Tools\HomeController;
 use App\Http\Controllers\Tools\InterestController;
 use App\Http\Controllers\Tools\PasswordController;
-use App\Http\Controllers\Tools\UnitController;
+use App\Http\Controllers\Tools\PercentageController;
 use App\Http\Controllers\Tools\QrController;
 use App\Http\Controllers\Tools\TextController;
 use App\Http\Controllers\Tools\TextUtilityController;
-use App\Http\Controllers\Tools\FinanceCalculatorController;
+use App\Http\Controllers\Tools\ToolController;
+use App\Http\Controllers\Tools\UnitController;
+use App\Http\Controllers\TopicHubController;
+use App\Http\Controllers\TrustController;
+use App\Http\Controllers\WorkspaceController;
+use App\Http\Middleware\EnsureSiteAuditAdmin;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,7 +46,22 @@ Route::get('/ads.txt', [SiteController::class, 'ads'])->name('ads');
 Route::get('/search', [SiteController::class, 'search'])->name('search');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('/workspace', [WorkspaceController::class, 'index'])->name('workspace');
+Route::get('/trust', [TrustController::class, 'show'])->defaults('page', 'trust')->name('trust.trust');
+Route::get('/editorial-policy', [TrustController::class, 'show'])->defaults('page', 'editorial-policy')->name('trust.editorial-policy');
+Route::get('/accuracy-policy', [TrustController::class, 'show'])->defaults('page', 'accuracy-policy')->name('trust.accuracy-policy');
+Route::get('/how-we-test-tools', [TrustController::class, 'show'])->defaults('page', 'how-we-test-tools')->name('trust.how-we-test-tools');
+Route::get('/authors/{slug}', [AuthorController::class, 'show'])->name('authors.show');
 Route::get('/api/search', [SiteController::class, 'searchApi'])->name('search.api')->middleware('throttle:120,1');
+Route::prefix('admin/site-audit')->middleware(EnsureSiteAuditAdmin::class)->group(function () {
+    Route::get('/', [SiteAuditController::class, 'index'])->name('admin.site-audit.index');
+    Route::post('/refresh', [SiteAuditController::class, 'refresh'])->name('admin.site-audit.refresh');
+    Route::get('/export/{format}', [SiteAuditController::class, 'export'])->name('admin.site-audit.export');
+});
+Route::prefix('admin/adsense-validator')->middleware(EnsureSiteAuditAdmin::class)->group(function () {
+    Route::get('/', [AdSenseValidatorController::class, 'index'])->name('admin.adsense-validator.index');
+    Route::post('/refresh', [AdSenseValidatorController::class, 'refresh'])->name('admin.adsense-validator.refresh');
+    Route::get('/export/{format}', [AdSenseValidatorController::class, 'export'])->name('admin.adsense-validator.export');
+});
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/compare', [ComparisonController::class, 'index'])->name('compare.index');

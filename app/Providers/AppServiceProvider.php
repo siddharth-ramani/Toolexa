@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Http\Controllers\Tools\HomeController;
 use App\Services\InternalLinkingService;
+use App\Services\EditorialService;
+use App\Services\ToolPageQualityService;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -42,13 +44,15 @@ class AppServiceProvider extends ServiceProvider
             $relatedTools = $linking->relatedToolsForTool($tool);
             $relatedArticles = $linking->relatedArticlesForTool($tool);
             $recentTools = HomeController::recentTools();
+            $toolQuality = app(ToolPageQualityService::class)->build($tool);
+            $editorialMeta = app(EditorialService::class)->metadata('tools', array_merge($tool, $toolQuality));
             $breadcrumbs = [
                 ['name' => 'Home', 'url' => url('/')],
                 ['name' => $tool['category'], 'url' => url('/').'#'.\Illuminate\Support\Str::slug($tool['category'])],
                 ['name' => $tool['name'], 'url' => url('tools/'.$tool['slug'])],
             ];
 
-            $schema = $this->toolSchema($tool, $breadcrumbs);
+            $schema = $this->toolSchema($tool, $breadcrumbs, $editorialMeta, $toolQuality);
 
             $view->with([
                 'toolMeta' => $tool,
@@ -61,21 +65,27 @@ class AppServiceProvider extends ServiceProvider
                 'recentTools' => $recentTools,
                 'breadcrumbs' => $breadcrumbs,
                 'schemaJsonLd' => $schema,
+                'editorialMeta' => $editorialMeta,
+                'toolQuality' => $toolQuality,
             ]);
         });
     }
 
-    private function toolSchema(array $tool, array $breadcrumbs): array
+    private function toolSchema(array $tool, array $breadcrumbs, array $editorialMeta, array $toolQuality): array
     {
+        $editorial = app(EditorialService::class);
         $schemas = [
             [
                 '@context' => 'https://schema.org',
-                '@type' => 'WebApplication',
+                '@type' => 'SoftwareApplication',
                 'name' => $tool['name'],
                 'description' => $tool['seo_description'],
                 'applicationCategory' => $tool['category'].'Application',
                 'operatingSystem' => 'Any',
                 'url' => url('tools/'.$tool['slug']),
+                'author' => $editorial->personSchema($editorialMeta['author']),
+                'reviewedBy' => $editorial->reviewerSchema($editorialMeta['reviewer']),
+                'dateModified' => $editorialMeta['updated_at'],
                 'offers' => [
                     '@type' => 'Offer',
                     'price' => '0',
@@ -104,7 +114,7 @@ class AppServiceProvider extends ServiceProvider
                         'position' => $index + 1,
                         'text' => $step,
                     ];
-                }, $tool['how_to'], array_keys($tool['how_to'])),
+                }, $toolQuality['steps'], array_keys($toolQuality['steps'])),
             ],
             [
                 '@context' => 'https://schema.org',
@@ -112,13 +122,13 @@ class AppServiceProvider extends ServiceProvider
                 'mainEntity' => array_map(function ($faq) {
                     return [
                         '@type' => 'Question',
-                        'name' => $faq['q'],
+                        'name' => $faq['question'],
                         'acceptedAnswer' => [
                             '@type' => 'Answer',
-                            'text' => $faq['a'],
+                            'text' => $faq['answer'],
                         ],
                     ];
-                }, $tool['faq']),
+                }, $toolQuality['faqs']),
             ],
         ];
 

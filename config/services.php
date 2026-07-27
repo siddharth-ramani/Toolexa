@@ -35,6 +35,11 @@ return [
         'analytics_id' => env('GOOGLE_ANALYTICS_ID'),
         'site_verification' => env('GOOGLE_SITE_VERIFICATION'),
         'adsense_publisher_id' => env('GOOGLE_ADSENSE_PUBLISHER_ID', 'ca-pub-7906749495850465'),
+        'adsense_slots' => [
+            'top' => env('GOOGLE_ADSENSE_TOP_SLOT'),
+            'sidebar' => env('GOOGLE_ADSENSE_SIDEBAR_SLOT'),
+            'inline' => env('GOOGLE_ADSENSE_INLINE_SLOT'),
+        ],
     ],
 
 ];

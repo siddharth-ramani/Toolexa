@@ -5,6 +5,7 @@
     <section class="tool-hero">
         <span class="eyebrow">Security tool</span>
         <h1>Password Generator</h1>
+        @include('partials.tool-editorial-meta')
         <p>Create a strong random password for accounts, apps and websites.</p>
     </section>
 

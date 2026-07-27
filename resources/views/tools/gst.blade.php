@@ -5,6 +5,7 @@
     <section class="tool-hero">
         <span class="eyebrow">Finance tool</span>
         <h1>GST Calculator</h1>
+        @include('partials.tool-editorial-meta')
         <p>Enter amount and GST rate to calculate GST amount and final total instantly.</p>
     </section>
 

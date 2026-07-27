@@ -3,7 +3,7 @@
 @php($mode = $toolMeta['slug'])
 
 @section('content')
-<section class="tool-hero"><span class="eyebrow">{{ $toolMeta['category'] }} tool</span><h1>{{ $toolMeta['name'] }}</h1><p>{{ $toolMeta['desc'] }}</p></section>
+<section class="tool-hero"><span class="eyebrow">{{ $toolMeta['category'] }} tool</span><h1>{{ $toolMeta['name'] }}</h1>@include('partials.tool-editorial-meta')<p>{{ $toolMeta['desc'] }}</p></section>
 
 <section class="form-panel advanced-tool" data-advanced-tool data-mode="{{ $mode }}">
     @if($mode === 'sha-256-hash-generator')

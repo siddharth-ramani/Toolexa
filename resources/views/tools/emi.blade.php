@@ -5,6 +5,7 @@
     <section class="tool-hero">
         <span class="eyebrow">Finance tool</span>
         <h1>EMI Calculator</h1>
+        @include('partials.tool-editorial-meta')
         <p>Plan monthly loan payments with EMI, total interest and total repayment in one view.</p>
     </section>
 

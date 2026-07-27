@@ -5,12 +5,8 @@
         <header class="tool-hero blog-article-hero">
             <span class="eyebrow">{{ $article['category'] }}</span>
             <h1>{{ $article['title'] }}</h1>
+            <x-editorial.metadata-row :metadata="$editorialMeta" />
             <p>{{ $article['excerpt'] }}</p>
-            <div class="blog-meta blog-meta-large">
-                <span>{{ $article['author'] }}</span>
-                <span>{{ \Carbon\Carbon::parse($article['published_at'])->format('F d, Y') }}</span>
-                <span>{{ $article['reading_time'] }} min read</span>
-            </div>
         </header>
 
         <figure class="blog-featured">
@@ -24,67 +20,91 @@
             @endif
         </figure>
 
-        <div class="blog-share-row">
-            <a class="btn btn-sm" href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode($canonicalUrl) }}" rel="noopener" target="_blank">Facebook</a>
-            <a class="btn btn-sm" href="https://twitter.com/intent/tweet?url={{ urlencode($canonicalUrl) }}&text={{ urlencode($article['title']) }}" rel="noopener" target="_blank">X</a>
-            <a class="btn btn-sm" href="https://www.linkedin.com/sharing/share-offsite/?url={{ urlencode($canonicalUrl) }}" rel="noopener" target="_blank">LinkedIn</a>
-            <button class="btn btn-sm" type="button" data-copy-text="{{ $canonicalUrl }}">Copy Link</button>
-        </div>
-
-        <aside class="blog-toc info-panel" aria-label="Table of contents">
-            <span class="eyebrow">Table of Contents</span>
-            <ol>
-                @foreach($toc as $item)
-                    <li><a href="#{{ $item['id'] }}">{{ $item['title'] }}</a></li>
-                @endforeach
-                <li><a href="#faq">FAQs</a></li>
-                <li><a href="#conclusion">Conclusion</a></li>
-            </ol>
-        </aside>
+        <x-blog.share :url="$canonicalUrl" :title="$article['title']" />
+        <x-blog.summary-box :items="$qualityContent['summary']" />
+        <x-blog.toc :items="$toc" />
 
         <section class="blog-content info-panel">
-            @foreach($article['sections'] as $section)
+            <div class="editorial-review-status" aria-label="Review process">
+                <span>✓ Reviewed for accuracy</span>
+                <span>✓ Last updated {{ \Carbon\Carbon::parse($editorialMeta['updated_at'])->format('F Y') }}</span>
+                <span>✓ Educational purposes</span>
+            </div>
+
+            <section id="introduction" class="blog-section">
+                <h2>Introduction</h2>
+                @foreach($qualityContent['introduction'] as $paragraph)
+                    <p>{{ $paragraph }}</p>
+                @endforeach
+            </section>
+
+            <section id="step-by-step-guide" class="blog-section">
+                <h2>Step-by-Step Guide</h2>
+                <ol class="blog-step-list">
+                    @foreach($qualityContent['steps'] as $step)
+                        <li><span>Step {{ $loop->iteration }}</span><p>{{ $step }}</p></li>
+                    @endforeach
+                </ol>
+            </section>
+
+            @foreach($qualityContent['sections'] as $section)
                 <section id="{{ \Illuminate\Support\Str::slug($section['heading']) }}" class="blog-section">
                     <h2>{{ $section['heading'] }}</h2>
                     @foreach($section['paragraphs'] as $paragraph)
                         <p>{{ $paragraph }}</p>
                     @endforeach
-                    @if($loop->iteration === 2)
-                        <h3>Practical example</h3>
-                        <p>Open the related Toolexa tool, enter one realistic value, then change only one input at a time. This makes the effect of rate, format, size, quantity or setting easier to understand than changing everything together.</p>
-                    @elseif($loop->iteration === 4)
-                        <h3>Common mistake to avoid</h3>
-                        <p>Do not rely on a result without checking the input type, unit, format or assumption behind it. Most wrong outputs come from entering the right number in the wrong field or using a setting that does not match the real task.</p>
+                    @if(isset($qualityContent['blocks'][$loop->index]))
+                        <x-blog.info-block :block="$qualityContent['blocks'][$loop->index]" />
                     @endif
                 </section>
             @endforeach
 
-            <section id="conclusion" class="blog-section">
-                <h2>Conclusion</h2>
-                <p>{{ $article['title'] }} becomes easier when you break the topic into clear inputs, practical examples and repeatable checks. Use this guide as a reference, then use the related Toolexa tools below whenever you need quick calculations, conversions or output you can copy.</p>
+            <section id="common-mistakes" class="blog-section">
+                <h2>Common Mistakes</h2>
+                <ul class="blog-mistake-list">
+                    @foreach($qualityContent['mistakes'] as $mistake)
+                        <li>{{ $mistake }}</li>
+                    @endforeach
+                </ul>
             </section>
         </section>
 
-        <x-related-tools :tools="$relatedTools" heading="Try these Toolexa tools" />
+        <x-blog.faq :faqs="$qualityContent['faqs']" :title="$article['title']" />
+        <x-blog.related-content :tools="$relatedTools" :comparisons="$relatedComparisons" :articles="$relatedArticles" />
+        <x-blog.references :references="$qualityContent['references']" />
+        <x-blog.feedback :slug="$article['slug']" />
 
-        <section class="info-panel blog-author-box">
-            <span class="eyebrow">Author</span>
-            <h2>{{ $article['author'] }}</h2>
-            <p>Toolexa Editorial Team creates practical guides for calculators, converters and browser-based productivity tools. Each article is written to help readers understand the concept, test real examples and use the related Toolexa tools with more confidence.</p>
-        </section>
-
-        <section id="faq" class="info-panel faq-panel">
-            <span class="eyebrow">FAQs</span>
-            <h2>{{ $article['title'] }} FAQs</h2>
-            @foreach($article['faqs'] as $faq)
-                <details>
-                    <summary>{{ $faq['question'] }}</summary>
-                    <p>{{ $faq['answer'] }}</p>
-                </details>
+        <section class="info-panel editorial-history blog-freshness" aria-labelledby="content-freshness-heading">
+            <span class="eyebrow">Content Freshness</span>
+            <h2 id="content-freshness-heading">Review and version details</h2>
+            <p><strong>Content history</strong> records meaningful editorial changes while the version number supports future revisions.</p>
+            <dl>
+                <div><dt>Last Updated</dt><dd>{{ \Carbon\Carbon::parse($editorialMeta['updated_at'])->format('F j, Y') }}</dd></div>
+                <div><dt>Content Version</dt><dd>{{ $qualityContent['content_version'] }}</dd></div>
+                <div><dt>Reviewed By</dt><dd>{{ $editorialMeta['reviewer']['name'] }}</dd></div>
+            </dl>
+            @foreach(array_merge($editorialMeta['history'], $qualityContent['version_history']) as $update)
+                <article>
+                    <time datetime="{{ $update['date'] }}">{{ \Carbon\Carbon::parse($update['date'])->format('F Y') }}</time>
+                    <p>{{ $update['note'] }}</p>
+                </article>
             @endforeach
         </section>
 
-        <x-related-articles :articles="$relatedArticles" heading="Keep Reading" />
+        <x-editorial.reviewer-card :reviewer="$editorialMeta['reviewer']" />
+        <x-editorial.author-card :author="$editorialMeta['author']" />
+
+        <section class="info-panel blog-bottom-cta" aria-labelledby="blog-cta-heading">
+            <span class="eyebrow">Continue with Toolexa</span>
+            <h2 id="blog-cta-heading">Turn what you learned into action</h2>
+            <p>Apply the guide with a related free tool, or continue learning with another practical article.</p>
+            <div>
+                @if(count($relatedTools))
+                    <a class="btn btn-primary" href="{{ url('tools/'.$relatedTools[0]['slug']) }}">Try Related Free Tools</a>
+                @endif
+                <a class="btn" href="{{ route('blog.index') }}">Explore More Articles</a>
+            </div>
+        </section>
 
         <nav class="blog-adjacent" aria-label="Previous and next articles">
             @if($previousArticle)
@@ -94,7 +114,6 @@
                     <small>{{ $previousArticle['category'] }} · {{ $previousArticle['reading_time'] }} min read</small>
                 </a>
             @endif
-
             @if($nextArticle)
                 <a class="blog-adjacent-card blog-adjacent-next" href="{{ route('blog.show', $nextArticle['slug']) }}">
                     <span class="blog-adjacent-label">Next Article</span>

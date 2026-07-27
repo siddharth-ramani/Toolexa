@@ -2,8 +2,6 @@
 
 namespace App\Support;
 
-use Illuminate\Support\Str;
-
 class BlogArticleDefinitions
 {
     public static function all(): array
@@ -725,13 +723,10 @@ class BlogArticleDefinitions
             'published_at' => $publishedAt,
             'featured_image' => null,
             'related_tools' => $relatedTools,
-            'sections' => array_merge(
-                collect($sections)->map(fn (array $section) => [
-                    'heading' => $section[0],
-                    'paragraphs' => $section[1],
-                ])->all(),
-                self::supportingSections($title, $category, $relatedTools)
-            ),
+            'sections' => collect($sections)->map(fn (array $section) => [
+                'heading' => $section[0],
+                'paragraphs' => $section[1],
+            ])->all(),
             'faqs' => collect($faqs)->map(fn (array $faq) => [
                 'question' => $faq[0],
                 'answer' => $faq[1],
@@ -739,65 +734,4 @@ class BlogArticleDefinitions
         ];
     }
 
-    private static function supportingSections(string $title, string $category, array $relatedTools): array
-    {
-        $toolText = collect($relatedTools)
-            ->map(fn (string $slug) => Str::headline(str_replace('-', ' ', $slug)))
-            ->join(', ', ' and ');
-
-        return [
-            ['heading' => 'A practical workflow you can follow', 'paragraphs' => [
-                'Start with the real question you want to answer, not with the tool itself. For '.$title.', write down the input values, the expected output and the decision you need to make after seeing the result. This keeps the work focused and prevents unnecessary trial and error.',
-                'Next, enter one complete example in the relevant Toolexa tool and review the result before changing anything. If the output looks sensible, adjust one value at a time. This habit is useful for '.$category.' topics because it shows which input has the biggest effect on the final answer.',
-            ]],
-            ['heading' => 'How to check your inputs before trusting the result', 'paragraphs' => [
-                'Most mistakes happen before the calculation, conversion or generation starts. A misplaced zero, wrong unit, incorrect rate, unsupported format or copied space can change the result completely. Before using the output, quickly compare every field with the original source you are working from.',
-                'For important work, run the same example twice: once with exact values and once with rounded values. If the difference is large, use the exact version. If the difference is tiny, rounded values may be good enough for planning, drafts or quick comparisons.',
-            ]],
-            ['heading' => 'Practical examples you can test yourself', 'paragraphs' => [
-                'Create three test cases: a small value, a normal real-life value and an unusually large value. The small value helps you understand the behavior, the normal value reflects your actual task, and the large value shows whether the result still makes sense at scale.',
-                'If one test case produces a surprising result, do not ignore it. Recheck the input, read the label beside the field and compare the output with a simpler example. Surprising results often reveal a wrong assumption rather than a broken tool.',
-            ]],
-            ['heading' => 'Tips for better results', 'paragraphs' => [
-                'Keep source information close while using the tool. On mobile, copy values carefully before switching tabs. On desktop, open related Toolexa tools in separate tabs when you need to compare several scenarios or output formats.',
-                'Use copy and download buttons where available instead of manually selecting text. This reduces accidental missing characters, extra spaces and formatting mistakes, especially for codes, dates, JSON, color values and financial summaries.',
-            ]],
-            ['heading' => 'Common mistakes to avoid', 'paragraphs' => [
-                'Do not rely on a result without checking the input type, unit, format or assumption behind it. Most wrong outputs come from entering the right number in the wrong field or using a setting that does not match the real task.',
-                'Another common mistake is treating a quick result as final when the situation requires verification. For official, tax, legal, academic, finance or security decisions, use Toolexa as a helpful working tool and confirm critical details from the right authority or professional.',
-            ]],
-            ['heading' => 'How the related Toolexa tools help', 'paragraphs' => [
-                'The related tools for this article are '.$toolText.'. They are linked below the article so you can move from explanation to action without searching again. Use them as quick helpers for estimates, cleanup, conversion, validation or copying final output.',
-                'Each tool page follows the same basic pattern: a focused input area, clear output, supporting content, FAQs and related tools. That consistency matters because once you learn one page, the rest of the Toolexa workflow feels familiar.',
-            ]],
-            ['heading' => 'A simple checklist before you share the output', 'paragraphs' => [
-                'Before sharing a result, ask four quick questions. Did I use the correct input? Did I choose the correct mode? Does the output format match where I will paste or upload it? Would another person understand the result without extra explanation? This short checklist catches many avoidable errors.',
-                'For '.$category.' work, the final output often travels into another place: an invoice, spreadsheet, website, report, upload form, code editor, presentation or message. Checking the destination matters because a result that is technically correct can still be unsuitable if the receiving platform expects a different format or level of precision.',
-            ]],
-            ['heading' => 'How to compare two possible answers', 'paragraphs' => [
-                'Many practical tasks involve comparison rather than a single answer. You may compare two loan tenures, two image sizes, two color formats, two conversion methods or two versions of a text result. Put both outputs side by side and compare the difference that actually affects your decision.',
-                'When comparing, keep every input the same except the one you want to test. This makes the result easier to understand. If several inputs change at once, you may see a different output but not know which change caused it.',
-            ]],
-            ['heading' => 'Why this topic matters in daily work', 'paragraphs' => [
-                $title.' matters because small decisions often repeat. A single calculation, conversion or generated output may take only a minute, but the same task can appear in invoices, posts, forms, reports, uploads, websites and client messages many times.',
-                'Learning the idea behind the tool helps you work faster without becoming careless. You can spot unlikely results, explain your answer and choose the next action with more confidence.',
-            ]],
-            ['heading' => 'What to document for future reference', 'paragraphs' => [
-                'If the result affects a bill, assignment, upload, password, investment estimate or business task, keep a short note of the input values and the date you used them. This makes it easier to explain the result later and repeat the same method when needed.',
-                'For finance-related topics, note the rate, tenure, tax assumption or compounding period. For image and developer utilities, note the source format, output format and key settings. These details prevent confusion when you revisit the task after a few days.',
-            ]],
-            ['heading' => 'How to use the result responsibly', 'paragraphs' => [
-                'Online tools are excellent for speed, comparison and everyday productivity, but they should be used with context. A calculator result may depend on rates or rules. A converter result may depend on format support. A text or developer utility may depend on the exact characters copied into the input.',
-                'When the result is used for planning, keep a note of assumptions. When it is used for submission, inspect the final output manually. When it affects money, compliance or security, verify the result with an official document, service provider or qualified expert.',
-            ]],
-            ['heading' => 'How to explain the result to someone else', 'paragraphs' => [
-                'A result becomes more useful when you can explain it in one or two sentences. Instead of only sharing the final number or output, mention the input used, the setting selected and the reason the result matters.',
-                'For '.$title.', a simple explanation can follow this pattern: "I used these inputs, selected this mode, checked the output against a second example, and this is the conclusion." That small structure makes the answer easier to trust.',
-            ]],
-            ['heading' => 'When to revisit your calculation or output', 'paragraphs' => [
-                'Revisit the result whenever the source information changes. Finance examples may change when rates, tenures, tax rules or contribution amounts change. Image and developer examples may change when the destination platform requires a different size, format, encoding or character limit.',
-                'For recurring tasks, save the process rather than only the answer. Bookmark the relevant Toolexa page, keep a note of your common settings and reuse the same workflow next time. Consistency turns a quick online tool into a dependable part of your routine.',
-            ]],
-        ];
-    }
 }
