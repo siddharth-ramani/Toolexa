@@ -1985,6 +1985,82 @@ class HomeController extends Controller
                 ],
                 'Total COD Cost = Percentage Charge + Fixed Fee + Tax on COD Fees'
             ),
+            self::sellerCalculator(
+                'Marketplace Commission Calculator', 'marketplace-commission-calculator', 'FEE',
+                'Calculate marketplace commission, tax on commission and the amount remaining after platform commission.', 'marketplace_commission',
+                [
+                    ['name' => 'sale_price', 'label' => 'Selling Price (₹)', 'type' => 'number', 'default' => 1499, 'step' => '0.01'],
+                    ['name' => 'commission_rate', 'label' => 'Commission Rate (%)', 'type' => 'number', 'default' => 15, 'step' => '0.01'],
+                    ['name' => 'tax_rate', 'label' => 'Tax on Commission (%)', 'type' => 'number', 'default' => 18, 'step' => '0.01'],
+                ],
+                'Net after commission = Selling Price − Commission − Tax on Commission'
+            ),
+            self::sellerCalculator(
+                'Break-even Selling Price Calculator', 'break-even-selling-price-calculator', 'BEP',
+                'Find the minimum selling price needed to recover product cost, fixed fees and percentage marketplace charges.', 'break_even_price',
+                [
+                    ['name' => 'product_cost', 'label' => 'Product and Packaging Cost (₹)', 'type' => 'number', 'default' => 500, 'step' => '0.01'],
+                    ['name' => 'fixed_fees', 'label' => 'Shipping and Fixed Fees (₹)', 'type' => 'number', 'default' => 100, 'step' => '0.01'],
+                    ['name' => 'fee_rate', 'label' => 'Combined Percentage Fees (%)', 'type' => 'number', 'default' => 18, 'step' => '0.01'],
+                    ['name' => 'target_profit', 'label' => 'Target Profit (₹)', 'type' => 'number', 'default' => 150, 'step' => '0.01'],
+                ],
+                'Required Price = (Costs + Target Profit) ÷ (1 − Percentage Fees)'
+            ),
+            self::sellerCalculator(
+                'Return & RTO Cost Calculator', 'return-rto-cost-calculator', 'RTO',
+                'Estimate expected return-to-origin and customer-return losses across an ecommerce order batch.', 'return_rto_cost',
+                [
+                    ['name' => 'orders', 'label' => 'Total Orders', 'type' => 'number', 'default' => 100, 'step' => '1'],
+                    ['name' => 'return_rate', 'label' => 'Return or RTO Rate (%)', 'type' => 'number', 'default' => 12, 'step' => '0.01'],
+                    ['name' => 'forward_cost', 'label' => 'Forward Shipping per Order (₹)', 'type' => 'number', 'default' => 70, 'step' => '0.01'],
+                    ['name' => 'reverse_cost', 'label' => 'Reverse Shipping per Return (₹)', 'type' => 'number', 'default' => 85, 'step' => '0.01'],
+                    ['name' => 'handling_loss', 'label' => 'Handling or Damage Loss per Return (₹)', 'type' => 'number', 'default' => 40, 'step' => '0.01'],
+                ],
+                'Expected Return Loss = Expected Returns × (Forward + Reverse Shipping + Handling Loss)'
+            ),
+            self::sellerCalculator(
+                'Shipping Cost per Order Calculator', 'shipping-cost-per-order-calculator', 'SHIP',
+                'Calculate the true average shipping cost per dispatched order including packaging, fuel surcharge and taxes.', 'shipping_cost_order',
+                [
+                    ['name' => 'orders', 'label' => 'Orders in Billing Period', 'type' => 'number', 'default' => 250, 'step' => '1'],
+                    ['name' => 'freight_total', 'label' => 'Total Freight Charges (₹)', 'type' => 'number', 'default' => 18000, 'step' => '0.01'],
+                    ['name' => 'packaging_total', 'label' => 'Total Packaging Cost (₹)', 'type' => 'number', 'default' => 5000, 'step' => '0.01'],
+                    ['name' => 'surcharge_total', 'label' => 'Surcharges and Taxes (₹)', 'type' => 'number', 'default' => 2500, 'step' => '0.01'],
+                ],
+                'Average Shipping Cost = Total Logistics and Packaging Cost ÷ Dispatched Orders'
+            ),
+            self::sellerCalculator(
+                'Inventory Reorder Point Calculator', 'inventory-reorder-point-calculator', 'ROP',
+                'Estimate when to reorder inventory using average demand, supplier lead time and safety stock.', 'reorder_point',
+                [
+                    ['name' => 'daily_sales', 'label' => 'Average Units Sold per Day', 'type' => 'number', 'default' => 8, 'step' => '0.01'],
+                    ['name' => 'lead_days', 'label' => 'Supplier Lead Time (days)', 'type' => 'number', 'default' => 12, 'step' => '1'],
+                    ['name' => 'safety_days', 'label' => 'Safety Stock Coverage (days)', 'type' => 'number', 'default' => 5, 'step' => '1'],
+                ],
+                'Reorder Point = Daily Sales × (Lead Time + Safety Stock Days)'
+            ),
+            self::sellerCalculator(
+                'Ecommerce ROAS Calculator', 'ecommerce-roas-calculator', 'ROAS',
+                'Measure advertising return on ad spend and compare campaign revenue with advertising cost.', 'seller_roas',
+                [
+                    ['name' => 'revenue', 'label' => 'Attributed Revenue (₹)', 'type' => 'number', 'default' => 75000, 'step' => '0.01'],
+                    ['name' => 'ad_spend', 'label' => 'Advertising Spend (₹)', 'type' => 'number', 'default' => 15000, 'step' => '0.01'],
+                    ['name' => 'gross_margin', 'label' => 'Gross Margin Before Ads (%)', 'type' => 'number', 'default' => 35, 'step' => '0.01'],
+                ],
+                'ROAS = Attributed Revenue ÷ Advertising Spend'
+            ),
+            self::sellerCalculator(
+                'Discount Profit Calculator', 'discount-profit-calculator', 'SALE',
+                'Check the final selling price, profit and margin after applying a customer discount and marketplace fees.', 'discount_profit',
+                [
+                    ['name' => 'list_price', 'label' => 'List Price (₹)', 'type' => 'number', 'default' => 1299, 'step' => '0.01'],
+                    ['name' => 'discount_rate', 'label' => 'Customer Discount (%)', 'type' => 'number', 'default' => 10, 'step' => '0.01'],
+                    ['name' => 'product_cost', 'label' => 'Product Cost (₹)', 'type' => 'number', 'default' => 500, 'step' => '0.01'],
+                    ['name' => 'fee_rate', 'label' => 'Marketplace Fees (%)', 'type' => 'number', 'default' => 17, 'step' => '0.01'],
+                    ['name' => 'fixed_cost', 'label' => 'Shipping and Fixed Cost (₹)', 'type' => 'number', 'default' => 95, 'step' => '0.01'],
+                ],
+                'Profit after Discount = Discounted Price − Product Cost − Marketplace Fees − Fixed Cost'
+            ),
         ];
     }
 
@@ -2030,7 +2106,7 @@ class HomeController extends Controller
                 ['q' => 'Is '.$name.' free?', 'a' => 'Yes. It is free to use without registration.'],
                 ['q' => 'Are the results official marketplace charges?', 'a' => 'No. Results are planning estimates. Check the current fee card, rate agreement and settlement statement for the marketplace or courier you use.'],
             ],
-            'related' => ['marketplace-profit-calculator', 'volumetric-weight-calculator', 'cod-fee-calculator', 'gst-calculator', 'discount-calculator'],
+            'related' => ['marketplace-profit-calculator', 'marketplace-commission-calculator', 'break-even-selling-price-calculator', 'volumetric-weight-calculator', 'cod-fee-calculator', 'return-rto-cost-calculator', 'discount-profit-calculator'],
         ];
     }
 

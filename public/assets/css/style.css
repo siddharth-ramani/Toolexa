@@ -6639,6 +6639,51 @@ pre {
     text-align: center;
 }
 
+/* Complete the lightweight Bootstrap button palette used throughout tools. */
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:focus-visible,
+.btn-success,
+.btn-success:hover,
+.btn-success:focus-visible {
+    color: #fff;
+}
+
+.btn-secondary {
+    color: #fff;
+    background: #475569;
+    border: 1px solid #475569;
+    box-shadow: 0 8px 18px rgba(51, 65, 85, .16);
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus-visible {
+    color: #fff;
+    background: #334155;
+    border-color: #334155;
+}
+
+.btn-outline {
+    color: #0f766e;
+    background: #fff;
+    border: 1px solid #0f766e;
+}
+
+.btn-outline:hover,
+.btn-outline:focus-visible {
+    color: #fff;
+    background: #0f766e;
+    border-color: #0f766e;
+}
+
+.btn:disabled,
+.btn.disabled {
+    color: #475569;
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+    opacity: .78;
+}
+
 .result-actions,
 .tool-actions {
     display: grid;

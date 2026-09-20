@@ -67,6 +67,8 @@ class SiteDesignQualityTest extends TestCase
         $this->assertStringContainsString('.tool-hero .editorial-metadata', $css);
         $this->assertStringContainsString('.tool-hero.trust-hero h1', $css);
         $this->assertMatchesRegularExpression('/\.tool-hero\.trust-hero h1[^}]+color:\s*#fff/s', $css);
+        $this->assertMatchesRegularExpression('/\.btn-secondary\s*\{[^}]*color:\s*#fff/s', $css);
+        $this->assertMatchesRegularExpression('/\.btn-outline\s*\{[^}]*color:\s*#0f766e/s', $css);
     }
 
     public function test_age_calculator_has_a_clear_tool_specific_usage_guide(): void

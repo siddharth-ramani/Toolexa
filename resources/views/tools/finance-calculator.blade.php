@@ -52,9 +52,17 @@
                         <div class="finance-result-item">
                             <span>{{ $label }}</span>
                             <strong>
-                                @if(str_contains($label, 'Weight'))
+                                @if(str_contains($label, '(units)'))
+                                    {{ number_format($value, 0) }} units
+                                @elseif(str_contains($label, '(days)'))
+                                    {{ number_format($value, 0) }} days
+                                @elseif(str_contains($label, '(orders)'))
+                                    {{ number_format($value, 1) }} orders
+                                @elseif(str_contains($label, 'ROAS (x)'))
+                                    {{ number_format($value, 2) }}x
+                                @elseif(str_contains($label, 'Weight'))
                                     {{ number_format($value, 2) }} kg
-                                @elseif(str_contains($label, 'CAGR') || str_contains($label, 'Margin'))
+                                @elseif(str_contains($label, 'CAGR') || str_contains($label, 'Margin') || str_contains($label, '(%)'))
                                     {{ number_format($value, 2) }}%
                                 @else
                                     &#8377; {{ number_format($value, 2) }}
