@@ -1,8 +1,8 @@
 <?php
 
 return [
-    'last_updated' => 'July 27, 2026',
-    'last_updated_iso' => '2026-07-27',
+    'last_updated' => 'September 20, 2026',
+    'last_updated_iso' => '2026-09-20',
 
     'pages' => [
         'trust' => [

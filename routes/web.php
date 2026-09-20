@@ -23,6 +23,7 @@ use App\Http\Controllers\Tools\ToolController;
 use App\Http\Controllers\Tools\UnitController;
 use App\Http\Controllers\TopicHubController;
 use App\Http\Controllers\TrustController;
+use App\Http\Controllers\UpdateLogController;
 use App\Http\Controllers\WorkspaceController;
 use App\Http\Middleware\EnsureSiteAuditAdmin;
 use Illuminate\Support\Facades\Route;
@@ -50,6 +51,7 @@ Route::get('/trust', [TrustController::class, 'show'])->defaults('page', 'trust'
 Route::get('/editorial-policy', [TrustController::class, 'show'])->defaults('page', 'editorial-policy')->name('trust.editorial-policy');
 Route::get('/accuracy-policy', [TrustController::class, 'show'])->defaults('page', 'accuracy-policy')->name('trust.accuracy-policy');
 Route::get('/how-we-test-tools', [TrustController::class, 'show'])->defaults('page', 'how-we-test-tools')->name('trust.how-we-test-tools');
+Route::get('/updates', [UpdateLogController::class, 'index'])->name('updates.index');
 Route::get('/authors/{slug}', [AuthorController::class, 'show'])->name('authors.show');
 Route::get('/api/search', [SiteController::class, 'searchApi'])->name('search.api')->middleware('throttle:120,1');
 Route::prefix('admin/site-audit')->middleware(EnsureSiteAuditAdmin::class)->group(function () {

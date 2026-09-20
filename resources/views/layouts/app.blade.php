@@ -254,7 +254,7 @@
                 </div>
 
                 <div class="nav-dropdown">
-                    <button class="nav-link dropdown-button {{ request()->is('about', 'contact', 'privacy-policy', 'terms', 'disclaimer', 'trust', 'editorial-policy', 'accuracy-policy', 'how-we-test-tools') ? 'active' : '' }}" type="button" data-dropdown-toggle aria-expanded="false">
+                    <button class="nav-link dropdown-button {{ request()->is('about', 'contact', 'privacy-policy', 'terms', 'disclaimer', 'trust', 'editorial-policy', 'accuracy-policy', 'how-we-test-tools', 'updates') ? 'active' : '' }}" type="button" data-dropdown-toggle aria-expanded="false">
                         Company
                     </button>
                     <div class="dropdown-panel">
@@ -264,6 +264,7 @@
                         <a href="{{ route('page.show', 'terms') }}">Terms</a>
                         <a href="{{ route('page.show', 'disclaimer') }}">Disclaimer</a>
                         <a href="{{ route('trust.trust') }}">Trust Center</a>
+                        <a href="{{ route('updates.index') }}">Site Updates</a>
                     </div>
                 </div>
 
@@ -373,6 +374,7 @@
                 <a href="{{ route('hub.index') }}">Topic Hubs</a>
                 <a href="{{ route('workspace') }}">Workspace</a>
                 <a href="{{ route('trust.trust') }}">Trust Center</a>
+                <a href="{{ route('updates.index') }}">Site Updates</a>
             </nav>
 
             <nav aria-label="Footer company">
@@ -388,6 +390,7 @@
                 <a href="{{ route('trust.editorial-policy') }}">Editorial Policy</a>
                 <a href="{{ route('trust.accuracy-policy') }}">Accuracy Policy</a>
                 <a href="{{ route('trust.how-we-test-tools') }}">How We Test Tools</a>
+                <a href="{{ route('updates.index') }}">Site Updates</a>
             </nav>
         </div>
 

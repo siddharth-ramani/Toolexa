@@ -209,16 +209,38 @@ class SiteController extends Controller
         abort_unless(isset($this->pages[$page]), 404);
 
         $data = $this->pages[$page];
+        $canonicalUrl = url($page);
+        $breadcrumbs = [
+            ['name' => 'Home', 'url' => url('/')],
+            ['name' => $data['heading'], 'url' => $canonicalUrl],
+        ];
 
         return view('static-page', [
             'page' => $data,
-            'canonicalUrl' => url($page),
+            'canonicalUrl' => $canonicalUrl,
             'seoTitle' => $data['title'],
             'seoDescription' => $data['description'],
             'seoKeywords' => 'Toolexa, '.$data['heading'].', online tools',
-            'breadcrumbs' => [
-                ['name' => 'Home', 'url' => url('/')],
-                ['name' => $data['heading'], 'url' => url($page)],
+            'breadcrumbs' => $breadcrumbs,
+            'schemaJsonLd' => [
+                [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'WebPage',
+                    'name' => $data['heading'],
+                    'description' => $data['description'],
+                    'url' => $canonicalUrl,
+                    'isPartOf' => ['@type' => 'WebSite', 'name' => $this->brandName, 'url' => url('/')],
+                ],
+                [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'BreadcrumbList',
+                    'itemListElement' => collect($breadcrumbs)->map(fn (array $item, int $index) => [
+                        '@type' => 'ListItem',
+                        'position' => $index + 1,
+                        'name' => $item['name'],
+                        'item' => $item['url'],
+                    ])->all(),
+                ],
             ],
         ]);
     }
@@ -231,6 +253,7 @@ class SiteController extends Controller
             ['loc' => url('/'), 'priority' => '1.0', 'changefreq' => 'daily', 'lastmod' => now()->toDateString()],
             ['loc' => url('search'), 'priority' => '0.6', 'changefreq' => 'weekly', 'lastmod' => now()->toDateString()],
             ['loc' => route('blog.index'), 'priority' => '0.8', 'changefreq' => 'weekly', 'lastmod' => now()->toDateString()],
+            ['loc' => route('updates.index'), 'priority' => '0.6', 'changefreq' => 'monthly', 'lastmod' => config('updates.entries.0.date', now()->toDateString())],
         ];
 
         foreach (array_keys($this->pages) as $page) {

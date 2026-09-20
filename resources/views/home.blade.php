@@ -44,7 +44,7 @@
     </section>
 
     <section class="home-section home-lazy-section" aria-labelledby="trending-tools-heading">
-        <x-home-section-heading eyebrow="Most popular" title="Trending Tools" id="trending-tools-heading" description="Frequently opened tools for calculations, conversions and everyday tasks." :url="route('search')" link-label="View All" />
+        <x-home-section-heading eyebrow="Editorial selection" title="Popular Tools" id="trending-tools-heading" description="Useful starting points selected by the Toolexa editorial team for common calculations, conversions and everyday tasks." :url="route('search')" link-label="View All" />
         <div class="tool-grid premium-tool-grid">
             @foreach($trendingTools as $tool)
                 @include('partials.home-tool-card', ['tool' => $tool, 'buttonLabel' => 'Open Tool'])
@@ -108,8 +108,8 @@
         <div class="home-counter-grid">
             <article><strong data-counter="{{ $toolCount }}" data-counter-suffix="+">0</strong><span>Tools</span></article>
             <article><strong data-counter="{{ $articleCount }}" data-counter-suffix="+">0</strong><span>Articles</span></article>
-            <article><strong data-counter="1000" data-counter-suffix="s+">0</strong><span>Calculations</span></article>
             <article><strong data-counter="{{ $categoryCount }}">0</strong><span>Categories</span></article>
+            <article><strong data-counter="100" data-counter-suffix="%">0</strong><span>Free Access</span></article>
         </div>
     </section>
 
@@ -140,16 +140,14 @@
 
     <section class="newsletter-panel premium-newsletter home-section home-lazy-section" aria-labelledby="newsletter-heading">
         <div>
-            <span class="eyebrow">Stay updated</span>
-            <h2 id="newsletter-heading">Get notified when new free tools are added.</h2>
-            <p>Occasional product updates. No noise, and no account required.</p>
+            <span class="eyebrow">Maintained in public</span>
+            <h2 id="newsletter-heading">See what changed on Toolexa.</h2>
+            <p>Review dated improvements to tools, educational content, quality checks and user experience.</p>
         </div>
-        <form class="newsletter-form" data-newsletter-form>
-            <label class="sr-only" for="newsletter-email">Email address</label>
-            <input id="newsletter-email" class="form-control" type="email" placeholder="you@example.com" required>
-            <button class="btn btn-primary" type="submit">Notify Me</button>
-            <small data-newsletter-status aria-live="polite">Newsletter delivery will be connected soon.</small>
-        </form>
+        <div class="newsletter-form">
+            <a class="btn btn-primary" href="{{ route('updates.index') }}">View Site Updates</a>
+            <a class="btn btn-outline" href="{{ route('page.show', 'contact') }}">Suggest a Tool</a>
+        </div>
     </section>
 
     <section class="home-final-cta home-section home-lazy-section" aria-labelledby="final-cta-heading">

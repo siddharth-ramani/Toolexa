@@ -16,6 +16,7 @@ class PageInventoryService
             $this->page('directory', 'Blog Directory', route('blog.index', [], false)),
             $this->page('directory', 'Comparison Directory', route('compare.index', [], false)),
             $this->page('directory', 'Topic Directory', route('hub.index', [], false)),
+            $this->page('trust', 'Site Updates', route('updates.index', [], false), 'updates'),
             $this->page('utility_page', 'Search', route('search', [], false)),
             $this->page('utility_page', 'Personal Dashboard', route('dashboard', [], false)),
             $this->page('utility_page', 'Workspace', route('workspace', [], false)),
