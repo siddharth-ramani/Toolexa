@@ -34,13 +34,31 @@
                 <p class="crop-error" data-crop-error hidden></p>
             </div>
 
-            <button class="btn btn-primary w-100" type="button" data-crop-export>Download Cropped Label</button>
+            <div class="mb-3 seller-output-options">
+                <label>Print Layout</label>
+                <div class="crop-format-row" role="radiogroup" aria-label="Choose print layout">
+                    <label class="checkbox-row">
+                        <input type="radio" name="crop_output_{{ $toolMeta['slug'] }}" value="thermal" data-crop-output-layout checked>
+                        <span><strong>4 × 6 Thermal</strong> — one centered label per printer page</span>
+                    </label>
+                    <label class="checkbox-row">
+                        <input type="radio" name="crop_output_{{ $toolMeta['slug'] }}" value="a4_grid" data-crop-output-layout>
+                        <span><strong>A4 Sheet</strong> — four labels per page for regular printers</span>
+                    </label>
+                    <label class="checkbox-row">
+                        <input type="radio" name="crop_output_{{ $toolMeta['slug'] }}" value="cropped" data-crop-output-layout>
+                        <span><strong>Exact Crop Size</strong> — preserve the selected area dimensions</span>
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn btn-primary w-100" type="button" data-crop-export disabled>Process &amp; Download Labels</button>
             <button class="btn btn-secondary w-100 mt-2" type="button" data-crop-clear>Clear File</button>
             <p class="tool-note">PDFs are rendered and cropped entirely in your browser. Files are never uploaded or stored on Toolexa servers.</p>
 
             <button type="button" class="crop-advanced-toggle" data-crop-advanced-toggle aria-expanded="false">Show advanced controls</button>
 
-            <div class="mb-3" data-crop-advanced hidden>
+            <div class="mb-3">
                 <label>Marketplace Layout</label>
                 <div class="seller-layout-grid" role="radiogroup" aria-label="Select label layout">
                     @foreach($toolMeta['label_layouts'] as $layout)
@@ -69,7 +87,7 @@
                     <button type="button" class="btn btn-secondary btn-sm" data-crop-preset="barcode_area">Crop Barcode Area</button>
                     <button type="button" class="btn btn-secondary btn-sm" data-crop-preset="packing_slip">Crop Packing Slip</button>
                 </div>
-                <p class="tool-note">Presets are a starting point. Drag, resize or zoom the crop box to fine-tune it. If a preset is not available for the selected layout, adjust the box manually.</p>
+                <p class="tool-note">Presets are a starting point. Drag, resize or zoom the crop box to fine-tune it. Your confirmed crop is applied proportionally to every PDF page.</p>
             </div>
 
             <div class="mb-3" data-crop-advanced hidden>
@@ -142,14 +160,14 @@
             </div>
 
             <div class="result-actions">
-                <button class="btn btn-success disabled" type="button" data-crop-download>Download Again</button>
+                <button class="btn btn-success" type="button" data-crop-download disabled>Download Again</button>
                 <button class="btn btn-success" type="button" data-share-url>Share Tool</button>
                 <span class="copy-status" data-crop-status></span>
             </div>
         </div>
     </section>
 
-    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js" defer></script>
+    <script src="{{ $sellerAssetRoot }}/js/vendor/pdf-lib.min.js?v=1.17.1" defer></script>
     <script src="{{ $sellerAssetRoot }}/js/seller-crop-engine.min.js?v={{ filemtime(public_path('assets/js/seller-crop-engine.min.js')) }}" defer></script>
     @include('partials.ad-slot', ['class' => 'ad-inline', 'label' => 'Seller tools ad'])
 @endsection

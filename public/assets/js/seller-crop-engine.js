@@ -17,14 +17,18 @@
     var MAX_PAGES = 300;
     var SOFT_PAGE_WARNING = 50;
     var RENDER_SCALE = 3;
-    var MIN_ZOOM = 0.25;
+    var MIN_ZOOM = 0.1;
     var MAX_ZOOM = 4;
     var HISTORY_LIMIT = 40;
     var MIN_SELECTION = 8;
 
     var PDFJS_VERSION = '3.11.174';
-    var PDFJS_SCRIPT = 'https://unpkg.com/pdfjs-dist@' + PDFJS_VERSION + '/build/pdf.min.js';
-    var PDFJS_WORKER = 'https://unpkg.com/pdfjs-dist@' + PDFJS_VERSION + '/build/pdf.worker.min.js';
+    var engineScript = document.currentScript;
+    var assetJsRoot = engineScript && engineScript.src
+        ? engineScript.src.replace(/\/seller-crop-engine(?:\.min)?\.js(?:\?.*)?$/, '')
+        : '/assets/js';
+    var PDFJS_SCRIPT = assetJsRoot + '/vendor/pdf.min.js?v=' + PDFJS_VERSION;
+    var PDFJS_WORKER = assetJsRoot + '/vendor/pdf.worker.min.js?v=' + PDFJS_VERSION;
 
     var CROP_TYPE_LABELS = {
         shipping_label: 'Shipping Label',
@@ -279,11 +283,13 @@
         }
 
         function fromFraction(fraction) {
+            var x = clamp(fraction.left * naturalWidth, 0, naturalWidth - MIN_SELECTION);
+            var y = clamp(fraction.top * naturalHeight, 0, naturalHeight - MIN_SELECTION);
             return {
-                x: clamp(fraction.left * naturalWidth, 0, naturalWidth),
-                y: clamp(fraction.top * naturalHeight, 0, naturalHeight),
-                width: clamp(fraction.width * naturalWidth, MIN_SELECTION, naturalWidth),
-                height: clamp(fraction.height * naturalHeight, MIN_SELECTION, naturalHeight)
+                x: x,
+                y: y,
+                width: clamp(fraction.width * naturalWidth, MIN_SELECTION, naturalWidth - x),
+                height: clamp(fraction.height * naturalHeight, MIN_SELECTION, naturalHeight - y)
             };
         }
 
@@ -343,6 +349,8 @@
             return {
                 pageCount: doc.numPages,
                 pageSize: describePageSize(pagePointSize.width, pagePointSize.height),
+                pageWidth: pagePointSize.width,
+                pageHeight: pagePointSize.height,
                 fileSize: bytesLabel(file.size),
                 fileName: file.name,
                 largeFile: doc.numPages > SOFT_PAGE_WARNING
@@ -402,11 +410,13 @@
         }
 
         function setSelectionPixels(rect, commit) {
+            var x = clamp(rect.x, 0, naturalWidth - MIN_SELECTION);
+            var y = clamp(rect.y, 0, naturalHeight - MIN_SELECTION);
             selection = {
-                x: clamp(rect.x, 0, naturalWidth),
-                y: clamp(rect.y, 0, naturalHeight),
-                width: clamp(rect.width, MIN_SELECTION, naturalWidth),
-                height: clamp(rect.height, MIN_SELECTION, naturalHeight)
+                x: x,
+                y: y,
+                width: clamp(rect.width, MIN_SELECTION, naturalWidth - x),
+                height: clamp(rect.height, MIN_SELECTION, naturalHeight - y)
             };
             if (commit) pushHistory();
         }
@@ -431,7 +441,19 @@
             return true;
         }
 
-        async function exportPdf() {
+        function drawContained(outPage, embedded, box) {
+            var scale = Math.min(box.width / embedded.width, box.height / embedded.height);
+            var width = embedded.width * scale;
+            var height = embedded.height * scale;
+            outPage.drawPage(embedded, {
+                x: box.x + (box.width - width) / 2,
+                y: box.y + (box.height - height) / 2,
+                width: width,
+                height: height
+            });
+        }
+
+        async function exportPdf(outputLayout) {
             if (!selection || !pdfFile || !window.PDFLib) {
                 throw { friendly: 'Draw or choose a crop area first.' };
             }
@@ -441,6 +463,17 @@
             var srcDoc = await window.PDFLib.PDFDocument.load(arrayBuffer);
             var outDoc = await window.PDFLib.PDFDocument.create();
             var pages = srcDoc.getPages();
+
+            var a4Page = null;
+            var a4Slot = 0;
+            var A4_WIDTH = 595.28;
+            var A4_HEIGHT = 841.89;
+            var THERMAL_WIDTH = 288;
+            var THERMAL_HEIGHT = 432;
+            var A4_MARGIN = 18;
+            var A4_GAP = 8;
+            var cellWidth = (A4_WIDTH - (A4_MARGIN * 2) - A4_GAP) / 2;
+            var cellHeight = (A4_HEIGHT - (A4_MARGIN * 2) - A4_GAP) / 2;
 
             for (var i = 0; i < pages.length; i++) {
                 var page = pages[i];
@@ -459,8 +492,25 @@
                 };
 
                 var embedded = await outDoc.embedPage(page, box);
-                var outPage = outDoc.addPage([embedded.width, embedded.height]);
-                outPage.drawPage(embedded, { x: 0, y: 0, width: embedded.width, height: embedded.height });
+
+                if (outputLayout === 'thermal') {
+                    var thermalPage = outDoc.addPage([THERMAL_WIDTH, THERMAL_HEIGHT]);
+                    drawContained(thermalPage, embedded, { x: 9, y: 9, width: THERMAL_WIDTH - 18, height: THERMAL_HEIGHT - 18 });
+                } else if (outputLayout === 'a4_grid') {
+                    if (!a4Page || a4Slot === 4) {
+                        a4Page = outDoc.addPage([A4_WIDTH, A4_HEIGHT]);
+                        a4Slot = 0;
+                    }
+                    var column = a4Slot % 2;
+                    var row = Math.floor(a4Slot / 2);
+                    var cellX = A4_MARGIN + column * (cellWidth + A4_GAP);
+                    var cellY = A4_HEIGHT - A4_MARGIN - (row + 1) * cellHeight - row * A4_GAP;
+                    drawContained(a4Page, embedded, { x: cellX + 5, y: cellY + 5, width: cellWidth - 10, height: cellHeight - 10 });
+                    a4Slot += 1;
+                } else {
+                    var croppedPage = outDoc.addPage([embedded.width, embedded.height]);
+                    croppedPage.drawPage(embedded, { x: 0, y: 0, width: embedded.width, height: embedded.height });
+                }
             }
 
             return outDoc.save();
@@ -505,7 +555,20 @@
             getZoom: function () { return zoom; },
             getNaturalSize: function () { return { width: naturalWidth, height: naturalHeight }; },
             getPageCount: function () { return pdfDoc ? pdfDoc.numPages : 0; },
-            getCurrentPage: function () { return currentPageNumber; }
+            getCurrentPage: function () { return currentPageNumber; },
+            clear: function () {
+                pdfDoc = null;
+                pdfFile = null;
+                selection = null;
+                history = [];
+                historyIndex = -1;
+                currentPageNumber = 1;
+                naturalWidth = 0;
+                naturalHeight = 0;
+                pagePointSize = { width: 0, height: 0 };
+                canvas.width = 0;
+                canvas.height = 0;
+            }
         };
     }
 
@@ -549,6 +612,7 @@
         var pageIndicator = tool.querySelector('[data-crop-page-indicator]');
 
         var exportFormatInputs = tool.querySelectorAll('[data-crop-export-format]');
+        var outputLayoutInputs = tool.querySelectorAll('[data-crop-output-layout]');
         var exportBtn = tool.querySelector('[data-crop-export]');
         var downloadBtn = tool.querySelector('[data-crop-download]');
         var clearBtn = tool.querySelector('[data-crop-clear]');
@@ -580,7 +644,7 @@
         function resetDownload() {
             outputBlob = null;
             outputKind = null;
-            if (downloadBtn) downloadBtn.classList.add('disabled');
+            if (downloadBtn) downloadBtn.disabled = true;
         }
 
         function displayScale() {
@@ -643,7 +707,13 @@
 
             try {
                 var info = await engine.loadFile(file);
-                currentLayout = layoutOptions.length ? layoutOptions[0].value : null;
+                var looksThermal = Math.max(info.pageWidth, info.pageHeight) <= 500;
+                var thermalOption = Array.prototype.find.call(layoutOptions, function (option) {
+                    return option.value.indexOf('thermal') !== -1;
+                });
+                currentLayout = looksThermal && thermalOption
+                    ? thermalOption.value
+                    : (layoutOptions.length ? layoutOptions[0].value : null);
                 layoutOptions.forEach(function (option) {
                     option.checked = option.value === currentLayout;
                     option.closest('.seller-layout-card').classList.toggle('is-selected', option.checked);
@@ -660,14 +730,19 @@
                 if (fileSizeEl) fileSizeEl.textContent = info.fileSize;
 
                 syncZoomUI();
+                setZoom(Math.min(1, Math.max(MIN_ZOOM, (stage.clientWidth - 24) / engine.getNaturalSize().width)));
                 syncPageUI();
-                setStatus(info.largeFile ? 'Large file: ' + info.pageCount + ' pages. Rendering and export may take a moment.' : 'PDF loaded. Adjust the crop box, then export.');
+                if (exportBtn) exportBtn.disabled = false;
+                setStatus(info.largeFile
+                    ? 'Large file: ' + info.pageCount + ' pages. Rendering and export may take a moment.'
+                    : 'PDF loaded. ' + (looksThermal ? 'Thermal page size detected automatically. ' : '') + 'Check the highlighted crop, then download.');
             } catch (error) {
                 console.error('Toolexa seller crop: could not load file', error);
                 setError((error && error.friendly) || 'Could not process this PDF.');
                 setStatus('');
                 canvas.hidden = true;
                 if (selectionEl) selectionEl.hidden = true;
+                if (exportBtn) exportBtn.disabled = true;
                 if (emptyState) {
                     emptyState.hidden = false;
                     emptyState.querySelector('span').textContent = 'Upload a PDF to see the live preview and crop box.';
@@ -825,6 +900,12 @@
             });
             dropzone.addEventListener('click', function () {
                 if (fileInput) fileInput.click();
+            });
+            dropzone.addEventListener('keydown', function (evt) {
+                if (evt.key === 'Enter' || evt.key === ' ') {
+                    evt.preventDefault();
+                    if (fileInput) fileInput.click();
+                }
             });
         }
 
@@ -997,11 +1078,14 @@
                 }
 
                 var format = 'pdf';
+                var outputLayout = 'thermal';
                 exportFormatInputs.forEach(function (input) { if (input.checked) format = input.value; });
+                outputLayoutInputs.forEach(function (input) { if (input.checked) outputLayout = input.value; });
 
                 setError('');
                 setStatus('Preparing your download…');
                 resetDownload();
+                exportBtn.disabled = true;
 
                 try {
                     if (format === 'png') {
@@ -1009,17 +1093,19 @@
                         outputKind = 'png';
                         setStatus('PNG downloaded (current page only, high resolution).');
                     } else {
-                        var bytes = await engine.exportPdf();
+                        var bytes = await engine.exportPdf(outputLayout);
                         outputBlob = new Blob([bytes], { type: 'application/pdf' });
                         outputKind = 'pdf';
-                        setStatus('PDF downloaded — crop applied to all ' + engine.getPageCount() + ' page(s).');
+                        setStatus('PDF downloaded — ' + engine.getPageCount() + ' label page(s) prepared for ' + (outputLayout === 'thermal' ? '4 × 6 thermal printing.' : (outputLayout === 'a4_grid' ? 'A4 printing.' : 'the exact crop size.')));
                     }
-                    if (downloadBtn) downloadBtn.classList.remove('disabled');
+                    if (downloadBtn) downloadBtn.disabled = false;
                     triggerDownload();
                 } catch (error) {
                     console.error('Toolexa seller crop: export failed', error);
                     setError((error && error.friendly) || 'Could not export this crop.');
                     setStatus('');
+                } finally {
+                    exportBtn.disabled = !engine.hasDocument();
                 }
             });
         }
@@ -1040,6 +1126,7 @@
         if (clearBtn) {
             clearBtn.addEventListener('click', function () {
                 if (fileInput) fileInput.value = '';
+                engine.clear();
                 resetDownload();
                 setError('');
                 setStatus('');
@@ -1047,6 +1134,9 @@
                 if (selectionEl) selectionEl.hidden = true;
                 if (fileInfo) fileInfo.hidden = true;
                 if (emptyState) emptyState.hidden = false;
+                if (emptyState) emptyState.querySelector('span').textContent = 'Upload a PDF to see the live preview and crop box.';
+                if (exportBtn) exportBtn.disabled = true;
+                syncPageUI();
             });
         }
 

@@ -10,6 +10,7 @@ return [
                 'Published this dated maintenance log so meaningful site changes can be reviewed publicly.',
                 'Clarified that homepage recommendations are editorial selections rather than measured usage claims.',
                 'Improved the Age Calculator instructions with clearer steps, input guidance and result interpretation.',
+                'Upgraded all seller label croppers with local PDF processing, automatic thermal detection, fitted previews and print-ready 4 × 6 or A4 output.',
                 'Rechecked trust, contact, policy, sitemap and advertising transparency pages.',
             ],
             'links' => [
