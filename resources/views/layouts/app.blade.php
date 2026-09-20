@@ -4,9 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @php
-        $pageTitle = trim($__env->yieldContent('title', $seoTitle ?? 'Toolexa - Free Online Tools'));
-        $pageDescription = trim($__env->yieldContent('description', $seoDescription ?? 'Free online calculators and utility tools for daily use.'));
-        $pageKeywords = trim($__env->yieldContent('keywords', $seoKeywords ?? 'online tools, gst calculator, emi calculator, age calculator, free calculators'));
+        // Inline Blade sections are escaped before they reach the layout. Decode once,
+        // then let Blade safely escape the final metadata value exactly once below.
+        $decodeMetadata = static fn ($value) => html_entity_decode(
+            trim((string) $value),
+            ENT_QUOTES | ENT_HTML5,
+            'UTF-8'
+        );
+        $pageTitle = $decodeMetadata($__env->yieldContent('title', $seoTitle ?? 'Toolexa - Free Online Tools'));
+        $pageDescription = $decodeMetadata($__env->yieldContent('description', $seoDescription ?? 'Free online calculators and utility tools for daily use.'));
+        $pageKeywords = $decodeMetadata($__env->yieldContent('keywords', $seoKeywords ?? 'online tools, gst calculator, emi calculator, age calculator, free calculators'));
         $pageCanonical = $canonicalUrl ?? url()->current();
         $robotsMeta = $robotsMeta ?? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
         $workspaceEmbed = request()->boolean('workspace') && request()->is('tools/*');

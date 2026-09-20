@@ -11,7 +11,7 @@ class PremiumHomepageTest extends TestCase
 {
     public function test_homepage_renders_all_conversion_sections_and_schemas(): void
     {
-        $this->get('/')
+        $response = $this->get('/')
             ->assertOk()
             ->assertSee('100+ Free Online Tools &amp; Calculators', false)
             ->assertSee('Featured Categories')
@@ -27,6 +27,10 @@ class PremiumHomepageTest extends TestCase
             ->assertSee('FAQPage')
             ->assertSee('CollectionPage')
             ->assertSee('SearchAction');
+
+        $response->assertSee('<title>100+ Free Online Tools &amp; Calculators | Toolexa</title>', false);
+        $response->assertDontSee('&amp;amp;', false);
+        $response->assertDontSee('&amp;quot;', false);
     }
 
     public function test_homepage_data_tracks_live_catalogs(): void

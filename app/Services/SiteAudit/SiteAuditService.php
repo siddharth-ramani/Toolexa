@@ -249,9 +249,19 @@ class SiteAuditService
 
     private function metadataChecks(DOMXPath $xpath, string $title, string $description, string $h1): array
     {
+        $containsEncodedEntity = static fn (string $value): bool => preg_match(
+            '/&(?:amp|quot|apos|lt|gt|#\d+|#x[a-f0-9]+);/i',
+            $value
+        ) === 1;
+
         return [
             $this->check('Title exists', $title !== '', $title ?: 'Missing'),
             $this->check('Meta description exists', $description !== '', $description ? mb_strlen($description).' characters' : 'Missing'),
+            $this->check(
+                'Metadata is not double escaped',
+                ! $containsEncodedEntity($title) && ! $containsEncodedEntity($description) && ! $containsEncodedEntity($h1),
+                'No encoded entity text remains after HTML parsing'
+            ),
             $this->check('Canonical exists', $xpath->query('//link[@rel="canonical" and @href]')->length > 0),
             $this->check('OpenGraph exists', $xpath->query('//meta[starts-with(@property, "og:")]')->length >= 4),
             $this->check('Twitter Card exists', $xpath->query('//meta[@name="twitter:card"]')->length > 0),

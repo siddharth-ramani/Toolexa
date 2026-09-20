@@ -49,6 +49,8 @@ class SiteAuditEngineTest extends TestCase
             $this->assertArrayHasKey('uniqueness_score', $page['metrics']);
             $this->assertArrayHasKey('content_depth_score', $page['metrics']);
             $this->assertArrayHasKey('recommendations', $page);
+            $metadataChecks = collect($page['modules']['metadata'])->keyBy('label');
+            $this->assertTrue($metadataChecks->get('Metadata is not double escaped')['pass'], $page['path']);
         }
     }
 
