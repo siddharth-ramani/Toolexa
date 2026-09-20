@@ -151,10 +151,15 @@ a {
 
 .dropdown-panel {
     position: absolute;
-    top: calc(100% + 10px);
+    top: 100%;
     right: 0;
     display: none;
     width: 250px;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 90px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: .55rem;
     background: #ffffff;
     border: 1px solid rgba(148, 163, 184, .26);
@@ -163,6 +168,8 @@ a {
 }
 
 .dropdown-panel-wide {
+    right: auto;
+    left: 0;
     width: min(620px, calc(100vw - 32px));
 }
 
@@ -171,10 +178,12 @@ a {
 }
 
 .dropdown-panel a {
+    min-width: 0;
     padding: .7rem .75rem;
     border-radius: 7px;
     color: #334155;
     font-weight: 700;
+    overflow-wrap: anywhere;
 }
 
 .dropdown-panel a strong,
@@ -207,6 +216,14 @@ a {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: .25rem;
+    min-width: 0;
+}
+
+@media (min-width: 1181px) {
+    .nav-dropdown:hover .dropdown-panel {
+        display: grid;
+    }
+
 }
 
 .site-main {
@@ -5617,6 +5634,7 @@ pre {
         max-height: calc(100vh - 88px);
         overflow-y: auto;
         overscroll-behavior: contain;
+        width: auto;
         padding: .7rem;
         background: #fff;
         border: 1px solid rgba(148, 163, 184, .28);
@@ -5638,6 +5656,9 @@ pre {
     .dropdown-panel-wide {
         position: static;
         width: 100%;
+        max-width: 100%;
+        max-height: none;
+        overflow: visible;
         margin: .25rem 0 .5rem;
         box-shadow: none;
     }

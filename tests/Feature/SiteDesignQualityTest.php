@@ -60,6 +60,10 @@ class SiteDesignQualityTest extends TestCase
         $this->assertStringContainsString('@media (max-width: 1180px)', $css);
         $this->assertStringContainsString(':focus-visible', $css);
         $this->assertStringContainsString('max-height: calc(100vh - 88px)', $css);
+        $this->assertStringContainsString('@media (min-width: 1181px)', $css);
+        $this->assertStringContainsString('.nav-dropdown:hover .dropdown-panel', $css);
+        $this->assertStringContainsString('max-width: calc(100vw - 32px)', $css);
+        $this->assertStringContainsString('overscroll-behavior: contain', $css);
         $this->assertStringContainsString('.tool-hero .editorial-metadata', $css);
         $this->assertStringContainsString('.trust-hero :where(h1, h2)', $css);
     }
