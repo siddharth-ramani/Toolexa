@@ -47,8 +47,41 @@ class FinanceCalculatorController extends Controller
             'nps' => $this->nps($input),
             'cagr' => $this->cagr($input['start_value'], $input['end_value'], $input['years']),
             'inflation' => $this->inflation($input['current_cost'], $input['rate'], $input['years']),
+            'marketplace_profit' => $this->marketplaceProfit($input),
+            'volumetric_weight' => $this->volumetricWeight($input),
+            'cod_fee' => $this->codFee($input),
             default => [],
         };
+    }
+
+    private function marketplaceProfit(array $input): array
+    {
+        $sale = (float) $input['sale_price'];
+        $commission = $sale * (float) $input['commission_rate'] / 100;
+        $feeBase = $commission + (float) $input['shipping_fee'] + (float) $input['other_fees'];
+        $feeTax = $feeBase * (float) $input['fee_tax_rate'] / 100;
+        $payout = $sale - $feeBase - $feeTax;
+        $profit = $payout - (float) $input['product_cost'];
+
+        return ['Estimated Payout' => $payout, 'Total Marketplace Fees' => $feeBase + $feeTax, 'Estimated Profit' => $profit, 'Profit Margin' => $sale > 0 ? $profit / $sale * 100 : 0];
+    }
+
+    private function volumetricWeight(array $input): array
+    {
+        $volumetric = ((float) $input['length'] * (float) $input['width'] * (float) $input['height']) / max(1, (float) $input['divisor']);
+        $actual = (float) $input['actual_weight'];
+
+        return ['Volumetric Weight' => $volumetric, 'Actual Weight' => $actual, 'Chargeable Weight' => max($volumetric, $actual)];
+    }
+
+    private function codFee(array $input): array
+    {
+        $percentageFee = (float) $input['order_value'] * (float) $input['cod_rate'] / 100;
+        $baseFee = $percentageFee + (float) $input['fixed_fee'];
+        $tax = $baseFee * (float) $input['tax_rate'] / 100;
+        $total = $baseFee + $tax;
+
+        return ['Percentage COD Fee' => $percentageFee, 'Fixed COD Fee' => (float) $input['fixed_fee'], 'Tax on COD Fees' => $tax, 'Total COD Cost' => $total, 'Estimated Payout' => (float) $input['order_value'] - $total];
     }
 
     private function compound(array $input): array

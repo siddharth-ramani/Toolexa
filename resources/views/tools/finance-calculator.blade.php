@@ -52,7 +52,9 @@
                         <div class="finance-result-item">
                             <span>{{ $label }}</span>
                             <strong>
-                                @if(str_contains($label, 'CAGR'))
+                                @if(str_contains($label, 'Weight'))
+                                    {{ number_format($value, 2) }} kg
+                                @elseif(str_contains($label, 'CAGR') || str_contains($label, 'Margin'))
                                     {{ number_format($value, 2) }}%
                                 @else
                                     &#8377; {{ number_format($value, 2) }}

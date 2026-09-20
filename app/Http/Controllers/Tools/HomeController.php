@@ -1949,6 +1949,42 @@ class HomeController extends Controller
                     ['key' => 'custom', 'label' => 'Custom', 'hint' => 'Start with a blank crop box and select the area yourself.', 'pageType' => 'custom'],
                 ]
             ),
+            self::sellerCalculator(
+                'Marketplace Profit Calculator', 'marketplace-profit-calculator', 'PROFIT',
+                'Estimate marketplace payout, fees, profit and profit margin for an online order.', 'marketplace_profit',
+                [
+                    ['name' => 'sale_price', 'label' => 'Selling Price (₹)', 'type' => 'number', 'default' => 999, 'step' => '0.01'],
+                    ['name' => 'product_cost', 'label' => 'Product Cost (₹)', 'type' => 'number', 'default' => 450, 'step' => '0.01'],
+                    ['name' => 'commission_rate', 'label' => 'Marketplace Commission (%)', 'type' => 'number', 'default' => 15, 'step' => '0.01'],
+                    ['name' => 'shipping_fee', 'label' => 'Shipping Fee (₹)', 'type' => 'number', 'default' => 80, 'step' => '0.01'],
+                    ['name' => 'other_fees', 'label' => 'Other Marketplace Fees (₹)', 'type' => 'number', 'default' => 25, 'step' => '0.01'],
+                    ['name' => 'fee_tax_rate', 'label' => 'Tax on Marketplace Fees (%)', 'type' => 'number', 'default' => 18, 'step' => '0.01'],
+                ],
+                'Profit = Selling Price − Product Cost − Commission − Shipping − Other Fees − Tax on Fees'
+            ),
+            self::sellerCalculator(
+                'Volumetric Weight Calculator', 'volumetric-weight-calculator', 'KG',
+                'Compare actual and volumetric package weight to estimate the chargeable shipping weight.', 'volumetric_weight',
+                [
+                    ['name' => 'length', 'label' => 'Package Length (cm)', 'type' => 'number', 'default' => 30, 'step' => '0.1'],
+                    ['name' => 'width', 'label' => 'Package Width (cm)', 'type' => 'number', 'default' => 20, 'step' => '0.1'],
+                    ['name' => 'height', 'label' => 'Package Height (cm)', 'type' => 'number', 'default' => 15, 'step' => '0.1'],
+                    ['name' => 'actual_weight', 'label' => 'Actual Weight (kg)', 'type' => 'number', 'default' => 1.2, 'step' => '0.01'],
+                    ['name' => 'divisor', 'label' => 'Courier Divisor', 'type' => 'select', 'default' => 5000, 'options' => [5000 => '5000 — common domestic divisor', 6000 => '6000 — selected courier services']],
+                ],
+                'Volumetric Weight (kg) = Length × Width × Height ÷ Courier Divisor'
+            ),
+            self::sellerCalculator(
+                'COD Fee Calculator', 'cod-fee-calculator', 'COD',
+                'Estimate cash-on-delivery charges, tax on fees and expected order payout.', 'cod_fee',
+                [
+                    ['name' => 'order_value', 'label' => 'Order Value (₹)', 'type' => 'number', 'default' => 1200, 'step' => '0.01'],
+                    ['name' => 'cod_rate', 'label' => 'COD Charge (%)', 'type' => 'number', 'default' => 2, 'step' => '0.01'],
+                    ['name' => 'fixed_fee', 'label' => 'Fixed COD Fee (₹)', 'type' => 'number', 'default' => 30, 'step' => '0.01'],
+                    ['name' => 'tax_rate', 'label' => 'Tax on COD Fee (%)', 'type' => 'number', 'default' => 18, 'step' => '0.01'],
+                ],
+                'Total COD Cost = Percentage Charge + Fixed Fee + Tax on COD Fees'
+            ),
         ];
     }
 
@@ -1971,6 +2007,30 @@ class HomeController extends Controller
             'faq' => $faq,
             'related' => ['meesho-label-cropper', 'amazon-label-cropper', 'flipkart-label-cropper', 'myntra-label-cropper', 'ajio-label-cropper'],
             'label_layouts' => $layouts,
+        ];
+    }
+
+    private static function sellerCalculator(string $name, string $slug, string $icon, string $desc, string $calculator, array $fields, string $formula): array
+    {
+        return [
+            'name' => $name,
+            'slug' => $slug,
+            'view' => 'finance-calculator',
+            'icon' => $icon,
+            'desc' => $desc,
+            'category' => 'Seller Tools',
+            'calculator' => $calculator,
+            'fields' => $fields,
+            'seo_title' => $name.' - Free Online Seller Tool',
+            'seo_description' => $desc.' Use clear inputs and get an instant planning estimate for marketplace selling.',
+            'keywords' => Str::lower($name).', ecommerce seller calculator, marketplace seller tools, online selling',
+            'formula' => ['title' => $name.' Formula', 'items' => [$formula]],
+            'how_to' => ['Enter the order, package or fee values.', 'Check rates and courier assumptions against your marketplace statement.', 'Calculate and review the complete result breakdown.'],
+            'faq' => [
+                ['q' => 'Is '.$name.' free?', 'a' => 'Yes. It is free to use without registration.'],
+                ['q' => 'Are the results official marketplace charges?', 'a' => 'No. Results are planning estimates. Check the current fee card, rate agreement and settlement statement for the marketplace or courier you use.'],
+            ],
+            'related' => ['marketplace-profit-calculator', 'volumetric-weight-calculator', 'cod-fee-calculator', 'gst-calculator', 'discount-calculator'],
         ];
     }
 

@@ -65,7 +65,8 @@ class SiteDesignQualityTest extends TestCase
         $this->assertStringContainsString('max-width: calc(100vw - 32px)', $css);
         $this->assertStringContainsString('overscroll-behavior: contain', $css);
         $this->assertStringContainsString('.tool-hero .editorial-metadata', $css);
-        $this->assertStringContainsString('.trust-hero :where(h1, h2)', $css);
+        $this->assertStringContainsString('.tool-hero.trust-hero h1', $css);
+        $this->assertMatchesRegularExpression('/\.tool-hero\.trust-hero h1[^}]+color:\s*#fff/s', $css);
     }
 
     public function test_age_calculator_has_a_clear_tool_specific_usage_guide(): void

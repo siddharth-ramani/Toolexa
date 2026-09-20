@@ -42,4 +42,38 @@ class SellerToolsTest extends TestCase
             $this->assertGreaterThan(10_000, filesize(public_path('assets/js/vendor/'.$asset)));
         }
     }
+
+    public function test_seller_calculators_render_and_calculate_real_results(): void
+    {
+        foreach (['marketplace-profit-calculator', 'volumetric-weight-calculator', 'cod-fee-calculator'] as $slug) {
+            $this->get('/tools/'.$slug)->assertOk()->assertSee('Seller Tools tool');
+        }
+
+        $this->post('/tools/marketplace-profit-calculator', [
+            'sale_price' => 1000, 'product_cost' => 400, 'commission_rate' => 10,
+            'shipping_fee' => 50, 'other_fees' => 20, 'fee_tax_rate' => 18,
+        ])->assertOk()->assertSee('Estimated Profit')->assertSee('Profit Margin');
+
+        $this->post('/tools/volumetric-weight-calculator', [
+            'length' => 30, 'width' => 20, 'height' => 15, 'actual_weight' => 1.2, 'divisor' => 5000,
+        ])->assertOk()->assertSee('1.80 kg')->assertSee('Chargeable Weight');
+
+        $this->post('/tools/cod-fee-calculator', [
+            'order_value' => 1200, 'cod_rate' => 2, 'fixed_fee' => 30, 'tax_rate' => 18,
+        ])->assertOk()->assertSee('Total COD Cost')->assertSee('Estimated Payout');
+    }
+
+    public function test_new_seller_guides_are_published_and_link_back_to_tools(): void
+    {
+        foreach ([
+            'how-to-calculate-marketplace-profit-per-order' => 'Marketplace Profit Calculator',
+            'volumetric-weight-ecommerce-shipping-guide' => 'Volumetric Weight Calculator',
+            'cod-charges-seller-payout-explained' => 'COD Fee Calculator',
+        ] as $slug => $toolName) {
+            $this->get('/blog/'.$slug)
+                ->assertOk()
+                ->assertSee($toolName)
+                ->assertSee('FAQPage');
+        }
+    }
 }

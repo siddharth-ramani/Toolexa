@@ -5506,7 +5506,8 @@ a {
     color: #475569;
 }
 
-.trust-hero :where(h1, h2) {
+.tool-hero.trust-hero h1,
+.tool-hero.trust-hero h2 {
     color: #fff;
 }
 
@@ -6723,7 +6724,8 @@ pre {
     color: #475569;
 }
 
-.trust-hero :where(h1, h2) {
+.tool-hero.trust-hero h1,
+.tool-hero.trust-hero h2 {
     color: #fff;
 }
 
