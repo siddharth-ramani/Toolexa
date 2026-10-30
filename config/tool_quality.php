@@ -205,13 +205,14 @@ return [
         ],
         'gst-calculator' => [
             'examples' => [
-                ['title' => 'Standard 18% GST purchase', 'input' => 'Base price: ₹1,000 · GST rate: 18%', 'action' => 'Multiply ₹1,000 by 18 ÷ 100.', 'outcome' => 'GST: ₹180 · Total price: ₹1,180'],
+                ['title' => 'Add 18% GST to an exclusive price', 'input' => 'Mode: GST exclusive · Base price: ₹1,000 · GST rate: 18%', 'action' => 'Multiply ₹1,000 by 18 ÷ 100, then add the tax.', 'outcome' => 'Taxable value: ₹1,000 · GST: ₹180 · Total: ₹1,180'],
+                ['title' => 'Extract 18% GST from an inclusive total', 'input' => 'Mode: GST inclusive · Total price: ₹1,180 · GST rate: 18%', 'action' => 'Divide ₹1,180 by 1.18, then subtract the taxable value.', 'outcome' => 'Taxable value: ₹1,000 · GST: ₹180 · Total: ₹1,180'],
                 ['title' => 'Reduced 5% GST rate', 'input' => 'Base price: ₹2,500 · GST rate: 5%', 'action' => 'Multiply ₹2,500 by 5 ÷ 100.', 'outcome' => 'GST: ₹125 · Total price: ₹2,625'],
                 ['title' => 'Invoice check at 12%', 'input' => 'Taxable value: ₹8,000 · GST rate: 12%', 'action' => 'Calculate the tax before adding it to the taxable value.', 'outcome' => 'GST: ₹960 · Invoice total: ₹8,960'],
-                ['title' => 'High-value 28% example', 'input' => 'Base price: ₹50,000 · GST rate: 28%', 'action' => 'Apply 28% to the amount before tax.', 'outcome' => 'GST: ₹14,000 · Total price: ₹64,000'],
             ],
             'formula_variables' => [
-                ['symbol' => 'Base Amount', 'meaning' => 'The taxable price before GST is added.'],
+                ['symbol' => 'Taxable Value', 'meaning' => 'The price before GST is added.'],
+                ['symbol' => 'Inclusive Total', 'meaning' => 'The final price that already contains taxable value and GST.'],
                 ['symbol' => 'GST Rate', 'meaning' => 'The applicable tax percentage, such as 5%, 12%, 18% or 28%.'],
                 ['symbol' => 'GST Amount', 'meaning' => 'The tax calculated from the base amount and rate.'],
                 ['symbol' => 'Total Amount', 'meaning' => 'The base amount plus the GST amount.'],

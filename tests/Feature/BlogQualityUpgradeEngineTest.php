@@ -96,4 +96,22 @@ class BlogQualityUpgradeEngineTest extends TestCase
 
         $this->assertSame(1, substr_count($html, '<h2>One Reconciled ₹1,200 Example</h2>'));
     }
+
+    public function test_gst_inclusive_article_uses_reconciled_examples_and_clear_scope(): void
+    {
+        $response = $this->get('/blog/gst-inclusive-vs-gst-exclusive-explained')->assertOk();
+        $html = $response->getContent();
+
+        $response
+            ->assertSee('<title>GST Inclusive vs Exclusive: Formula &amp; ₹1,180 Example</title>', false)
+            ->assertSee('₹1,000 × 18 ÷ 100 = ₹180')
+            ->assertSee('₹1,180 ÷ 1.18 = ₹1,000')
+            ->assertSee('Why 18% of an Inclusive Total Is Wrong')
+            ->assertSee('What the Calculator Does Not Decide')
+            ->assertSee('Central Board of Indirect Taxes and Customs')
+            ->assertDontSee('Use the examples as a method, not merely as answers to copy')
+            ->assertDontSee('Who should read this GST Inclusive');
+
+        $this->assertSame(1, substr_count($html, '<h2>Why 18% of an Inclusive Total Is Wrong</h2>'));
+    }
 }

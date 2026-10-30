@@ -14,17 +14,26 @@ class GstController extends Controller
 
     public function calculate(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
+            'mode' => 'nullable|in:exclusive,inclusive',
             'amount' => 'required|numeric|min:1',
             'rate' => 'required|numeric|min:1',
         ]);
 
-        $amount = $request->amount;
-        $rate = $request->rate;
+        $mode = $validated['mode'] ?? 'exclusive';
+        $amount = (float) $validated['amount'];
+        $rate = (float) $validated['rate'];
 
-        $gst = ($amount * $rate) / 100;
-        $total = $amount + $gst;
+        if ($mode === 'inclusive') {
+            $taxable = $amount / (1 + ($rate / 100));
+            $gst = $amount - $taxable;
+            $total = $amount;
+        } else {
+            $taxable = $amount;
+            $gst = ($amount * $rate) / 100;
+            $total = $amount + $gst;
+        }
 
-        return view('tools.gst', compact('amount', 'rate', 'gst', 'total'));
+        return view('tools.gst', compact('mode', 'amount', 'rate', 'taxable', 'gst', 'total'));
     }
 }

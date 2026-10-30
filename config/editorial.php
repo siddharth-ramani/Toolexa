@@ -42,11 +42,13 @@ return [
     'article_assignments' => [
         'how-to-calculate-marketplace-profit-per-order' => ['updated_at' => '2026-10-30'],
         'cod-charges-seller-payout-explained' => ['updated_at' => '2026-10-30'],
+        'gst-inclusive-vs-gst-exclusive-explained' => ['updated_at' => '2026-10-30'],
     ],
     'tool_assignments' => [
         'image-compressor' => ['updated_at' => '2026-10-30'],
         'meesho-label-cropper' => ['updated_at' => '2026-10-30'],
         'percentage-calculator' => ['updated_at' => '2026-10-30'],
+        'gst-calculator' => ['updated_at' => '2026-10-30'],
     ],
     'comparison_assignments' => [],
 
@@ -61,6 +63,9 @@ return [
             'cod-charges-seller-payout-explained' => [
                 ['date' => '2026-10-30', 'note' => 'Replaced generic guidance with a verified COD fee, tax and payout example.'],
             ],
+            'gst-inclusive-vs-gst-exclusive-explained' => [
+                ['date' => '2026-10-30', 'note' => 'Added reconciled inclusive and exclusive GST examples and clarified the taxable-value formulas.'],
+            ],
         ],
         'tools' => [
             'image-compressor' => [
@@ -71,6 +76,9 @@ return [
             ],
             'percentage-calculator' => [
                 ['date' => '2026-10-30', 'note' => 'Added percentage-of, percentage-share and percentage-change modes with clearer formulas and verified examples.'],
+            ],
+            'gst-calculator' => [
+                ['date' => '2026-10-30', 'note' => 'Added inclusive GST extraction while preserving the existing exclusive GST calculation.'],
             ],
         ],
         'comparisons' => [],
