@@ -6,7 +6,7 @@
         <span class="eyebrow">Utility tool</span>
         <h1>Unit Converter</h1>
         @include('partials.tool-editorial-meta')
-        <p>Convert common distance and weight units in a clean, quick interface.</p>
+        <p>Convert common length, weight, temperature and volume units with labelled results.</p>
     </section>
 
     <section class="tool-layout">
@@ -16,16 +16,20 @@
 
                 <div class="mb-3">
                     <label for="value">Enter Value</label>
-                    <input id="value" type="number" name="value" class="form-control" min="0" step="0.01" required value="{{ old('value', $value ?? '') }}">
+                    <input id="value" type="number" name="value" class="form-control @error('value') is-invalid @enderror" step="any" required value="{{ old('value', $value ?? '') }}">
+                    @error('value')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="mb-3">
                     <label for="type">Select Conversion</label>
-                    <select id="type" name="type" class="form-control">
-                        <option value="km_to_m" @selected(($type ?? '') === 'km_to_m')>Kilometer to Meter</option>
-                        <option value="m_to_km" @selected(($type ?? '') === 'm_to_km')>Meter to Kilometer</option>
-                        <option value="kg_to_g" @selected(($type ?? '') === 'kg_to_g')>Kilogram to Gram</option>
-                        <option value="g_to_kg" @selected(($type ?? '') === 'g_to_kg')>Gram to Kilogram</option>
+                    <select id="type" name="type" class="form-control" required>
+                        @foreach(collect($conversionOptions)->groupBy('group') as $group => $options)
+                            <optgroup label="{{ $group }}">
+                                @foreach($options as $key => $option)
+                                    <option value="{{ $key }}" @selected(old('type', $type ?? 'km_to_m') === $key)>{{ $option['label'] }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
                     </select>
                 </div>
 
@@ -36,8 +40,9 @@
         @isset($result)
             <div class="result-box text-center">
                 <span class="eyebrow">Result</span>
-                <span class="result-value">{{ number_format($result, 4) }}</span>
-                <a href="https://wa.me/?text={{ rawurlencode('Converted Value: ' . number_format($result, 4)) }}" target="_blank" rel="noopener" class="btn btn-success mt-3">Share on WhatsApp</a>
+                <p>{{ $conversionLabel }}</p>
+                <span class="result-value">{{ rtrim(rtrim(number_format($result, 6, '.', ''), '0'), '.') }} {{ $resultUnit }}</span>
+                <a href="https://wa.me/?text={{ rawurlencode($conversionLabel . ': ' . rtrim(rtrim(number_format($result, 6, '.', ''), '0'), '.') . ' ' . $resultUnit) }}" target="_blank" rel="noopener" class="btn btn-success mt-3">Share result</a>
             </div>
         @endisset
     </section>
