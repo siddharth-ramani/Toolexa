@@ -44,6 +44,10 @@ return [
         'cod-charges-seller-payout-explained' => ['updated_at' => '2026-10-30'],
         'gst-inclusive-vs-gst-exclusive-explained' => ['updated_at' => '2026-10-30'],
         'uuid-explained-what-it-is-and-why-developers-use-it' => ['updated_at' => '2026-10-30'],
+        'how-inflation-affects-your-savings' => ['updated_at' => '2026-10-30'],
+        'how-to-calculate-inflation-rate-easily' => ['updated_at' => '2026-10-30'],
+        'how-to-choose-the-right-color-palette' => ['updated_at' => '2026-10-30'],
+        'gold-loan-explained-benefits-risks-emi-calculation' => ['updated_at' => '2026-10-30'],
     ],
     'tool_assignments' => [
         'image-compressor' => ['updated_at' => '2026-10-30'],
@@ -53,9 +57,13 @@ return [
         'myntra-label-cropper' => ['updated_at' => '2026-10-30'],
         'unit-converter' => ['updated_at' => '2026-10-30'],
         'barcode-generator' => ['updated_at' => '2026-10-30'],
+        'gold-loan-calculator' => ['updated_at' => '2026-10-30'],
+        'inflation-calculator' => ['updated_at' => '2026-10-30'],
     ],
     'comparison_assignments' => [
         'jpg-vs-png' => ['updated_at' => '2026-10-30'],
+        'webp-vs-png' => ['updated_at' => '2026-10-30'],
+        'fd-vs-sip' => ['updated_at' => '2026-10-30'],
     ],
 
     'history' => [
@@ -75,6 +83,10 @@ return [
             'uuid-explained-what-it-is-and-why-developers-use-it' => [
                 ['date' => '2026-10-30', 'note' => 'Updated the guide to RFC 9562 with exact UUIDv4 structure, version guidance and security limitations.'],
             ],
+            'how-inflation-affects-your-savings' => [['date' => '2026-10-30', 'note' => 'Added a reconciled future-cost example, exact real-return formula and calculator boundaries.']],
+            'how-to-calculate-inflation-rate-easily' => [['date' => '2026-10-30', 'note' => 'Separated historical inflation calculation from annualisation and future-cost projection.']],
+            'how-to-choose-the-right-color-palette' => [['date' => '2026-10-30', 'note' => 'Rebuilt the guide around color roles, exact WCAG contrast thresholds and component-state testing.']],
+            'gold-loan-explained-benefits-risks-emi-calculation' => [['date' => '2026-10-30', 'note' => 'Added verified EMI math, lender-term checks and explicit collateral-risk guidance.']],
         ],
         'tools' => [
             'image-compressor' => [
@@ -98,11 +110,15 @@ return [
             'barcode-generator' => [
                 ['date' => '2026-10-30', 'note' => 'Corrected Code 128 encoding and added explicit EAN-13 and UPC-A length and check-digit validation.'],
             ],
+            'gold-loan-calculator' => [['date' => '2026-10-30', 'note' => 'Clarified that the calculator models EMI only and added a verified 12-month example.']],
+            'inflation-calculator' => [['date' => '2026-10-30', 'note' => 'Clarified future-cost projection boundaries and added verified compound scenarios.']],
         ],
         'comparisons' => [
             'jpg-vs-png' => [
                 ['date' => '2026-10-30', 'note' => 'Replaced generic comparison copy with format-specific guidance on compression, transparency, editing, print and web delivery.'],
             ],
+            'webp-vs-png' => [['date' => '2026-10-30', 'note' => 'Added encoding-mode, animation, transparency and compatibility guidance.']],
+            'fd-vs-sip' => [['date' => '2026-10-30', 'note' => 'Added matched-cash-flow guidance and official SEBI and DICGC references.']],
         ],
     ],
 ];
