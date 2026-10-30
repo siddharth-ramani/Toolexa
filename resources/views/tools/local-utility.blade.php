@@ -37,15 +37,16 @@
                 <div class="mb-3">
                     <label for="barcodeType">Barcode Type</label>
                     <select id="barcodeType" class="form-control" data-barcode-type>
-                        <option value="code128">Code128</option>
-                        <option value="code39">Code39</option>
+                        <option value="code128">Code 128</option>
+                        <option value="code39">Code 39</option>
                         <option value="ean13">EAN-13</option>
                         <option value="upca">UPC-A</option>
                     </select>
                 </div>
                 <div class="mb-3">
                     <label for="barcodeValue">Barcode Value</label>
-                    <input id="barcodeValue" class="form-control" type="text" value="TOOLEXA123" maxlength="80" data-barcode-value>
+                    <input id="barcodeValue" class="form-control" type="text" value="TOOLEXA123" maxlength="48" aria-describedby="barcodeHelp" data-barcode-value>
+                    <div id="barcodeHelp" class="form-text">Code 128 supports printable ASCII. Code 39 supports uppercase letters, numbers and limited symbols. EAN-13 requires 12 or 13 digits; UPC-A requires 11 or 12 digits.</div>
                 </div>
                 <div class="tool-actions compact-actions">
                     <button class="btn btn-primary" type="button" data-local-action="barcode">Generate Barcode</button>

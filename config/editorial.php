@@ -52,6 +52,7 @@ return [
         'gst-calculator' => ['updated_at' => '2026-10-30'],
         'myntra-label-cropper' => ['updated_at' => '2026-10-30'],
         'unit-converter' => ['updated_at' => '2026-10-30'],
+        'barcode-generator' => ['updated_at' => '2026-10-30'],
     ],
     'comparison_assignments' => [],
 
@@ -91,6 +92,9 @@ return [
             ],
             'unit-converter' => [
                 ['date' => '2026-10-30', 'note' => 'Expanded the converter to verified length, weight, temperature and volume conversions with labelled output.'],
+            ],
+            'barcode-generator' => [
+                ['date' => '2026-10-30', 'note' => 'Corrected Code 128 encoding and added explicit EAN-13 and UPC-A length and check-digit validation.'],
             ],
         ],
         'comparisons' => [],

@@ -1333,8 +1333,8 @@ class HomeController extends Controller
                 'Barcode Generator',
                 'barcode-generator',
                 'BAR',
-                'Generate Code128, Code39, EAN-13 and UPC-A barcodes locally.',
-                'Barcode Generator is a business utility for creating printable barcodes directly in your browser. Choose Code128 for flexible text and numbers, Code39 for simple alphanumeric labels, EAN-13 for retail-style 13-digit codes, or UPC-A for 12-digit product codes. Enter the barcode value, generate the preview, then download the barcode as SVG or PNG, or print it from the page. This is useful for product mockups, inventory labels, internal references, packaging drafts, warehouse testing, sample catalog entries and small business workflows where a quick barcode image is needed. Barcode generation runs locally with JavaScript, so Toolexa does not upload or permanently store your barcode value. The preview lets you check the visual output before downloading, while the copy area summarizes the encoded value and selected format. Users should test printed barcodes with their own scanner before using them in production, especially for retail systems that require official number allocation. The interface stays simple, responsive and aligned with the existing Toolexa tool design.',
+                'Create validated Code 128, Code 39, EAN-13 and UPC-A barcode images locally.',
+                'Barcode Generator creates four one-dimensional barcode formats in your browser. Code 128 Set B supports printable ASCII for internal asset or inventory identifiers, while Code 39 supports uppercase letters, numbers and a smaller symbol set. EAN-13 and UPC-A are numeric retail formats: enter 12 EAN data digits or 11 UPC data digits and the tool calculates the final check digit, or enter a complete code and it validates that digit. Download the result as SVG for scalable print work or PNG for ordinary documents. The tool produces standard Code 128—not GS1-128—and it does not issue or register retail identifiers. A generated image therefore does not make an invented number valid for a marketplace or point-of-sale system. Obtain product identifiers through the appropriate issuing organization, follow the printer’s sizing and quiet-zone requirements, and scan-test the final printed label. Values stay in the browser and are not uploaded to Toolexa.',
                 [
                     'Generate Code128 barcodes',
                     'Generate Code39 barcodes',
@@ -1351,11 +1351,12 @@ class HomeController extends Controller
                     'Download PNG, download SVG or print the barcode.',
                 ],
                 [
-                    ['q' => 'Which barcode formats are supported?', 'a' => 'The tool supports Code128, Code39, EAN-13 and UPC-A.'],
+                    ['q' => 'Which barcode formats are supported?', 'a' => 'The tool supports Code 128 Set B, Code 39, EAN-13 and UPC-A.'],
                     ['q' => 'Can I download the barcode?', 'a' => 'Yes, download options are available for SVG and PNG.'],
                     ['q' => 'Can I print the barcode?', 'a' => 'Yes, use the Print Barcode button after generating it.'],
                     ['q' => 'Does Toolexa store barcode values?', 'a' => 'No, barcode generation runs locally in your browser.'],
-                    ['q' => 'Should I test the printed barcode?', 'a' => 'Yes, always scan-test output before production or retail use.'],
+                    ['q' => 'Does this tool issue an official UPC or EAN?', 'a' => 'No. It renders a supplied number but does not allocate, register or verify ownership of a product identifier.'],
+                    ['q' => 'Should I test the printed barcode?', 'a' => 'Yes. Scan-test the final printed label at its actual size before production or retail use.'],
                 ],
                 ['vat-calculator', 'qr-generator', 'image-to-base64-converter', 'pdf-merger', 'json-formatter', 'random-number-generator'],
                 'Business Tools'
