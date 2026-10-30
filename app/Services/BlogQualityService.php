@@ -28,7 +28,10 @@ class BlogQualityService
             ->reject(fn (array $section) => str_contains(Str::lower($section['heading']), 'introduction'))
             ->values()
             ->all();
-        $faqs = $this->faqs($article, $override['faqs'] ?? $article['faqs'], $profile);
+        $faqSource = $override['faqs'] ?? $article['faqs'];
+        $faqs = ($override['append_generated_faqs'] ?? true)
+            ? $this->faqs($article, $faqSource, $profile)
+            : array_values($faqSource);
 
         return [
             'summary' => $override['summary'] ?? $this->summary($article, $sections),

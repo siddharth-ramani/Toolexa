@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'version' => 2,
+    'version' => 3,
     'words_per_minute' => 220,
 
     'category_profiles' => [
@@ -40,6 +40,148 @@ return [
     ],
 
     'overrides' => [
+        'image-compressor' => [
+            'manually_edited' => true,
+            'introduction' => 'Image Compressor re-encodes one JPG, PNG or WebP image in your browser while keeping its original pixel dimensions and file format. It is useful when a website, marketplace listing, form or email rejects a large image and resizing is not required. Choose a file, set the quality slider and compare the original and output previews, dimensions and file sizes before downloading. The image is decoded and encoded with the browser Canvas API; it is not uploaded to Toolexa. Compression results depend on the source format and image detail. JPEG and WebP normally respond to the quality setting, while browsers commonly ignore the quality value for PNG encoding, so a PNG may show little reduction or can even become larger. Keep the original file and accept the output only when both the visual result and measured size suit the destination.',
+            'steps' => [
+                ['title' => 'Choose the source image', 'description' => 'Select one JPG, JPEG, PNG or WebP file. Confirm its pixel dimensions and original size below the preview.'],
+                ['title' => 'Set a starting quality', 'description' => 'Start at 80% for a photographic JPG or WebP. Use a higher value for fine text and a lower value only when a stricter size limit matters more than detail.'],
+                ['title' => 'Compress and compare', 'description' => 'Select Compress Image, then compare the two previews at text, edges and gradients. Check the output size; the tool does not assume that every re-encoded file is smaller.'],
+                ['title' => 'Adjust once if necessary', 'description' => 'If the file is still too large, lower the quality and compress again from the original loaded image. If artifacts appear, raise the value.'],
+                ['title' => 'Download the verified result', 'description' => 'Download only after checking the destination limit. The saved file keeps the source dimensions and uses the source format.'],
+            ],
+            'steps_note' => 'For PNG files, the browser may ignore the quality slider because PNG uses lossless encoding. Convert or resize only when the destination permits it; this tool deliberately preserves format and dimensions.',
+            'examples' => [
+                ['title' => 'Website photograph', 'input' => 'A 1600 × 900 JPG product photograph', 'action' => 'Compress at 80%, compare hair, fabric or product edges, and read the measured output size.', 'outcome' => 'A 1600 × 900 JPG is produced. The exact byte reduction varies with the photograph and browser encoder.'],
+                ['title' => 'Second pass without cumulative loss', 'input' => 'The same original JPG remains loaded after an 80% result', 'action' => 'Change the slider to 65% and run the tool again.', 'outcome' => 'The 65% output is encoded again from the loaded original—not from the previous compressed download—so losses are not stacked inside this session.'],
+                ['title' => 'Transparent PNG check', 'input' => 'A PNG logo with a transparent background', 'action' => 'Compress and compare the displayed file sizes and transparent edges.', 'outcome' => 'The output remains PNG with the same dimensions and transparency, but size reduction is not guaranteed because PNG quality is browser-controlled.'],
+                ['title' => 'WebP listing image', 'input' => 'A WebP image accepted by the destination platform', 'action' => 'Try 80%, then lower the value only if the measured output still exceeds the platform limit.', 'outcome' => 'The output remains WebP, making it suitable only for destinations that accept WebP uploads.'],
+            ],
+            'detailed_explanation' => [
+                'When a file is selected, the browser reads it into an image element and shows the source width, height and byte size. Compress Image draws that decoded image onto a canvas at the same natural width and height. No resizing, cropping, sharpening or metadata editor is applied.',
+                'The canvas is encoded back to the source MIME type: JPEG stays JPEG, PNG stays PNG and WebP stays WebP. For JPEG and WebP, the slider value is passed to the browser encoder as a number from 0.10 to 1.00. Different browsers can produce different byte sizes from the same image because their encoders are not guaranteed to be identical.',
+                'The output panel reports the actual Blob size returned by the browser. That measured value—not the slider number—is the useful check. An 80% quality setting does not mean an 80% smaller file, and it does not describe visual quality with scientific precision.',
+                'PNG is a special case. Canvas encoders generally treat PNG as lossless and may ignore the quality argument. Re-encoding can remove some non-pixel data, but a highly optimized source PNG can become larger. For screenshots and flat graphics, preserving crisp edges may still be more valuable than a smaller result.',
+                'Compression cannot restore detail already removed from the source and cannot guarantee a marketplace or form will accept the output. Destination rules may also specify maximum dimensions, color profile or a required format. Use Image Resizer or a format converter only when those requirements call for a different operation.',
+            ],
+            'advantages' => [
+                'Processes the image locally without a server upload',
+                'Shows measured original and output file sizes',
+                'Keeps the original width and height',
+                'Keeps JPG, PNG and WebP in their original format',
+                'Lets you compare the original and output before download',
+                'Re-runs from the loaded original when the slider changes',
+            ],
+            'limitations' => [
+                'The tool processes one image at a time and does not provide batch compression.',
+                'The quality slider normally affects JPEG and WebP, but browser PNG encoders may ignore it.',
+                'A re-encoded PNG or already optimized image can be the same size or larger.',
+                'Pixel dimensions are preserved; use Image Resizer when width or height must change.',
+                'Canvas re-encoding can discard EXIF metadata, embedded color profiles and animation.',
+                'Very large images can exceed the memory available to a mobile browser.',
+                'Exact output size can differ between browsers because encoding implementations differ.',
+            ],
+            'mistakes' => [
+                'Assuming an 80% setting means the file will become 80% smaller.',
+                'Downloading without comparing the measured output size with the source.',
+                'Using aggressive compression on images containing small text or fine product details.',
+                'Expecting the slider to behave like lossy compression for a PNG.',
+                'Compressing when the destination actually requires smaller pixel dimensions or another format.',
+                'Replacing the only original before checking the downloaded image in its destination.',
+            ],
+            'best_practices' => [
+                'Keep the original file until the compressed image has been accepted by its destination.',
+                'Start around 80% for photographic JPEG or WebP files and reduce in small steps.',
+                'Inspect text, faces, product edges and gradients rather than judging only the thumbnail.',
+                'Use the displayed byte size to make the decision; quality percentage alone is not a size target.',
+                'Use resizing before compression when the source dimensions are much larger than required.',
+                'Retain PNG for transparency or crisp flat graphics unless the destination permits another format.',
+            ],
+            'faqs' => [
+                ['question' => 'Is my image uploaded to Toolexa?', 'answer' => 'No. The selected image is decoded and re-encoded in your browser with Canvas. The tool does not send the file to the Toolexa server.'],
+                ['question' => 'Does the tool change image dimensions?', 'answer' => 'No. The output canvas uses the original natural width and height. Use Image Resizer when pixel dimensions must change.'],
+                ['question' => 'Why did my PNG not become smaller?', 'answer' => 'PNG is normally encoded losslessly by the browser, and the Canvas quality value may be ignored. An already optimized PNG can remain similar in size or become larger.'],
+                ['question' => 'Does 80% quality mean 80% file-size reduction?', 'answer' => 'No. It is an encoder setting, not a reduction percentage. The output panel displays the actual resulting size.'],
+                ['question' => 'Does trying another quality compress the previous result again?', 'answer' => 'No. While the original remains loaded, each run draws from that source image rather than the previously downloaded output.'],
+                ['question' => 'Will transparency be preserved?', 'answer' => 'PNG and WebP output can preserve alpha transparency. JPEG does not support transparent pixels.'],
+                ['question' => 'Can metadata be lost?', 'answer' => 'Yes. Canvas re-encoding can omit EXIF metadata, GPS data, embedded profiles and other non-pixel information.'],
+                ['question' => 'Why can another browser create a different file size?', 'answer' => 'Canvas encoding is implemented by the browser, so encoder versions and settings can produce different byte sizes.'],
+            ],
+            'references' => [
+                ['title' => 'HTMLCanvasElement.toBlob()', 'url' => 'https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob', 'publisher' => 'MDN Web Docs'],
+                ['title' => 'Image file type and format guide', 'url' => 'https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/Image_types', 'publisher' => 'MDN Web Docs'],
+            ],
+        ],
+        'meesho-label-cropper' => [
+            'manually_edited' => true,
+            'introduction' => 'Meesho Label Cropper prepares a Meesho shipping-label PDF for a 4 × 6 thermal printer, an A4 printer or an exact-size cropped PDF. Upload a PDF and inspect the first page in the live preview. The selected Meesho layout supplies an initial crop region, but it is only a starting point because marketplace exports can change. Adjust the highlighted box whenever it cuts a barcode, address or border. PDF export applies the same proportional crop to every page and keeps the cropped page content as PDF; PNG export creates a high-resolution image of the current page only. The file is read locally by PDF.js and processed in the browser with pdf-lib. It is not sent to Toolexa. Always scan one exported barcode and check one address before printing a bulk batch.',
+            'steps' => [
+                ['title' => 'Upload the original Meesho PDF', 'description' => 'Drop or choose the PDF downloaded from the Meesho seller workflow. The page reports its size, page count and detected page dimensions.'],
+                ['title' => 'Confirm the source layout', 'description' => 'Choose A4 Single Label, A4 Double Label or Thermal 4x6 to match the PDF—not the printer. The matching preset sets the initial crop.'],
+                ['title' => 'Inspect the complete label boundary', 'description' => 'Check that the highlighted area contains the full barcode, order identifiers and delivery address. Open advanced controls and drag or resize the box if any edge is clipped.'],
+                ['title' => 'Choose the printer layout', 'description' => 'Use 4 × 6 Thermal for one centered label per page, A4 Sheet for four labels per sheet, or Exact Crop Size to preserve the selected crop dimensions.'],
+                ['title' => 'Export and verify one page', 'description' => 'Download PDF for all pages or PNG for the current page only. Open the file, print one sample at actual size and scan its barcode before printing the full batch.'],
+            ],
+            'steps_note' => 'The crop selected on the preview is applied proportionally to every PDF page. If pages in one file use different layouts, split them into separate files or verify each page before bulk printing.',
+            'examples' => [
+                ['title' => 'Single-label A4 export to thermal', 'input' => 'A Meesho A4 PDF with one shipping label and an invoice below it', 'action' => 'Choose A4 Single Label, keep the shipping-label crop, select 4 × 6 Thermal and export PDF.', 'outcome' => 'Each source page becomes one 4 × 6-inch PDF page with the selected label centered inside a 9-point margin.'],
+                ['title' => 'Bulk labels on office A4 paper', 'input' => 'An eight-page PDF whose pages share the same label position', 'action' => 'Confirm the crop once, choose A4 Sheet and export PDF.', 'outcome' => 'The eight cropped labels are arranged four per A4 sheet, producing two output sheets. Print one sheet first to check scale and barcode clarity.'],
+                ['title' => 'Thermal-size source PDF', 'input' => 'A PDF page already small enough to be detected as thermal-size', 'action' => 'Use Thermal 4x6 as the source layout, confirm the full label is selected and export to 4 × 6 Thermal.', 'outcome' => 'The existing label is centered on a 288 × 432 point output page without inventing invoice content.'],
+                ['title' => 'One-page image for support review', 'input' => 'A multi-page PDF where only the current label needs to be shared as an image', 'action' => 'Navigate to that page, adjust the crop, select PNG and export.', 'outcome' => 'A high-resolution PNG is created for the currently displayed page only; the other PDF pages are not included.'],
+            ],
+            'detailed_explanation' => [
+                'The preview uses PDF.js to render the selected page at high resolution. Meesho presets are stored as fractions of the source page, so the highlighted region scales with A4 and thermal page dimensions instead of relying on screen pixels.',
+                'Dragging or resizing the box changes the crop fractions. PDF export reopens the original file, embeds the selected region from every page and places it into the chosen output layout. This retains PDF content more faithfully than taking a screenshot of the preview.',
+                'The 4 × 6 option creates a 288 × 432 point printer page and places one crop inside a small margin. The A4 option places up to four cropped labels in a two-by-two grid. Exact Crop Size creates one output page matching the selected region for each source page.',
+                'PNG follows a different path: it renders only the current page crop to a high-resolution canvas. Choose PNG for a single image workflow, not for downloading an entire batch.',
+                'A preset cannot guarantee alignment for every Meesho template, courier partner or future layout. The preview is the final authority. Verify that quiet space around the barcode remains intact and that no address line or identifier touches the crop edge.',
+            ],
+            'advantages' => [
+                'Processes the source PDF locally in the browser',
+                'Shows the exact crop before export',
+                'Supports Meesho A4 single, A4 double and thermal source layouts',
+                'Applies a confirmed proportional crop across a multi-page PDF',
+                'Creates 4 × 6 thermal, four-up A4 or exact-size PDF output',
+                'Provides a current-page PNG option for image workflows',
+                'Keeps undo, redo, zoom and manual crop controls available',
+            ],
+            'limitations' => [
+                'Presets are starting regions and may need adjustment when Meesho changes its PDF layout.',
+                'One proportional crop is applied to all pages; mixed page layouts should be split first.',
+                'PNG export includes only the currently displayed page, while PDF export includes all pages.',
+                'The browser limits processing to 300 PDF pages and very large files can exhaust device memory.',
+                'The tool does not validate whether a barcode is readable or whether an address is complete.',
+                'Encrypted, damaged or unusually complex PDFs may fail to render.',
+                'Printer scaling settings can alter output even when the generated PDF is correct.',
+            ],
+            'mistakes' => [
+                'Choosing the source layout based on the printer instead of the uploaded PDF page.',
+                'Exporting without checking that the barcode quiet zone and address are fully inside the crop.',
+                'Using one crop for a PDF whose pages contain labels in different positions.',
+                'Selecting PNG and expecting every page in the PDF to be exported.',
+                'Printing with Fit to page when the thermal workflow requires actual-size output.',
+                'Printing the full batch before scanning one sample barcode.',
+            ],
+            'best_practices' => [
+                'Keep the original Meesho PDF until the shipment batch has been accepted.',
+                'Match A4 Single, A4 Double or Thermal 4x6 to the source PDF page.',
+                'Leave visible quiet space around all sides of the barcode.',
+                'Check at least the first and last source pages when processing a batch.',
+                'Print one page at actual size and scan the barcode before bulk printing.',
+                'Split PDFs when different pages use different label layouts.',
+                'Use PDF for multi-page batches and PNG only for the current-page image use case.',
+            ],
+            'faqs' => [
+                ['question' => 'Is the Meesho PDF uploaded to Toolexa?', 'answer' => 'No. PDF.js reads the file and pdf-lib prepares the output in your browser. The file is not posted to the Toolexa server.'],
+                ['question' => 'Does the preset guarantee a perfect Meesho crop?', 'answer' => 'No. It provides a layout-specific starting region. Always inspect and adjust the highlighted box because marketplace PDF templates can change.'],
+                ['question' => 'What is the difference between source layout and print layout?', 'answer' => 'Source layout describes the uploaded PDF page. Print layout describes the new output page sent to your thermal or A4 printer.'],
+                ['question' => 'Does PDF export include every source page?', 'answer' => 'Yes. The confirmed proportional crop is applied to every page, up to the browser limit of 300 pages.'],
+                ['question' => 'Does PNG export include all labels?', 'answer' => 'No. PNG export creates an image from the current preview page only. Use PDF for a multi-page batch.'],
+                ['question' => 'What does A4 Sheet output do?', 'answer' => 'It arranges up to four cropped labels on each A4 output page in a two-by-two grid.'],
+                ['question' => 'Can the tool check barcode readability?', 'answer' => 'No. It preserves the selected content but cannot certify a barcode. Print and scan one sample before processing the whole batch.'],
+                ['question' => 'What if pages use different label positions?', 'answer' => 'Split the file by layout or process those pages separately. One crop region is applied proportionally across the exported PDF.'],
+            ],
+        ],
         'age-calculator' => [
             'steps' => [
                 [

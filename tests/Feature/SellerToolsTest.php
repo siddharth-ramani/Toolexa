@@ -56,9 +56,13 @@ class SellerToolsTest extends TestCase
         }
 
         $this->post('/tools/marketplace-profit-calculator', [
-            'sale_price' => 1000, 'product_cost' => 400, 'commission_rate' => 10,
-            'shipping_fee' => 50, 'other_fees' => 20, 'fee_tax_rate' => 18,
-        ])->assertOk()->assertSee('Estimated Profit')->assertSee('Profit Margin');
+            'sale_price' => 999, 'product_cost' => 450, 'commission_rate' => 15,
+            'shipping_fee' => 80, 'other_fees' => 25, 'fee_tax_rate' => 18,
+        ])->assertOk()
+            ->assertSee('Estimated Payout')->assertSee('&#8377; 698.28', false)
+            ->assertSee('Total Marketplace Fees')->assertSee('&#8377; 300.72', false)
+            ->assertSee('Estimated Profit')->assertSee('&#8377; 248.28', false)
+            ->assertSee('Profit Margin')->assertSee('24.85%');
 
         $this->post('/tools/volumetric-weight-calculator', [
             'length' => 30, 'width' => 20, 'height' => 15, 'actual_weight' => 1.2, 'divisor' => 5000,

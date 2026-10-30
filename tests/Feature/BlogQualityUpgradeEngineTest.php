@@ -15,10 +15,17 @@ class BlogQualityUpgradeEngineTest extends TestCase
 
         foreach (BlogRepository::all() as $article) {
             $quality = $service->build($article);
+            $manuallyEdited = (bool) config('blog_quality.articles.'.$article['slug'].'.manually_edited', false);
 
-            $this->assertCount(5, $quality['summary'], $article['slug']);
-            $this->assertGreaterThanOrEqual(300, str_word_count(implode(' ', $quality['introduction'])), $article['slug']);
-            $this->assertGreaterThanOrEqual(8, count($quality['faqs']), $article['slug']);
+            if ($manuallyEdited) {
+                $this->assertGreaterThanOrEqual(3, count($quality['summary']), $article['slug']);
+                $this->assertGreaterThanOrEqual(100, str_word_count(implode(' ', $quality['introduction'])), $article['slug']);
+                $this->assertGreaterThanOrEqual(6, count($quality['faqs']), $article['slug']);
+            } else {
+                $this->assertCount(5, $quality['summary'], $article['slug']);
+                $this->assertGreaterThanOrEqual(300, str_word_count(implode(' ', $quality['introduction'])), $article['slug']);
+                $this->assertGreaterThanOrEqual(8, count($quality['faqs']), $article['slug']);
+            }
             $this->assertLessThanOrEqual(12, count($quality['faqs']), $article['slug']);
             $this->assertNotEmpty($quality['steps'], $article['slug']);
             $this->assertNotEmpty($quality['mistakes'], $article['slug']);
@@ -52,5 +59,22 @@ class BlogQualityUpgradeEngineTest extends TestCase
 
         $this->assertSame('1.1', $quality['content_version']);
         $this->assertSame('GST Portal', $quality['references'][0]['name']);
+    }
+
+    public function test_marketplace_profit_article_has_one_reconciled_example_without_generic_padding(): void
+    {
+        $response = $this->get('/blog/how-to-calculate-marketplace-profit-per-order')->assertOk();
+        $html = $response->getContent();
+
+        $response
+            ->assertSee('One Reconciled Worked Example')
+            ->assertSee('estimated payout is ₹999 − ₹300.72 = ₹698.28')
+            ->assertSee('The Fee-tax Assumption You Must Check')
+            ->assertSee('Limitations of the Calculator')
+            ->assertSee('Content Version</dt><dd>2.0', false)
+            ->assertDontSee('Use the examples as a method, not merely as answers to copy')
+            ->assertDontSee('Who should read this How to Calculate Marketplace Profit per Order guide?');
+
+        $this->assertSame(1, substr_count($html, '<h2>One Reconciled Worked Example</h2>'));
     }
 }

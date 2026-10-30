@@ -39,8 +39,13 @@ return [
         ],
     ],
 
-    'article_assignments' => [],
-    'tool_assignments' => [],
+    'article_assignments' => [
+        'how-to-calculate-marketplace-profit-per-order' => ['updated_at' => '2026-10-30'],
+    ],
+    'tool_assignments' => [
+        'image-compressor' => ['updated_at' => '2026-10-30'],
+        'meesho-label-cropper' => ['updated_at' => '2026-10-30'],
+    ],
     'comparison_assignments' => [],
 
     'history' => [
@@ -48,8 +53,18 @@ return [
             'how-to-calculate-gst-in-india' => [
                 ['date' => '2026-07-27', 'note' => 'Reviewed calculation guidance and added clearer GST examples.'],
             ],
+            'how-to-calculate-marketplace-profit-per-order' => [
+                ['date' => '2026-10-30', 'note' => 'Reconciled the worked example with the calculator and documented its fee-tax assumption.'],
+            ],
         ],
-        'tools' => [],
+        'tools' => [
+            'image-compressor' => [
+                ['date' => '2026-10-30', 'note' => 'Replaced generic guidance with browser-encoder behavior, format-specific limitations and verified workflows.'],
+            ],
+            'meesho-label-cropper' => [
+                ['date' => '2026-10-30', 'note' => 'Replaced generic guidance with source-layout, export-layout and batch-verification instructions.'],
+            ],
+        ],
         'comparisons' => [],
     ],
 ];
