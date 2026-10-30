@@ -45,6 +45,7 @@ return [
     'tool_assignments' => [
         'image-compressor' => ['updated_at' => '2026-10-30'],
         'meesho-label-cropper' => ['updated_at' => '2026-10-30'],
+        'percentage-calculator' => ['updated_at' => '2026-10-30'],
     ],
     'comparison_assignments' => [],
 
@@ -63,6 +64,9 @@ return [
             ],
             'meesho-label-cropper' => [
                 ['date' => '2026-10-30', 'note' => 'Replaced generic guidance with source-layout, export-layout and batch-verification instructions.'],
+            ],
+            'percentage-calculator' => [
+                ['date' => '2026-10-30', 'note' => 'Added percentage-of, percentage-share and percentage-change modes with clearer formulas and verified examples.'],
             ],
         ],
         'comparisons' => [],

@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'version' => 3,
+    'version' => 4,
     'words_per_minute' => 220,
 
     'category_profiles' => [
@@ -218,10 +218,78 @@ return [
             ],
         ],
         'percentage-calculator' => [
+            'manually_edited' => true,
+            'introduction' => 'Percentage Calculator answers three different questions that are often confused: “What is 18% of 2,500?”, “45 is what percentage of 60?”, and “By what percentage did a value change from 80 to 100?” Choose the matching calculation before entering your numbers. The tool is useful for students checking marks, shoppers comparing discounts, teams measuring completion rates, and anyone reviewing changes in prices, sales or other measurements. It accepts decimals and negative values where the calculation remains meaningful, displays the formula substitution used, and keeps full precision during calculation before formatting the visible result to two decimal places. A percentage result only describes the numbers supplied; it does not explain why a change happened or determine whether two values are fairly comparable.',
+            'steps' => [
+                ['title' => 'Choose the question', 'description' => 'Select percentage of a number, one value as a percentage of another, or percentage increase/decrease.'],
+                ['title' => 'Enter the first number', 'description' => 'Use the percentage rate, compared value, or original value as indicated by the selected question.'],
+                ['title' => 'Enter the second number', 'description' => 'Use the base number, total, or new value. Decimal values are accepted.'],
+                ['title' => 'Calculate and verify', 'description' => 'Select Calculate, then read the result and the substituted formula shown below it.'],
+            ],
+            'steps_note' => 'The denominator cannot be zero. In percentage-change mode, the original value is the denominator, so a change from zero has no finite percentage result.',
             'examples' => [
-                ['title' => 'Exam score', 'input' => 'Scored marks: 72 · Total marks: 80', 'action' => 'Divide 72 by 80 and multiply by 100.', 'outcome' => 'Percentage: 90%'],
-                ['title' => 'Completed tasks', 'input' => 'Completed: 45 · Total: 60', 'action' => 'Calculate 45 as a share of 60.', 'outcome' => 'Completion rate: 75%'],
-                ['title' => 'Survey response', 'input' => 'Positive responses: 84 · Responses: 120', 'action' => 'Divide the positive count by the total.', 'outcome' => 'Positive response rate: 70%'],
+                ['title' => 'Find 18% of a price', 'input' => 'Mode: What is X% of Y? · First: 18 · Second: 2,500', 'action' => '(18 ÷ 100) × 2,500', 'outcome' => '18% of 2,500 is 450.'],
+                ['title' => 'Calculate an exam percentage', 'input' => 'Mode: X is what percent of Y? · First: 72 · Second: 80', 'action' => '(72 ÷ 80) × 100', 'outcome' => '72 marks out of 80 is 90%.'],
+                ['title' => 'Measure a price increase', 'input' => 'Mode: Percentage increase or decrease · First: 80 · Second: 100', 'action' => '((100 − 80) ÷ 80) × 100', 'outcome' => 'The value increased by 25%.'],
+                ['title' => 'Measure a price decrease', 'input' => 'Mode: Percentage increase or decrease · First: 100 · Second: 80', 'action' => '((80 − 100) ÷ 100) × 100', 'outcome' => 'The value decreased by 20%.'],
+            ],
+            'formula_variables' => [
+                ['symbol' => 'Percentage', 'meaning' => 'The rate out of 100, such as 18 in “18% of 2,500”.'],
+                ['symbol' => 'Base number', 'meaning' => 'The number to which a percentage rate is applied.'],
+                ['symbol' => 'Value', 'meaning' => 'The part being compared with a total.'],
+                ['symbol' => 'Total', 'meaning' => 'The whole or reference amount in a percentage-share calculation.'],
+                ['symbol' => 'Original value', 'meaning' => 'The starting baseline in a percentage-change calculation.'],
+                ['symbol' => 'New value', 'meaning' => 'The later value being compared with the original baseline.'],
+            ],
+            'detailed_explanation' => [
+                'A percentage is a ratio expressed per hundred. Finding a percentage of a number applies a rate to a base: 18% of 2,500 means 18 ÷ 100 multiplied by 2,500. This mode returns an amount, not another percentage. It is commonly used for tax components, discounts, commissions and allocation amounts, although those applications can have additional rules outside the arithmetic.',
+                'Finding what percentage one value is of another answers a different question. Divide the part by the total and multiply by 100. For 72 marks from 80, 72 ÷ 80 × 100 gives 90%. The two inputs must represent comparable units: comparing 45 completed tasks with 60 total tasks is meaningful, while comparing rupees with kilograms is not.',
+                'Percentage change measures movement relative to the original value. The calculator subtracts the original from the new value, divides by the absolute original value, and multiplies by 100. A positive result is labelled an increase and a negative result is displayed as a decrease. The direction matters: moving from 80 to 100 is a 25% increase, but moving back from 100 to 80 is a 20% decrease because the baseline changed.',
+                'A zero denominator makes a ratio undefined. Therefore, the total cannot be zero in percentage-share mode and the original value cannot be zero in percentage-change mode. If a quantity moves from zero to a positive number, report the absolute change or describe it as a new value instead of claiming a finite percentage increase.',
+                'The calculator uses the entered decimal values during computation and rounds only the displayed answer to two decimal places. For invoices, financial statements or graded work, follow the rounding rule required by the relevant institution and retain the unrounded working when necessary. A correct percentage does not prove that the source data, date range or comparison basis is correct.',
+            ],
+            'advantages' => [
+                'Covers the three most common percentage questions in one page',
+                'Accepts whole numbers and decimal values',
+                'Labels percentage change as an increase or decrease',
+                'Shows the substituted calculation for verification',
+                'Rejects zero denominators instead of returning a misleading result',
+                'Works without registration on desktop and mobile browsers',
+            ],
+            'limitations' => [
+                'A percentage is only as reliable as the two source values and their units.',
+                'Percentage change from an original value of zero is undefined and cannot be calculated.',
+                'The visible answer is rounded to two decimal places, although calculation uses the entered values.',
+                'The calculator does not apply tax law, discount conditions, statistical weighting or financial advice.',
+                'Large percentage changes can be mathematically correct but misleading when the original sample is very small.',
+            ],
+            'mistakes' => [
+                'Selecting percentage share when the question actually asks for a percentage of a number.',
+                'Reversing the part and total; 20 is 25% of 80, while 80 is 400% of 20.',
+                'Using the new value as the baseline for an increase calculation.',
+                'Assuming equal absolute changes have equal percentage changes in both directions.',
+                'Comparing values with different units, time periods or definitions.',
+                'Rounding the inputs before calculating and creating avoidable error.',
+            ],
+            'best_practices' => [
+                'Write the question in words before choosing a calculation mode.',
+                'Confirm that both compared values use the same unit and time period.',
+                'Use the original value as the first number for percentage change.',
+                'Keep source precision during calculation and round only the final answer.',
+                'Check the displayed substitution against the numbers you intended to enter.',
+                'Report the baseline alongside a percentage when the context matters.',
+            ],
+            'faqs' => [
+                ['question' => 'How do I find 20% of a number?', 'answer' => 'Choose “What is X% of Y?”, enter 20 as the first number and the base amount as the second. The tool divides 20 by 100 and multiplies by the base.'],
+                ['question' => 'How do I calculate what percentage one number is of another?', 'answer' => 'Choose “X is what percent of Y?”, enter the part first and the total second. The calculation is part ÷ total × 100.'],
+                ['question' => 'How is percentage increase calculated?', 'answer' => 'Subtract the original value from the new value, divide by the absolute original value, then multiply by 100. A positive result is an increase.'],
+                ['question' => 'How is percentage decrease calculated?', 'answer' => 'Use the same percentage-change formula. When the new value is below the original, the tool reports the absolute result as a decrease.'],
+                ['question' => 'Why are a 25% increase and the reverse change not both 25%?', 'answer' => 'The denominator changes. An increase from 80 to 100 uses 80 as its baseline and equals 25%; a decrease from 100 to 80 uses 100 and equals 20%.'],
+                ['question' => 'Can I calculate percentage change from zero?', 'answer' => 'No finite percentage change exists because the formula would divide by zero. Report the absolute change or explain that the new amount started from zero.'],
+                ['question' => 'Can the calculator use decimals or negative values?', 'answer' => 'Yes. Decimal inputs are supported. Negative values can be mathematically valid, but you should confirm that a percentage comparison makes sense for the real-world quantity.'],
+                ['question' => 'Why can my answer differ from an invoice or report?', 'answer' => 'The other result may use different source values, rounding stages, rates, inclusions or reporting rules. Compare the inputs and calculation method before treating either answer as wrong.'],
+                ['question' => 'Does Toolexa store the numbers I enter?', 'answer' => 'The calculation is submitted to Toolexa to render the result page, but no account or saved calculation record is created by this tool. Do not enter confidential data.'],
+                ['question' => 'Is this percentage calculator free?', 'answer' => 'Yes. It can be used without an account or subscription.'],
             ],
         ],
         'discount-calculator' => [

@@ -112,7 +112,8 @@ class AppServiceProvider extends ServiceProvider
                     return [
                         '@type' => 'HowToStep',
                         'position' => $index + 1,
-                        'text' => $step,
+                        'name' => is_array($step) ? ($step['title'] ?? 'Step '.($index + 1)) : 'Step '.($index + 1),
+                        'text' => is_array($step) ? ($step['description'] ?? $step['title'] ?? '') : $step,
                     ];
                 }, $toolQuality['steps'], array_keys($toolQuality['steps'])),
             ],
