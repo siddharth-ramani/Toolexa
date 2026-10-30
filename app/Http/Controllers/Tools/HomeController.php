@@ -2080,8 +2080,12 @@ class HomeController extends Controller
             'icon' => $icon,
             'desc' => $desc,
             'category' => 'Seller Tools',
-            'seo_title' => $name.' - Interactive Seller Shipping Label Tool',
-            'seo_description' => $desc.' Adjust the crop live, then export as PDF or PNG without losing barcode quality.',
+            'seo_title' => $slug === 'myntra-label-cropper'
+                ? 'Myntra Label Cropper: A4 & 4x6 PDF Labels'
+                : $name.' - Interactive Seller Shipping Label Tool',
+            'seo_description' => $slug === 'myntra-label-cropper'
+                ? 'Crop single or multi-page Myntra label PDFs for 4x6 thermal, four-up A4 or exact-size output. Preview, adjust and verify before printing.'
+                : $desc.' Adjust the crop live, then export as PDF or PNG without losing barcode quality.',
             'keywords' => Str::lower($name).', seller tools, shipping label cropper, marketplace label tool',
             'formula' => null,
             'introduction' => $introduction,

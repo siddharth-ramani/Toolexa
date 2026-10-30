@@ -30,7 +30,7 @@
                     <small>Pages: <span data-crop-page-count>&mdash;</span></small>
                     <small>File size: <span data-crop-file-size>&mdash;</span></small>
                 </div>
-                <p class="tool-note">We crop the shipping label automatically. If it is not quite right, drag the box on the preview to adjust it.</p>
+                <p class="tool-note">The selected marketplace layout starts with a shipping-label preset. Verify the preview and drag the box if the source PDF differs.</p>
                 <p class="crop-error" data-crop-error hidden></p>
             </div>
 

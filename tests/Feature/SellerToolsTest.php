@@ -119,4 +119,19 @@ class SellerToolsTest extends TestCase
                 ->assertSee('FAQPage');
         }
     }
+
+    public function test_myntra_cropper_has_specific_batch_and_print_guidance(): void
+    {
+        $response = $this->get('/tools/myntra-label-cropper')->assertOk();
+
+        $response
+            ->assertSee('<title>Myntra Label Cropper: A4 &amp; 4x6 PDF Labels</title>', false)
+            ->assertSee('The selected marketplace layout starts with a shipping-label preset')
+            ->assertSee('Multi-page A4 file to 4 × 6 thermal')
+            ->assertSee('PNG output contains the current page only')
+            ->assertSee('What is the difference between source and print layout?')
+            ->assertSee('Print one sample at actual size')
+            ->assertDontSee('Quick everyday check')
+            ->assertDontSee('representative everyday value');
+    }
 }

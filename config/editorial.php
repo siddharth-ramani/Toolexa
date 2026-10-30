@@ -50,6 +50,7 @@ return [
         'meesho-label-cropper' => ['updated_at' => '2026-10-30'],
         'percentage-calculator' => ['updated_at' => '2026-10-30'],
         'gst-calculator' => ['updated_at' => '2026-10-30'],
+        'myntra-label-cropper' => ['updated_at' => '2026-10-30'],
     ],
     'comparison_assignments' => [],
 
@@ -83,6 +84,9 @@ return [
             ],
             'gst-calculator' => [
                 ['date' => '2026-10-30', 'note' => 'Added inclusive GST extraction while preserving the existing exclusive GST calculation.'],
+            ],
+            'myntra-label-cropper' => [
+                ['date' => '2026-10-30', 'note' => 'Added Myntra-specific multi-label, printer-layout and barcode-verification guidance.'],
             ],
         ],
         'comparisons' => [],
