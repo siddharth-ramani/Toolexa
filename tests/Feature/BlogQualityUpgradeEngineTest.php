@@ -114,4 +114,23 @@ class BlogQualityUpgradeEngineTest extends TestCase
 
         $this->assertSame(1, substr_count($html, '<h2>Why 18% of an Inclusive Total Is Wrong</h2>'));
     }
+
+    public function test_uuid_article_uses_current_standard_and_security_boundaries(): void
+    {
+        $response = $this->get('/blog/uuid-explained-what-it-is-and-why-developers-use-it')->assertOk();
+        $html = $response->getContent();
+
+        $response
+            ->assertSee('<title>What Is a UUID? Format, Versions &amp; UUID v4 Example</title>', false)
+            ->assertSee('RFC 9562, the current IETF UUID standard')
+            ->assertSee('122 random bits')
+            ->assertSee('The 128-bit and 8-4-4-4-12 Structure')
+            ->assertSee('A UUID Is Not a Security Boundary')
+            ->assertSee('RFC 9562 — Universally Unique IDentifiers')
+            ->assertSee('MDN — Crypto.randomUUID()')
+            ->assertDontSee('Use the examples as a method, not merely as answers to copy')
+            ->assertDontSee('Who should read this What Is a UUID');
+
+        $this->assertSame(1, substr_count($html, '<h2>A UUID Is Not a Security Boundary</h2>'));
+    }
 }

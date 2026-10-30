@@ -43,6 +43,7 @@ return [
         'how-to-calculate-marketplace-profit-per-order' => ['updated_at' => '2026-10-30'],
         'cod-charges-seller-payout-explained' => ['updated_at' => '2026-10-30'],
         'gst-inclusive-vs-gst-exclusive-explained' => ['updated_at' => '2026-10-30'],
+        'uuid-explained-what-it-is-and-why-developers-use-it' => ['updated_at' => '2026-10-30'],
     ],
     'tool_assignments' => [
         'image-compressor' => ['updated_at' => '2026-10-30'],
@@ -65,6 +66,9 @@ return [
             ],
             'gst-inclusive-vs-gst-exclusive-explained' => [
                 ['date' => '2026-10-30', 'note' => 'Added reconciled inclusive and exclusive GST examples and clarified the taxable-value formulas.'],
+            ],
+            'uuid-explained-what-it-is-and-why-developers-use-it' => [
+                ['date' => '2026-10-30', 'note' => 'Updated the guide to RFC 9562 with exact UUIDv4 structure, version guidance and security limitations.'],
             ],
         ],
         'tools' => [

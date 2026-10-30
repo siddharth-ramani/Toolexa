@@ -375,5 +375,110 @@ return [
                 ['date' => '2026-10-30', 'note' => 'Replaced generic examples with reconciled ₹1,000 exclusive and ₹1,180 inclusive calculations.'],
             ],
         ],
+        'uuid-explained-what-it-is-and-why-developers-use-it' => [
+            'manually_edited' => true,
+            'append_generated_faqs' => false,
+            'content_version' => '2.0',
+            'summary' => [
+                'A UUID is a 128-bit identifier; its common text form contains 32 hexadecimal digits in an 8-4-4-4-12 layout.',
+                'UUIDv4 uses random or pseudorandom data. After its fixed version and variant bits, 122 bits remain random.',
+                'UUIDs avoid dependence on a central sequential counter, but applications should still enforce uniqueness when duplicates would cause harm.',
+                'A UUID is an identifier—not encryption, authentication, authorization or proof that a record exists.',
+            ],
+            'introduction' => [
+                'A universally unique identifier (UUID) gives software a 128-bit identifier that can be created without asking one central database for the next number. That property is useful when mobile apps, services, import jobs or offline clients must create records independently and merge them later. The familiar text form looks like 550e8400-e29b-41d4-a716-446655440000: 32 hexadecimal digits displayed in five groups separated by hyphens.',
+                'This guide follows RFC 9562, the current IETF UUID standard that replaced RFC 4122 in May 2024. It explains what the version and variant positions mean, why random UUIDv4 values have an extremely low—but not mathematically impossible—collision probability, when UUIDv7 can be useful, and why an identifier must never be treated as a password or access-control check. The examples also match Toolexa’s browser-based UUID tools.',
+            ],
+            'steps' => [
+                'Decide whether the system needs identifiers that can be generated independently or whether a database sequence is sufficient.',
+                'Choose a UUID version supported by the application and storage layer; use UUIDv4 for random identifiers or consider UUIDv7 when time ordering is a defined requirement.',
+                'Generate UUIDs with a standards-compliant library or a cryptographically secure platform API—not a handwritten Math.random pattern.',
+                'Store and compare one consistent representation, and enforce a unique constraint when duplicate records would be damaging.',
+                'Validate format at input boundaries, but authorize access using authenticated identity and permissions rather than possession of a UUID.',
+            ],
+            'sections' => [
+                [
+                    'heading' => 'The 128-bit and 8-4-4-4-12 Structure',
+                    'paragraphs' => [
+                        'RFC 9562 defines a UUID as 16 octets, or 128 bits. The canonical text representation contains groups of 8, 4, 4, 4 and 12 hexadecimal characters. Hyphens make the value easier to read; they are not additional identifier bits.',
+                        'In 550e8400-e29b-41d4-a716-446655440000, the first character of the third group is 4, identifying UUID version 4. The first character of the fourth group is a; its high bits match the RFC variant used by modern UUID versions. Case does not change the value, though lowercase is a common storage convention.',
+                    ],
+                ],
+                [
+                    'heading' => 'How UUIDv4 Is Generated',
+                    'paragraphs' => [
+                        'UUIDv4 begins with random or pseudorandom data, then sets the version and variant bits to their required values. Those structural fields leave 122 random bits. A compliant browser can generate UUIDv4 through crypto.randomUUID(), which uses a cryptographically secure random-number generator.',
+                        'Toolexa’s UUID Generator and Batch Generator use the browser Crypto API and run locally. The generated value is not uploaded to Toolexa. For production application code, prefer the language or framework’s maintained UUID implementation and test the storage path as well as generation.',
+                    ],
+                ],
+                [
+                    'heading' => 'Collision Probability Is Tiny, Not a Guarantee',
+                    'paragraphs' => [
+                        'The 122 random bits in UUIDv4 create an enormous space, so accidental collision is negligible for ordinary workloads when generation is sound. “Universally unique” is an engineering property based on that space and generation method, not a mathematical promise that two values can never match.',
+                        'If a duplicate would overwrite data, break an idempotency rule or assign an object to the wrong owner, add a database unique constraint and handle a rare conflict safely. The constraint protects the business invariant even if a generator, import or test fixture is defective.',
+                    ],
+                ],
+                [
+                    'heading' => 'UUID Versions Serve Different Purposes',
+                    'paragraphs' => [
+                        'UUIDv1 is time-based and can carry timestamp and node-related fields. UUIDv3 and UUIDv5 deterministically derive a value from a namespace and name, using different hash algorithms. UUIDv4 is random. RFC 9562 also defines UUIDv6 and UUIDv7 for time-ordered use cases and reserves UUIDv8 for custom formats.',
+                        'Version choice affects privacy, ordering and reproducibility. Do not switch formats only because a newer number exists. Confirm library support, database indexing behavior, interoperability and whether exposing time order is acceptable for the system.',
+                    ],
+                ],
+                [
+                    'heading' => 'Database and API Use',
+                    'paragraphs' => [
+                        'UUIDs are useful for records created across services, public API resource identifiers, sync workflows, message IDs and test fixtures. They avoid exposing a simple record count in the way sequential public IDs can, but that does not make a UUID confidential.',
+                        'Databases may offer a native UUID type or compact binary storage. Text storage is readable but larger. Whatever representation is selected, normalize input consistently, index the column appropriately and measure write performance for the chosen UUID version and database engine.',
+                    ],
+                ],
+                [
+                    'heading' => 'A UUID Is Not a Security Boundary',
+                    'paragraphs' => [
+                        'Knowing a UUID must not be enough to read, modify or delete a protected object. UUIDs can appear in logs, browser history, analytics, copied links or leaked datasets. Even a hard-to-guess UUID is only an identifier.',
+                        'Authenticate the caller and check authorization for the requested object. Use purpose-built, expiring and revocable tokens for password resets, invitations or sensitive sharing. Do not put secrets or personal information into custom UUID fields.',
+                    ],
+                ],
+                [
+                    'heading' => 'Generate, Validate and Inspect with Toolexa',
+                    'paragraphs' => [
+                        'Use UUID Generator for up to 100 browser-generated UUIDv4 values or UUID Batch Generator for up to 1,000 newline-separated values. UUID Validator checks canonical structure, version and RFC variant placement; a valid format does not prove that the identifier exists in another system.',
+                        'UUID Decoder & Inspector separates the fields and reports the version and variant. For UUIDv1 it can reconstruct the embedded timestamp. For UUIDv4 it cannot reveal an owner or creation time because those fields are random data rather than an encoded account record.',
+                    ],
+                ],
+            ],
+            'mistakes' => [
+                'Treating a valid UUID as proof that a corresponding database record exists.',
+                'Using a UUID in a URL as a replacement for authentication and object-level authorization.',
+                'Generating production UUIDs with Math.random or another unsuitable random source.',
+                'Assuming collision is impossible and omitting a uniqueness constraint where integrity matters.',
+                'Mixing text, binary, uppercase and lowercase representations without a normalization rule.',
+                'Choosing a time-based version without considering metadata exposure and database behavior.',
+            ],
+            'blocks' => [
+                ['type' => 'important', 'label' => 'Current standard', 'text' => 'RFC 9562, published in May 2024, defines current UUID formats and obsoletes RFC 4122.'],
+                ['type' => 'note', 'label' => 'Read a UUIDv4', 'text' => 'In 550e8400-e29b-41d4-a716-446655440000, the 4 marks version 4 and the a begins the RFC variant field.'],
+                ['type' => 'practice', 'label' => 'Integrity check', 'text' => 'Use a database unique constraint when a duplicate identifier would damage data, even when UUIDv4 collision risk is negligible.'],
+                ['type' => 'tip', 'label' => 'Security rule', 'text' => 'Authorize the user for the object; never grant access merely because the request contains a valid UUID.'],
+            ],
+            'faqs' => [
+                ['question' => 'What does UUID stand for?', 'answer' => 'UUID stands for universally unique identifier. It is a 128-bit identifier defined by RFC 9562.'],
+                ['question' => 'How many characters are in a UUID?', 'answer' => 'The canonical text form has 36 characters: 32 hexadecimal digits plus four hyphens in an 8-4-4-4-12 layout.'],
+                ['question' => 'How can I identify a UUIDv4?', 'answer' => 'In canonical text form, the first character of the third group is 4. The fourth group also begins with a character matching the RFC variant, commonly 8, 9, a or b.'],
+                ['question' => 'Can two UUIDv4 values collide?', 'answer' => 'Yes in theory, but with a sound generator the probability is negligible for typical systems. Enforce uniqueness when the business consequence of a duplicate is serious.'],
+                ['question' => 'What is the difference between UUIDv4 and UUIDv7?', 'answer' => 'UUIDv4 is random, while UUIDv7 begins with a Unix-epoch timestamp and is designed for time-ordered use cases. Choose based on system requirements and library support.'],
+                ['question' => 'Is a UUID a secure access token?', 'answer' => 'No. A UUID identifies something; it does not authenticate a user or grant permission. Use proper authorization and purpose-built tokens.'],
+                ['question' => 'Does a UUIDv4 reveal when it was created?', 'answer' => 'No. UUIDv4 uses random data and does not encode a creation timestamp. Some time-based versions have different properties.'],
+                ['question' => 'Does UUID validation prove the ID exists?', 'answer' => 'No. Validation confirms structure, version and variant placement only. Existence must be checked in the relevant application or database.'],
+                ['question' => 'Are Toolexa-generated UUIDs uploaded?', 'answer' => 'No. UUID generation uses browser JavaScript and the browser Crypto API locally.'],
+            ],
+            'references' => [
+                ['name' => 'RFC 9562 — Universally Unique IDentifiers', 'url' => 'https://www.rfc-editor.org/rfc/rfc9562.html'],
+                ['name' => 'MDN — Crypto.randomUUID()', 'url' => 'https://developer.mozilla.org/en-US/docs/Web/API/Crypto/randomUUID'],
+            ],
+            'version_history' => [
+                ['date' => '2026-10-30', 'note' => 'Updated from generic UUID guidance to RFC 9562 structure, version selection, collision handling and security boundaries.'],
+            ],
+        ],
     ],
 ];
