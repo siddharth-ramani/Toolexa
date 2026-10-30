@@ -15,8 +15,10 @@
         $pageDescription = $decodeMetadata($__env->yieldContent('description', $seoDescription ?? 'Free online calculators and utility tools for daily use.'));
         $pageKeywords = $decodeMetadata($__env->yieldContent('keywords', $seoKeywords ?? 'online tools, gst calculator, emi calculator, age calculator, free calculators'));
         $pageCanonical = $canonicalUrl ?? url()->current();
-        $robotsMeta = $robotsMeta ?? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
         $workspaceEmbed = request()->boolean('workspace') && request()->is('tools/*');
+        $robotsMeta = $workspaceEmbed
+            ? 'noindex, follow'
+            : ($robotsMeta ?? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
     @endphp
     <meta name="keywords" content="{{ $pageKeywords }}">
     <meta name="description" content="{{ $pageDescription }}">

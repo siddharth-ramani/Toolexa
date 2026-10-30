@@ -23,9 +23,22 @@ class WorkspaceTest extends TestCase
         $this->get('/tools/json-formatter?workspace=1')
             ->assertOk()
             ->assertSee('JSON Formatter')
+            ->assertSee('<meta name="robots" content="noindex, follow">', false)
+            ->assertSee('<link rel="canonical" href="http://localhost/tools/json-formatter">', false)
             ->assertSee('workspace-embedded-page', false)
             ->assertDontSee('class="site-nav"', false)
             ->assertDontSee('class="site-footer"', false);
+    }
+
+    public function test_apache_config_redirects_www_to_the_non_www_canonical_host(): void
+    {
+        foreach ([base_path('.htaccess'), public_path('.htaccess')] as $file) {
+            $rules = file_get_contents($file);
+
+            $this->assertStringContainsString('^www\.toolexa\.in$', $rules);
+            $this->assertStringContainsString('https://toolexa.in%{REQUEST_URI}', $rules);
+            $this->assertStringContainsString('[R=301,L,NE]', $rules);
+        }
     }
 
     public function test_tool_surfaces_link_to_workspace(): void

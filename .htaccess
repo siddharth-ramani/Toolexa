@@ -5,6 +5,11 @@
 
     RewriteEngine On
 
+    # Consolidate all public indexing and link equity on the non-www host.
+    # Keep the original path and query string while issuing one permanent hop.
+    RewriteCond %{HTTP_HOST} ^www\.toolexa\.in$ [NC]
+    RewriteRule ^ https://toolexa.in%{REQUEST_URI} [R=301,L,NE]
+
     DirectoryIndex index.php
     FallbackResource /toolexa/index.php
 
