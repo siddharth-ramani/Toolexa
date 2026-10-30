@@ -54,7 +54,9 @@ return [
         'unit-converter' => ['updated_at' => '2026-10-30'],
         'barcode-generator' => ['updated_at' => '2026-10-30'],
     ],
-    'comparison_assignments' => [],
+    'comparison_assignments' => [
+        'jpg-vs-png' => ['updated_at' => '2026-10-30'],
+    ],
 
     'history' => [
         'articles' => [
@@ -97,6 +99,10 @@ return [
                 ['date' => '2026-10-30', 'note' => 'Corrected Code 128 encoding and added explicit EAN-13 and UPC-A length and check-digit validation.'],
             ],
         ],
-        'comparisons' => [],
+        'comparisons' => [
+            'jpg-vs-png' => [
+                ['date' => '2026-10-30', 'note' => 'Replaced generic comparison copy with format-specific guidance on compression, transparency, editing, print and web delivery.'],
+            ],
+        ],
     ],
 ];

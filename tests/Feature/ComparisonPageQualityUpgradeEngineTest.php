@@ -60,8 +60,8 @@ class ComparisonPageQualityUpgradeEngineTest extends TestCase
         $comparison = collect($catalog)->firstWhere('slug', 'jpg-vs-png');
         $quality = app(ComparisonQualityService::class)->build($comparison, $catalog);
 
-        $this->assertSame('1.1', $quality['content_version']);
-        $this->assertSame('Product photography', $quality['examples'][0]['scenario']);
+        $this->assertSame('2.0', $quality['content_version']);
+        $this->assertSame('Marketplace product photograph', $quality['examples'][0]['scenario']);
 
         $this->get('/compare/jpg-vs-png')
             ->assertSee('data-comparison-feedback="jpg-vs-png"', false)

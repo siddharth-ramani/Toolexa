@@ -67,7 +67,7 @@ class AuthorReviewerSystemTest extends TestCase
             ->assertSee('Written by')
             ->assertSee('Reviewed by')
             ->assertSee('Updated')
-            ->assertSee('July 2026')
+            ->assertSee('October 2026')
             ->assertSee('"reviewedBy"', false)
             ->assertSee('"@type":"Person"', false);
     }

@@ -22,7 +22,7 @@ class ComparisonService
 
     private function build(string $leftKey, string $rightKey): ?array
     {
-        $fingerprint = substr(sha1(json_encode(config('comparisons'))), 0, 12);
+        $fingerprint = substr(sha1(json_encode([config('comparisons'), config('comparison_quality.comparisons')])), 0, 12);
 
         return Cache::remember('comparison:'.$fingerprint.':'.$leftKey.':'.$rightKey, now()->addHours(6), function () use ($leftKey, $rightKey) {
             $left = $this->subject($leftKey);
@@ -32,6 +32,7 @@ class ComparisonService
             }
 
             $slug = $leftKey.'-vs-'.$rightKey;
+            $override = config('comparison_quality.comparisons.'.$slug, []);
             $title = $left['name'].' vs '.$right['name'];
             $rows = $this->rows($left, $right);
             $faqs = $this->faqs($left, $right);
@@ -49,15 +50,15 @@ class ComparisonService
                 'title' => $title,
                 'left' => $left,
                 'right' => $right,
-                'introduction' => $this->introduction($left, $right),
+                'introduction' => $override['introduction'] ?? $this->introduction($left, $right),
                 'rows' => $rows,
                 'winners' => $this->winners($rows, $left, $right),
                 'faqs' => $faqs,
                 'mistakes' => $this->mistakes($left, $right),
                 'related_tools' => $linking->relatedToolsForTool($context, 8),
                 'related_articles' => $linking->relatedArticlesForTool($context, 4),
-                'meta_title' => $title.': Differences, Pros, Cons & Best Choice | Toolexa',
-                'meta_description' => Str::limit('Compare '.$left['name'].' vs '.$right['name'].'. See key differences, advantages, disadvantages, best use cases and which option fits your needs.', 158, ''),
+                'meta_title' => $override['meta_title'] ?? $title.': Differences, Pros, Cons & Best Choice | Toolexa',
+                'meta_description' => $override['meta_description'] ?? Str::limit('Compare '.$left['name'].' vs '.$right['name'].'. See key differences, advantages, disadvantages, best use cases and which option fits your needs.', 158, ''),
                 'schema' => $this->schema($slug, $title, $left, $right, $faqs),
             ];
         });
