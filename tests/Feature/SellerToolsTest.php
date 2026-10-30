@@ -70,7 +70,11 @@ class SellerToolsTest extends TestCase
 
         $this->post('/tools/cod-fee-calculator', [
             'order_value' => 1200, 'cod_rate' => 2, 'fixed_fee' => 30, 'tax_rate' => 18,
-        ])->assertOk()->assertSee('Total COD Cost')->assertSee('Estimated Payout');
+        ])->assertOk()
+            ->assertSee('Percentage COD Fee')->assertSee('&#8377; 24.00', false)
+            ->assertSee('Tax on COD Fees')->assertSee('&#8377; 9.72', false)
+            ->assertSee('Total COD Cost')->assertSee('&#8377; 63.72', false)
+            ->assertSee('Estimated Payout')->assertSee('&#8377; 1,136.28', false);
 
         $this->post('/tools/marketplace-commission-calculator', [
             'sale_price' => 1499, 'commission_rate' => 15, 'tax_rate' => 18,

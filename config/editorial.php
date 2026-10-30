@@ -41,6 +41,7 @@ return [
 
     'article_assignments' => [
         'how-to-calculate-marketplace-profit-per-order' => ['updated_at' => '2026-10-30'],
+        'cod-charges-seller-payout-explained' => ['updated_at' => '2026-10-30'],
     ],
     'tool_assignments' => [
         'image-compressor' => ['updated_at' => '2026-10-30'],
@@ -56,6 +57,9 @@ return [
             ],
             'how-to-calculate-marketplace-profit-per-order' => [
                 ['date' => '2026-10-30', 'note' => 'Reconciled the worked example with the calculator and documented its fee-tax assumption.'],
+            ],
+            'cod-charges-seller-payout-explained' => [
+                ['date' => '2026-10-30', 'note' => 'Replaced generic guidance with a verified COD fee, tax and payout example.'],
             ],
         ],
         'tools' => [

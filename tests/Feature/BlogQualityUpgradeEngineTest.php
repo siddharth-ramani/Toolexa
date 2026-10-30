@@ -77,4 +77,23 @@ class BlogQualityUpgradeEngineTest extends TestCase
 
         $this->assertSame(1, substr_count($html, '<h2>One Reconciled Worked Example</h2>'));
     }
+
+    public function test_cod_article_matches_the_calculator_and_removes_generic_padding(): void
+    {
+        $response = $this->get('/blog/cod-charges-seller-payout-explained')->assertOk();
+        $html = $response->getContent();
+
+        $response
+            ->assertSee('<title>COD Charges for Sellers: Fee, Tax &amp; Payout Example</title>', false)
+            ->assertSee('One Reconciled ₹1,200 Example')
+            ->assertSee('Total COD cost is ₹54 + ₹9.72 = ₹63.72')
+            ->assertSee('estimated payout of ₹1,200 − ₹63.72 = ₹1,136.28')
+            ->assertSee('Payout Is Not Seller Profit')
+            ->assertSee('Limitations of This Estimate')
+            ->assertSee('Content Version</dt><dd>2.0', false)
+            ->assertDontSee('Use the examples as a method, not merely as answers to copy')
+            ->assertDontSee('Who should read this COD Charges');
+
+        $this->assertSame(1, substr_count($html, '<h2>One Reconciled ₹1,200 Example</h2>'));
+    }
 }
