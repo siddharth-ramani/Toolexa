@@ -5,6 +5,12 @@
 
     RewriteEngine On
 
+    # Block direct web access to application source, runtime data and
+    # deployment files when the project root is used as the document root.
+    RewriteRule (^|/)\. - [F,L]
+    RewriteRule ^(?:app|bootstrap|config|database|resources|routes|storage|tests|vendor)(?:/|$) - [F,L,NC]
+    RewriteRule ^(?:artisan|composer\.(?:json|lock)|package(?:-lock)?\.json|phpunit\.xml|server\.php|README(?:\.md)?)$ - [F,L,NC]
+
     # Consolidate all public indexing and link equity on the non-www host.
     # Keep the original path and query string while issuing one permanent hop.
     RewriteCond %{HTTP_HOST} ^www\.toolexa\.in$ [NC]
@@ -33,8 +39,15 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 
-    <Files ~ "\.(env|env.example|json|config.js|md|gitignore|gitattributes|lock)$|artisan">
-            Order allow,deny
-            Deny from all
-    </Files>
 </IfModule>
+
+<FilesMatch "(^\.|\.(?:env|ini|log|sql|sqlite|bak|dist|config\.js|md|lock|yml|yaml)$|^(?:artisan|composer\.(?:json|lock)|package(?:-lock)?\.json|phpunit\.xml|server\.php)$)">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+ServerSignature Off

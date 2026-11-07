@@ -1,5 +1,7 @@
 <?php
 
+// Toolexa production front controller. Keep this tracked file deployment-owned.
+
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 

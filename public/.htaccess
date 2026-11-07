@@ -5,6 +5,10 @@
 
     RewriteEngine On
 
+    # Never execute or expose hidden deployment artifacts through /public.
+    RewriteRule (^|/)\. - [F,L]
+    RewriteRule ^(?:storage|uploads)/.*\.php(?:/|$) - [F,L,NC]
+
     # Consolidate all public indexing and link equity on the non-www host.
     RewriteCond %{HTTP_HOST} ^www\.toolexa\.in$ [NC]
     RewriteRule ^ https://toolexa.in%{REQUEST_URI} [R=301,L,NE]
@@ -23,6 +27,10 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+<FilesMatch "(^\.|\.(?:env|ini|log|sql|sqlite|bak|dist|md|lock|yml|yaml)$)">
+    Require all denied
+</FilesMatch>
 
 <IfModule mod_headers.c>
     <FilesMatch "\.(css|js|ico|json|png|jpg|jpeg|gif|webp|avif|svg|woff|woff2)(\.br|\.gz)?$">
